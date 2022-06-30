@@ -7,6 +7,7 @@
 
     <link rel="preconnect" href="https://fonts.gstatic.com">
     <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
+		<link rel="stylesheet" href="https://unpkg.com/purecss@2.1.0/build/pure-min.css" integrity="sha384-yHIFVG6ClnONEA5yB5DJXfW2/KC173DIQrYoZMEtBvGzmf0PKiGyNEqe9N6BNDBH" crossorigin="anonymous">
 
     <style>
         * {
@@ -16,16 +17,17 @@
         body {
             background-color: rgb(235, 235, 235);
             font-family: 'Roboto', sans-serif;
+						font-size: 0.8rem;
         }
         #wrap {
             padding: 1rem;
-            max-width: 1024px;
+            max-width: 1280px;
             margin: 0 auto;
         }
 				.fixed {
 					position : fixed;
 					top : 0px;
-					width: 1024px;
+					width: 1280px;
 					z-index : 999;
 				}
         h1 {
@@ -42,6 +44,7 @@
             margin-top: 1.5rem;
             margin-bottom: .5rem;
             color:#333;
+						width:90%;
         }
         h2 small a {
             color:#c33333;
@@ -70,22 +73,55 @@
             text-decoration: none;
             font-size: .8rem;
         }
+				.flex {
+						display: flex;
+				}
+				#comet2 {
+					width: 50%;
+				}				
+				#casl2 {
+					width: 50%;					
+				}				
+				#casl2src {
+					font-family: 'Ubuntu Mono', Monaco, Courier;
+					/*font-family: 'Roboto', sans-serif;*/
+					font-size: 0.8rem;
+					width: 600px;
+					height: 480px;					
+				}				
+				#casl2msg {
+					font-family: 'Ubuntu Mono', Monaco, Courier;
+					/*font-family: 'Roboto', sans-serif;*/
+					font-size: 0.8rem;
+					width: 600px;
+					height: 240px;					
+				}				
     </style>
 </head>
 <body>
     <div id="wrap" class="fixed">
-
-        <h1>CASL2/COMET2 <span>JS</span></h1>
-        <h2>casl2 <small><a href="#" id="textarea-refresh">[ reload ]</a></small></h2>
-				<textarea id="">
-
-				</textarea>
-
-				<h2>comet2 <small><a href="#" id="terminal-refresh">[ reload ]</a></small></h2>
-        <div id="terminal-1"></div>
-
-    </div>
-
-    <script src="./terminal.js"></script>
+      <h1>CASL2/COMET2 <span>JS</span></h1>
+			<div class="flex">
+				<div id="casl2">
+     	  	<h2>casl2</h2>
+					<div>					
+						<textarea id="casl2src"></textarea>
+					</div>
+					<div>					
+						<button id="assemble" class="pure-button pure-button-primary">
+						Assemble
+						</button>
+					</div>
+					<div>					
+						<div id="terminal-2"></div>
+					</div>
+				</div>
+				<div id="comet2">
+					<h2>comet2 <small><a href="#" id="terminal-refresh">[ restart ]</a></small></h2>
+  	      <div id="terminal-1"></div>
+				</div>
+			</div>
+	  </div>
+   	<script src="./terminal.js"></script>
 </body>
 </html>

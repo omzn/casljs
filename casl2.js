@@ -71,7 +71,7 @@ var outref = [];
 
 var opt_a = 1;
 
-var comet2mem = [];
+var comet2ops = [];
 
 const main = () => {
   try {
@@ -80,7 +80,7 @@ const main = () => {
     const casl2code = fs.readFileSync(inputFilepath, 'utf-8');
     //    console.log(casl2code);
     pass1(casl2code, symtbl, memory, buf);
-    pass2(comet2mem, symtbl, memory, buf);
+    pass2(comet2ops, symtbl, memory, buf);
     // fs.writeFileSync(outputFilepath, data);
     // console.log(`Write to ${outputFilepath}`);
   } catch (e) {
@@ -89,7 +89,7 @@ const main = () => {
   }
   //  console.log(memory);
   //  console.log(symtbl);
-  console.log(comet2mem);
+  console.log(comet2ops);
 };
 
 function unpack_C(string) {

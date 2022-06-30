@@ -1,0 +1,12 @@
+PGMULA01  START
+          LAD     GR0,5
+          MULA    GR0,GR0
+          MULA    GR0,GR0
+          MULA    GR0,GR0
+          LAD     GR0,5
+          LAD     GR1,2
+          DIVA    GR0,GR1
+          LAD     GR1,0
+          DIVA    GR0,GR1
+          RET
+          END
