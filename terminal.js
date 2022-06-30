@@ -1,4 +1,321 @@
-var sprintf = require('sprintf-js').sprintf
+/******/ (() => { // webpackBootstrap
+/******/ 	var __webpack_modules__ = ({
+/***/ 917:
+/***/ ((module) => {
+/*! terminal.js | https://github.com/eosterberg/terminaljs */
+module.exports = (function () {
+
+	var VERSION = '3.0.1';
+
+	// PROMPT_TYPE
+	var PROMPT_INPUT = 1, PROMPT_PASSWORD = 2, PROMPT_CONFIRM = 3;
+
+	var firstPrompt = true;
+	promptInput = function (terminalObj, message, PROMPT_TYPE, callback) {
+		var shouldDisplayInput = (PROMPT_TYPE === PROMPT_INPUT || PROMPT_TYPE === PROMPT_CONFIRM);
+		var inputField = document.createElement('input');
+
+		inputField.style.position = 'absolute';
+		inputField.style.zIndex = '-100';
+		inputField.style.outline = 'none';
+		inputField.style.border = 'none';
+		inputField.style.opacity = '0';
+		inputField.style.fontSize = '0.2em';
+
+		terminalObj._inputLine.textContent = '';
+		terminalObj._input.style.display = 'block';
+		terminalObj.html.appendChild(inputField);
+		terminalObj.fireCursorInterval(inputField);
+
+		if (message.length) {
+			terminalObj.print(PROMPT_TYPE === PROMPT_CONFIRM ? message + ' (y/n)' : message);
+		}
+
+		inputField.onblur = function () {
+			terminalObj._cursor.style.display = 'none';
+		}
+
+		inputField.onfocus = function () {
+			inputField.value = terminalObj._inputLine.textContent;
+			terminalObj._cursor.style.display = 'inline';
+		}
+
+		terminalObj.html.onclick = function () {
+			inputField.focus();
+		}
+		inputField.onkeydown = function (e) {
+			if (e.code === 'ArrowUp' || e.code === 'ArrowRight' || e.code === 'ArrowLeft' || e.code === 'ArrowDown' || e.code === 'Tab') {
+				e.preventDefault();
+			}
+		}
+		inputField.onkeyup = function (e) {
+			
+			var inputValue = inputField.value;
+
+			if (shouldDisplayInput && e.code !== 'Enter') {
+				terminalObj._inputLine.textContent = inputField.value;
+			}
+
+			if (PROMPT_TYPE === PROMPT_CONFIRM && e.code !== 'Enter') {
+				if (e.code !== 'KeyY' && e.code !== 'KeyN') { // PROMPT_CONFIRM accept only "Y" and "N" 
+					terminalObj._inputLine.textContent = inputField.value = '';
+					return;
+				}
+				if (terminalObj._inputLine.textContent.length > 1) { // PROMPT_CONFIRM accept only one character
+					terminalObj._inputLine.textContent = inputField.value = terminalObj._inputLine.textContent.substr(-1);
+				}
+			}
+			
+			if (e.code === "Enter") {
+
+				if (PROMPT_TYPE === PROMPT_CONFIRM) {
+					if (!inputValue.length) { // PROMPT_CONFIRM doesn't accept empty string. It requires answer.
+						return;		
+					}
+				}
+				
+				terminalObj._input.style.display = 'none';
+				if (shouldDisplayInput) {
+					terminalObj.print(inputValue);
+				}
+				
+				if (typeof(callback) === 'function') {
+					if (PROMPT_TYPE === PROMPT_CONFIRM) {
+						if (inputValue.toUpperCase()[0] === 'Y') {
+							callback(true);
+						} else if (inputValue.toUpperCase()[0] === 'N') {
+							callback(false);
+						} else {
+							throw `PROMPT_CONFIRM failed: Invalid input (${inputValue.toUpperCase()[0]}})`;
+						}
+					} else {
+						callback(inputValue);
+					}
+					terminalObj.html.removeChild(inputField); // remove input field in the end of each callback	
+					terminalObj.scrollBottom(); // scroll to the bottom of the terminal
+				}
+
+			}
+		}
+		inputField.focus();
+	}
+
+
+	var TerminalConstructor = function (containerId) {
+
+		let terminalObj = this;
+
+		this.html = document.createElement('div');
+		this.html.className = 'Terminal';
+
+		this._innerWindow = document.createElement('div');
+		this._output = document.createElement('p');
+		this._promptPS = document.createElement('span'); 
+		this._inputLine = document.createElement('span'); //the span element where the users input is put
+		this._cursor = document.createElement('span');
+		this._input = document.createElement('p'); //the full element administering the user input, including cursor
+		this._shouldBlinkCursor = true;
+
+		this.cursorTimer;
+		this.fireCursorInterval = function (inputField) {
+			if (terminalObj.cursorTimer) { clearTimeout(terminalObj.cursorTimer); }
+			terminalObj.cursorTimer = setTimeout(function () {
+				if (inputField.parentElement && terminalObj._shouldBlinkCursor) {
+					terminalObj._cursor.style.visibility = terminalObj._cursor.style.visibility === 'visible' ? 'hidden' : 'visible';
+					terminalObj.fireCursorInterval(inputField);
+				} else {
+					terminalObj._cursor.style.visibility = 'visible';
+				}
+			}, 500);
+		};
+
+		this.scrollBottom = function() {
+			this.html.scrollTop = this.html.scrollHeight;
+		}
+
+		this.print = function (message) {
+			var newLine = document.createElement('div');
+			newLine.textContent = message;
+			this._output.appendChild(newLine);
+			this.scrollBottom();
+			return this;
+		}
+
+		this.input = function (message, callback) {
+			promptInput(this, message, PROMPT_INPUT, callback);
+			return this;
+		}
+
+		this.password = function (message, callback) {
+			promptInput(this, message, PROMPT_PASSWORD, callback);
+			return this;
+		}
+
+		this.confirm = function (message, callback) {
+			promptInput(this, message, PROMPT_CONFIRM, callback);
+			return this;
+		}
+
+		this.clear = function () {
+			this._output.innerHTML = '';
+			return this;
+		}
+
+		this.sleep = function (milliseconds, callback) {
+			setTimeout(callback, milliseconds);
+			return this;
+		}
+
+		this.setTextSize = function (size) {
+			this._output.style.fontSize = size;
+			this._input.style.fontSize = size;
+			return this;
+		}
+
+		this.setTextColor = function (col) {
+			this.html.style.color = col;
+			this._cursor.style.background = col;
+			return this;
+		}
+
+		this.setBackgroundColor = function (col) {
+			this.html.style.background = col;
+			return this;
+		}
+
+		this.setWidth = function (width) {
+			this.html.style.width = width;
+			return this;
+		}
+
+		this.setHeight = function (height) {
+			this.html.style.height = height;
+			return this;
+		}
+
+		this.blinkingCursor = function (bool) {
+			bool = bool.toString().toUpperCase();
+			this._shouldBlinkCursor = (bool === 'TRUE' || bool === '1' || bool === 'YES');
+			return this;
+		}
+
+		this.setPrompt = function (promptPS) {
+			this._promptPS.textContent = promptPS;
+			return this;
+		}
+
+		this.getVersion = function() {
+			console.info(`TerminalJS ${VERSION}`)
+			return VERSION;
+		}
+
+		this._input.appendChild(this._promptPS);
+		this._input.appendChild(this._inputLine);
+		this._input.appendChild(this._cursor);
+		this._innerWindow.appendChild(this._output);
+		this._innerWindow.appendChild(this._input);
+		this.html.appendChild(this._innerWindow);
+
+		this.setBackgroundColor('black')
+			.setTextColor('white')
+			.setTextSize('1em')
+			.setWidth('100%')
+			.setHeight('100%');
+
+		this.html.style.fontFamily = 'Ubuntu Mono, Monaco, Courier';
+		this.html.style.margin = '0';
+		this.html.style.overflow = 'auto';
+		this.html.style.whiteSpace = 'pre';
+		this._innerWindow.style.padding = '10px';
+		this._input.style.margin = '0';
+		this._output.style.margin = '0';
+		this._cursor.style.background = 'white';
+		this._cursor.innerHTML = 'C'; //put something in the cursor..
+		this._cursor.style.display = 'none'; //then hide it
+		this._input.style.display = 'none';
+
+		if (typeof(containerId) === 'string') { 
+			let container = document.getElementById(containerId);
+			container.innerHTML = "";
+			container.appendChild(this.html);
+		} else {
+			throw "terminal-js-emulator requires (string) parent container id in the constructor";
+		}
+	}
+
+	return TerminalConstructor;
+}())
+
+/***/ })
+
+/******/ 	});
+/************************************************************************/
+/******/ 	// The module cache
+/******/ 	var __webpack_module_cache__ = {};
+/******/ 	
+/******/ 	// The require function
+/******/ 	function __webpack_require__(moduleId) {
+/******/ 		// Check if module is in cache
+/******/ 		var cachedModule = __webpack_module_cache__[moduleId];
+/******/ 		if (cachedModule !== undefined) {
+/******/ 			return cachedModule.exports;
+/******/ 		}
+/******/ 		// Create a new module (and put it into the cache)
+/******/ 		var module = __webpack_module_cache__[moduleId] = {
+/******/ 			// no module.id needed
+/******/ 			// no module.loaded needed
+/******/ 			exports: {}
+/******/ 		};
+/******/ 	
+/******/ 		// Execute the module function
+/******/ 		__webpack_modules__[moduleId](module, module.exports, __webpack_require__);
+/******/ 	
+/******/ 		// Return the exports of the module
+/******/ 		return module.exports;
+/******/ 	}
+/******/ 	
+/************************************************************************/
+/******/ 	/* webpack/runtime/compat get default export */
+/******/ 	(() => {
+/******/ 		// getDefaultExport function for compatibility with non-harmony modules
+/******/ 		__webpack_require__.n = (module) => {
+/******/ 			var getter = module && module.__esModule ?
+/******/ 				() => (module['default']) :
+/******/ 				() => (module);
+/******/ 			__webpack_require__.d(getter, { a: getter });
+/******/ 			return getter;
+/******/ 		};
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/define property getters */
+/******/ 	(() => {
+/******/ 		// define getter functions for harmony exports
+/******/ 		__webpack_require__.d = (exports, definition) => {
+/******/ 			for(var key in definition) {
+/******/ 				if(__webpack_require__.o(definition, key) && !__webpack_require__.o(exports, key)) {
+/******/ 					Object.defineProperty(exports, key, { enumerable: true, get: definition[key] });
+/******/ 				}
+/******/ 			}
+/******/ 		};
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/hasOwnProperty shorthand */
+/******/ 	(() => {
+/******/ 		__webpack_require__.o = (obj, prop) => (Object.prototype.hasOwnProperty.call(obj, prop))
+/******/ 	})();
+/******/ 	
+/************************************************************************/
+var __webpack_exports__ = {};
+
+/////
+
+// This entry need to be wrapped in an IIFE because it need to be in strict mode.
+(() => {
+	"use strict";
+
+
+
+//// comet2
 
 var VERSION = '0.1 kit (Dec 31, 2021)';
 var DEBUG = 1;
@@ -56,16 +373,16 @@ var COMET2TBL = {
 var CMDTBL = {
   'r|run': { subr : cmd_run,    list : 1 },
   's|step': { subr : cmd_step,   list : 1 },
-  'b|break'   : { subr : cmd_break,  list : 0 },
-  'd|delete'  : { subr : cmd_delete, list : 0 },
+//  'b|break'   : { subr : cmd_break,  list : 0 },
+//  'd|delete'  : { subr : cmd_delete, list : 0 },
   'i|info'    : { subr : cmd_info,   list : 0 },
   'p|print'   : { subr : cmd_print,  list : 0 },
-  'du|dump'   : { subr : cmd_dump,   list : 0 },
-  'st|stack'  : { subr : cmd_stack,  list : 0 },
-  'f|file'    : { subr : cmd_file,   list : 1 },
-  'j|jump'    : { subr : cmd_jump,   list : 1 },
-  'm|memory'  : { subr : cmd_memory, list : 1 },
-  'di|disasm' : { subr : cmd_disasm, list : 0 },
+//  'du|dump'   : { subr : cmd_dump,   list : 0 },
+//  'st|stack'  : { subr : cmd_stack,  list : 0 },
+//  'f|file'    : { subr : cmd_file,   list : 1 },
+//  'j|jump'    : { subr : cmd_jump,   list : 1 },
+//  'm|memory'  : { subr : cmd_memory, list : 1 },
+//  'di|disasm' : { subr : cmd_disasm, list : 0 },
   'h|help'    : { subr : cmd_help,   list : 0 },
 };
 
@@ -99,44 +416,17 @@ var MAX_SIGNED = 32767;
 var MIN_SIGNED = -32768;
 
 // memory image
-var comet2mem = [];
+var comet2mem = [
+	4608,     5, 11264, 11264,
+ 11264,  4608,     5,  4624,
+		 2, 11521,  4624,     0,
+ 11521, 33024
+];
 // PC, FR, GR0, GR1, GR2, GR3, GR4, GR5, GR6, GR7, SP, break points
 var state = [0x0000, FR_ZERO, 0, 0, 0, 0, 0, 0, 0, 0, STACK_TOP, []];
 
 var run_stop = 0;
 var last_cmd;
-
-import Terminal from 'terminal-js-emulator';
-var terminal = new Terminal('terminal');
-terminal.setHeight("400px");
-
-const main = () => {
-  terminal.input(`comet> `, function (cmd) {
-    if (cmd == '') {
-      cmd = last_cmd;
-    } else {
-      last_cmd = cmd;
-    }
-    var cmds = cmd.replace(/\s+/,' ').split(' ');
-    cmd = cmds.shift();
-    for (const key in CMDTBL) {
-      if (cmd.match(key)) {
-        cmd.subr(comet2mem,state,cmds);
-        if (CMDTBL[key].list) {
-          cmd_print(comet2mem,state,cmds);
-        }
-      }
-    }
-  });
-};
-
-function cometprint(str) {
-  console.log(str);
-}
-
-//function cometprint(str) {
-//  console.log(str);
-//}
 
 function zeroPadding(val, len) {
   for (var i = 0; i < len; i++) {
@@ -151,6 +441,10 @@ function unpack_C(string) {
     ret.push(string.charCodeAt(i));
   }
   return ret;
+}
+
+function hex(val,len) {
+	return zeroPadding(val.toString(16),len);
 }
 
 function signed(val) {
@@ -232,7 +526,7 @@ function parse(memoryp, statep) {
     var type = COMET2TBL[key]['type'];
     // instructions with GR, adr, and XR
     if (type == 'op1') {
-      opr_sym = 'GR' + Srting(gr) + ', #' + zeroPadding(adr.toString(16));
+      opr_sym = 'GR' + String(gr) + ', #' + zeroPadding(adr.toString(16));
       if (xr > 0) {
         opr_sym += ', GR' + String(xr);
       }
@@ -262,55 +556,11 @@ function parse(memoryp, statep) {
   return results;
 }
 
-// Handler of the IN system call --- extract two arguments from the
-// stack, read a line from STDIN, store it in specified place.
-function exec_in(memoryp, statep) {
-  if (DEBUG) {
-    console.log('exec_in(' + memoryp + ',' + statep + ')');
-  }
-  var regs = statep.slice(GR0, GR7 + 1);
-  var lenp = regs[2];
-  var bufp = regs[1];
-
-  if (DEBUG) {
-    console.log('LENP: ' + lenp + ', BUFP: ' + bufp);
-  }
-
-  var input;  // [TODO] must get input from somewhere.
-  input.trim();
-  if (input.length() > 256) {
-    input = input.substr(0, 256);  //      # must be shorter than 256 characters
-  }
-  mem_put(memoryp, lenp, input.length());
-  var ainput = unpack_C(input);
-  for (var i = 0; i < ainput.length(); i++) {
-    mem_put(memoryp, bufp++, ainput[i]);
-  }
-}
-
-// Handler of the OUT system call --- extract two arguments from the
-// stack, write a string to STDOUT.
-function exec_out(memoryp, statep) {
-  if (DEBUG) {
-    console.log('exec_out(' + memoryp + ',' + statep + ')');
-  }
-  var regs = statep.slice(GR0, GR7 + 1);
-  var lenp = regs[2];
-  var bufp = regs[1];
-  var len = mem_get(memoryp, lenp);
-
-  //    print 'OUT> ' if !::opt_Q;
-  for (var i = 1; i <= len; i++) {
-    // [TODO] must put output to somewhere.
-    console.log(mem_get(memoryp, bufp + (i - 1)) & 0xff);
-  }
-}
-
 // Execute one instruction from the PC --- evaluate the intruction,
 // update registers, and advance the PC by the instruction's size.
 function step_exec(memoryp, statep) {
   if (DEBUG) {
-    console.log('exec_exec(' + memoryp + ',' + statep + ')');
+    console.log('step_exec(' + memoryp + ',' + statep + ')');
   }
   // obtain the mnemonic and the operand for the current address
   var res = parse(memoryp, statep);
@@ -697,9 +947,9 @@ function step_exec(memoryp, statep) {
 
   } else if (inst == 'SVC') {
     if (eadr == SYS_IN) {
-      exec_in(memoryp, statep);
+//      exec_in(memoryp, statep);
     } else if (eadr == SYS_OUT) {
-      exec_out(memoryp, statep);
+//      exec_out(memoryp, statep);
     }
     pc += 2;
 
@@ -707,7 +957,7 @@ function step_exec(memoryp, statep) {
     pc++;
 
   } else {
-    throw ('Illegal instruction ' + inst + ' at \#' + zeroPadding(pc, 4));
+    throw (`Illegal instruction ${inst} at #${ zeroPadding(hex(pc), 4)}`);
   }
 
   // update registers
@@ -715,74 +965,34 @@ function step_exec(memoryp, statep) {
   statep[FR] = fr;
   statep[SP] = sp;
   for (var i = GR0; i <= GR7; i++) {
-    statep[i] = regs[i];
+    statep[i] = regs[i - GR0];
   }
+}
+
+
+function cmd_run() {
+
 }
 
 function cmd_step(memoryp, statep, arg) {
   if (DEBUG) {
     console.log('cmd_step(' + memoryp + ',' + statep + ',' + arg + ')');
   }
-
-  var count = expand_number(arg);
-  if (!count) {
-    count = 1;
-  }
+	var count = 1;	
+	if (arg != []) { 
+	  count = expand_number(arg);
+  	if (!count) {
+    	count = 1;
+  	}
+	}
   for (var i = 1; i <= count; i++) {
     step_exec(memoryp, statep);
   }
 }
 
-function cmd_run(memoryp, statep, arg) {
-  if (DEBUG) {
-    console.log('cmd_run(' + memoryp + ',' + statep + ',' + arg + ')');
-  }
-  run_stop = 0;
-  
-  const intervalId = setInterval(() => {
-    step_exec(memoryp, statep);
-    for (var i = 0; i < statep[BP].length; i++) {
-      var pnt = statep[BP][i];
-      if (pnt == statep[PC]) {
-        console.log(
-            'Breakpoint ' + i + ', \#' + zeroPadding(pnt.toString(16), 4));
-        run_stop = 1;
-        break;
-      }
-    }
-    if (run_stop) {
-      clearInterval(intervalId);
-    }
-  }, 10);
+function cmd_info() {
+	
 }
-
-function cmd_break(memoryp, statep, arg) {
-  if (DEBUG) {
-    console.log('cmd_break(' + memoryp + ',' + statep + ',' + arg + ')');
-  }
-
-  var val = expand_number(arg);
-  if (val) {
-    statep[BP].push(val);
-  } else {
-    console.log('Invalid argument.');
-  }
-}
-
-function cmd_delete(memoryp, statep, arg) {
-  if (DEBUG) {
-    console.log('cmd_delete(' + memoryp + ',' + statep + ',' + arg + ')');
-  }
-
-  var val = expand_number( arg );
-  if ( val ) {
-    statep[BP].splice(val, 1);
-  }
-  else {
-    statep[BP] = [];
-  }
-}
-
 function cmd_print(memoryp, statep, arg) {
   if (DEBUG) {
     console.log('cmd_print(' + memoryp + ',' + statep + ',' + arg + ')');
@@ -792,6 +1002,10 @@ function cmd_print(memoryp, statep, arg) {
   var fr   = statep[FR];
   var sp   = statep[SP];
   var regs = statep.slice(GR0,GR7+1);
+  if (DEBUG) {
+    console.log(`statep[ ${statep} ]`);
+    console.log('regs[' + regs + ']');
+  }
 
   // obtain instruction and operand at current PC
   var res = parse( memoryp, statep );
@@ -827,3 +1041,57 @@ function cmd_help ( memoryp, statep, args ) {
   cometprint("h,  help	Print list of commands.");
   cometprint("q,  quit	Exit comet.");
 }
+
+
+////// terminal
+
+/* harmony import */ var terminal_js_emulator__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(917);
+/* harmony import */ var terminal_js_emulator__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(terminal_js_emulator__WEBPACK_IMPORTED_MODULE_0__);
+let t1 = new (terminal_js_emulator__WEBPACK_IMPORTED_MODULE_0___default())('terminal-1');
+t1  
+.setHeight("480px")
+.setPrompt("comet2> ");
+let terminal1 = function() {
+    t1
+        .input(``, function (cmd) {
+						if (cmd == '') {
+							cmd = last_cmd;
+						} else {
+							last_cmd = cmd;
+						}
+						var cmds = cmd.replace(/\s+/,' ').split(' ');
+						cmd = cmds.shift();
+						var found = 0;
+						for (const key in CMDTBL) {
+							if (cmd.match('^('+key+')$')) {
+								CMDTBL[key].subr(comet2mem,state,cmds);
+								//t1.print(`command - ${key}`);
+								if (CMDTBL[key].list) {
+									cmd_print(comet2mem,state,cmds);
+								}
+								found = 1;
+							}
+						}
+						if (!found) {
+							t1.print(`Undefined command "${cmd}". Try "help".`);
+						}
+
+						terminal1();
+					});
+//        document.getElementById('version').innerHTML = t1.getVersion();
+}
+
+function cometprint(msg) {
+	t1.print(msg);	
+}
+
+terminal1();
+// refresh buttons
+document.getElementById("terminal-refresh").addEventListener("click", function() {
+    terminal1();
+});
+
+})();
+
+/******/ })()
+;

@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CASL2/COMET2 JS</title>
+
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
+
+    <style>
+        * {
+            padding: 0;
+            margin: 0;
+        }
+        body {
+            background-color: rgb(235, 235, 235);
+            font-family: 'Roboto', sans-serif;
+        }
+        #wrap {
+            padding: 1rem;
+            max-width: 1024px;
+            margin: 0 auto;
+        }
+				.fixed {
+					position : fixed;
+					top : 0px;
+					width: 1024px;
+					z-index : 999;
+				}
+        h1 {
+            text-align: center;
+            margin-top: 2rem;
+            margin-bottom: 0rem;
+            color:#8b3a3a;
+            font-size: 3rem;
+        }
+        h1 span {
+            color:rgb(94, 1, 1);
+        }
+        h2 {
+            margin-top: 1.5rem;
+            margin-bottom: .5rem;
+            color:#333;
+        }
+        h2 small a {
+            color:#c33333;
+            font-size: 1rem;
+            text-decoration: none;
+            float: right;
+        }
+        h2 small a:hover {
+            color:maroon;
+        }
+        .demo-version {
+            color: #555;
+            font-size: 0.7rem;
+            text-align: center;
+        }
+        .demo-version span {
+            font-weight: bold;
+        }
+        .links {
+            margin-top: .4rem;
+            margin-bottom: .8rem;
+            text-align: center;
+        }
+        .links {
+            color:rgb(0, 110, 161);
+            text-decoration: none;
+            font-size: .8rem;
+        }
+    </style>
+</head>
+<body>
+    <div id="wrap" class="fixed">
+
+        <h1>CASL2/COMET2 <span>JS</span></h1>
+        <h2>casl2 <small><a href="#" id="textarea-refresh">[ reload ]</a></small></h2>
+				<textarea id="">
+
+				</textarea>
+
+				<h2>comet2 <small><a href="#" id="terminal-refresh">[ reload ]</a></small></h2>
+        <div id="terminal-1"></div>
+
+    </div>
+
+    <script src="./terminal.js"></script>
+</body>
+</html>
