@@ -1166,7 +1166,7 @@ var CMDTBL = {
 //  'f|file'    : { subr : cmd_file,   list : 1 },
 //  'j|jump'    : { subr : cmd_jump,   list : 1 },
 //  'm|memory'  : { subr : cmd_memory, list : 1 },
-//  'di|disasm' : { subr : cmd_disasm, list : 0 },
+  'di|disasm' : { subr : cmd_disasm, list : 0 },
   'h|help'    : { subr : cmd_help,   list : 0 },
 };
 
@@ -1785,6 +1785,32 @@ function cmd_step(memoryp, statep, arg) {
 	return 1;
 }
 
+function cmd_disasm ( memoryp, statep, args ) {
+  if (DEBUG) {
+    console.log('cmd_disasm(' + memoryp + ',' + statep + ',' + args + ')');
+  }
+
+	var val = null;
+	if (args != []) {
+		val = expand_number( args[0] );
+	}
+	if (val == null) {
+		val = statep[PC];
+	}
+
+	var pc = statep[PC];    // save original PC
+	statep[PC] = val;
+
+	for ( var i = 0 ; i < 16 ; i++ ) {
+			var result  = parse( memoryp, statep );
+			cometprint(`#${zeroPadding(hex(statep[PC]),4)}\t${result[0]}\t${result[1]}\n`);
+			statep[PC] += result[2];
+	}
+	statep[PC] = pc;       // restore PC
+	return 1;
+}
+
+
 function cmd_info() {
 	
 	return 1;
@@ -1831,7 +1857,7 @@ function cmd_help ( memoryp, statep, args ) {
   cometprint("p,  print	Print status of PC/FR/SP/GR0..GR7 registers.");
   cometprint("du, dump	Dump 128 words of memory image from specified address.");
   cometprint("st, stack	Dump 128 words of stack image.");
-  cometprint("f,  file	Use FILE as program to be debugged.");
+//  cometprint("f,  file	Use FILE as program to be debugged.");
   cometprint("j,  jump	Continue program at specifed address.");
   cometprint("m,  memory	Change the memory at ADDRESS to VALUE.");
   cometprint("di, disasm      Disassemble 32 words from specified address.");
