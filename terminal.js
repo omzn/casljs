@@ -1847,7 +1847,7 @@ function cmd_help ( memoryp, statep, args ) {
 /* harmony import */ var terminal_js_emulator__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(terminal_js_emulator__WEBPACK_IMPORTED_MODULE_0__);
 let t1 = new (terminal_js_emulator__WEBPACK_IMPORTED_MODULE_0___default())('terminal-1');
 t1  
-.setHeight("480px")
+.setHeight("720px")
 .setWidth("640px")
 .setPrompt("comet2> ");
 
