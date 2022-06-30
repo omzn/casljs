@@ -1161,11 +1161,11 @@ var CMDTBL = {
 //  'd|delete'  : { subr : cmd_delete, list : 0 },
   'i|info'    : { subr : cmd_info,   list : 0 },
   'p|print'   : { subr : cmd_print,  list : 0 },
-//  'du|dump'   : { subr : cmd_dump,   list : 0 },
-//  'st|stack'  : { subr : cmd_stack,  list : 0 },
+  'du|dump'   : { subr : cmd_dump,   list : 0 },
+  'st|stack'  : { subr : cmd_stack,  list : 0 },
 //  'f|file'    : { subr : cmd_file,   list : 1 },
-//  'j|jump'    : { subr : cmd_jump,   list : 1 },
-//  'm|memory'  : { subr : cmd_memory, list : 1 },
+  'j|jump'    : { subr : cmd_jump,   list : 1 },
+  'm|memory'  : { subr : cmd_memory, list : 1 },
   'di|disasm' : { subr : cmd_disasm, list : 0 },
   'h|help'    : { subr : cmd_help,   list : 0 },
 };
@@ -1240,7 +1240,7 @@ function expand_number(val) {
   if (check_number(sval)) {
     var res;
     if (res = sval.match(/^\#(.*)/)) {
-      val = parseInt(result[1], 16);
+      val = parseInt(res[1], 16);
     }
     val &= 0xffff;  // truncate to 16 bits
     return val;
@@ -1766,13 +1766,13 @@ function cmd_run(memoryp, statep, arg) {
 	return last_ret;
 }
 
-function cmd_step(memoryp, statep, arg) {
+function cmd_step(memoryp, statep, args) {
   if (DEBUG) {
-    console.log('cmd_step(' + memoryp + ',' + statep + ',' + arg + ')');
+    console.log(`cmd_step( ${memoryp} / ${statep} / ${args} )`);
   }
 	var count = 1;	
-	if (arg != []) { 
-	  count = expand_number(arg);
+	if (args != []) { 
+	  count = expand_number(args);
   	if (!count) {
     	count = 1;
   	}
@@ -1785,9 +1785,80 @@ function cmd_step(memoryp, statep, arg) {
 	return 1;
 }
 
+function cmd_dump(memoryp, statep, args) {
+  if (DEBUG) {
+    console.log(`cmd_dump( ${memoryp} / ${statep} / ${args} )`);
+  }
+
+	var val = expand_number( args[0] );
+	if (val != null) {
+	  val = statep[PC];
+	}
+
+	var row, col, base;
+	for (row = 0; row < 16; row++) {
+			var line = '';
+			base = val + ( row << 3 );
+			line = zeroPadding(hex(base),4) + ':';
+			for (col = 0; col < 8; col ++) {
+					line += ' ' + zeroPadding(hex(mem_get( memoryp, base + col )),4) ;
+			}
+			line += ' ';
+			for (col = 0; col < 8; col ++) {
+				var c = mem_get( memoryp, base + col ) & 0xff;
+				line += ( ( c >= 0x20 && c <= 0x7f ) ? String.fromCharCode(c) : ".");
+			}
+			cometprint(line);
+	}
+	return 1;
+}
+
+function cmd_stack( memoryp, statep, args ) {
+  if (DEBUG) {
+    console.log(`cmd_stack( ${memoryp} / ${statep} / ${args} )`);
+  }
+
+	var val = statep[SP];
+	cmd_dump( memoryp, statep, val );
+	return 1;
+}
+
+
+function cmd_jump( memoryp, statep, args ) {
+  if (DEBUG) {
+    console.log(`cmd_jump( ${memoryp} / ${statep} / ${args} )`);
+  }
+
+	var val = expand_number( args[0] );
+	if ( val != null) {
+			statep[PC] = val;
+	}
+	else {
+			cometprint("Invalid argument.\n");
+	}
+	return 1;
+}
+
+
+function cmd_memory( memoryp, statep, args ) {
+  if (DEBUG) {
+    console.log(`cmd_memory( ${memoryp} / ${statep} / ${args} )`);
+  }
+
+	var adr = expand_number( args[0] );
+	var val = expand_number( args[1] );
+	if ( adr != null && val != null ) {
+			mem_put( memoryp, adr, val );
+	} else {
+			cometprint("Invalid argument.\n");
+	}
+	return 1;
+}
+
+
 function cmd_disasm ( memoryp, statep, args ) {
   if (DEBUG) {
-    console.log('cmd_disasm(' + memoryp + ',' + statep + ',' + args + ')');
+    console.log(`cmd_disasm( ${memoryp} / ${statep} / ${args} )`);
   }
 
 	var val = null;
@@ -1815,9 +1886,9 @@ function cmd_info() {
 	
 	return 1;
 }
-function cmd_print(memoryp, statep, arg) {
+function cmd_print(memoryp, statep, args) {
   if (DEBUG) {
-    console.log('cmd_print(' + memoryp + ',' + statep + ',' + arg + ')');
+    console.log(`cmd_print( ${memoryp} / ${statep} / ${args} )`);
   }
 
   var pc   = statep[PC];
@@ -1845,7 +1916,7 @@ function cmd_print(memoryp, statep, arg) {
 
 function cmd_help ( memoryp, statep, args ) {
   if (DEBUG) {
-    console.log('cmd_help');
+    console.log(`cmd_help( ${memoryp} / ${statep} / ${args} )`);
   }
 
   cometprint("List of commands:");
@@ -1901,6 +1972,7 @@ let terminal1 = function() {
 						}
 						if (!found) {
 							t1.print(`Undefined command "${cmd}". Try "help".`);
+							terminal1();
 						}
 						if (result) {
 							terminal1();
