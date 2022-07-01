@@ -1157,9 +1157,10 @@ var COMET2TBL = {
 var CMDTBL = {
   'r|run': { subr : cmd_run,    list : 1 },
   's|step': { subr : cmd_step,   list : 1 },
-//  'b|break'   : { subr : cmd_break,  list : 0 },
-//  'd|delete'  : { subr : cmd_delete, list : 0 },
+  'b|break'   : { subr : cmd_break,  list : 0 },
+  'd|delete'  : { subr : cmd_delete, list : 0 },
   'i|info'    : { subr : cmd_info,   list : 0 },
+  'c|clear'   : { subr : cmd_clear,  list : 0 },
   'p|print'   : { subr : cmd_print,  list : 0 },
   'du|dump'   : { subr : cmd_dump,   list : 0 },
   'st|stack'  : { subr : cmd_stack,  list : 0 },
@@ -1722,7 +1723,7 @@ function step_exec(memoryp, statep) {
     pc++;
 
   } else {
-    throw (`Illegal instruction ${inst} at #${ zeroPadding(hex(pc), 4)}`);
+    throw (`Illegal instruction ${inst} at #${ hex(pc,4)}`);
   }
 
   // update registers
@@ -1752,7 +1753,7 @@ function cmd_run(memoryp, statep, arg) {
     for (var i = 0; i < statep[BP].length; i++) {
       var pnt = statep[BP][i];
       if (pnt == statep[PC]) {
-        cometprint(`Breakpoint ${i}, #${zeroPadding(hex(pnt), 4)}`);
+        cometprint(`Breakpoint ${i}, #${hex(pnt,4)}`);
         run_stop = 1;
         break;
       }
@@ -1791,7 +1792,7 @@ function cmd_dump(memoryp, statep, args) {
   }
 
 	var val = expand_number( args[0] );
-	if (val != null) {
+	if (val == null) {
 	  val = statep[PC];
 	}
 
@@ -1799,9 +1800,9 @@ function cmd_dump(memoryp, statep, args) {
 	for (row = 0; row < 16; row++) {
 			var line = '';
 			base = val + ( row << 3 );
-			line = zeroPadding(hex(base),4) + ':';
+			line = hex(base,4) + ':';
 			for (col = 0; col < 8; col ++) {
-					line += ' ' + zeroPadding(hex(mem_get( memoryp, base + col )),4) ;
+					line += ' ' + hex(mem_get( memoryp, base + col ),4) ;
 			}
 			line += ' ';
 			for (col = 0; col < 8; col ++) {
@@ -1874,18 +1875,70 @@ function cmd_disasm ( memoryp, statep, args ) {
 
 	for ( var i = 0 ; i < 16 ; i++ ) {
 			var result  = parse( memoryp, statep );
-			cometprint(`#${zeroPadding(hex(statep[PC]),4)}\t${result[0]}\t${result[1]}\n`);
+			cometprint(`#${hex(statep[PC],4)}\t${result[0]}\t${result[1]}\n`);
 			statep[PC] += result[2];
 	}
 	statep[PC] = pc;       // restore PC
 	return 1;
 }
 
+function cmd_break ( memoryp, statep, args ) {
+  if (DEBUG) {
+    console.log(`cmd_break( ${memoryp} / ${statep} / ${args} )`);
+  }
 
-function cmd_info() {
-	
+	var val = expand_number( args[0] );
+	if ( val != null) {
+			statep[BP].push(val);
+	}
+	else {
+			cometprint("Invalid argument.");
+	}
 	return 1;
 }
+
+function cmd_delete ( memoryp, statep, args ) {
+  if (DEBUG) {
+    console.log(`cmd_delete( ${memoryp} / ${statep} / ${args} )`);
+  }
+
+	var val = expand_number( args[0] );
+	if ( val != null ) {
+		statep[BP].splice(val, 1);
+		return 1;
+	} else {
+		t1.setPrompt('y/n> ')
+		.confirm('Delete all breakpoints?', function (didConfirm) {
+				if (didConfirm) {
+					statep[BP] = [];
+				}
+				t1.setPrompt('comet2> ');
+				terminal1();
+			});
+		return 0;
+	}
+}
+
+function cmd_info ( memoryp, statep, args ) {
+  if (DEBUG) {
+    console.log(`cmd_info( ${memoryp} / ${statep} / ${args} )`);
+  }
+
+	for ( var i = 0; i < statep[BP].length; i++ ) {
+			cometprint(`${spacePadding(i,2)}: #${hex(statep[BP][i],4)}`);
+	}
+	return 1;
+}
+
+function cmd_clear( memoryp, statep, args ) {
+  if (DEBUG) {
+    console.log(`cmd_clear( ${memoryp} / ${statep} / ${args} )`);
+  }
+	t1.clear();
+	return 1;
+}
+
+
 function cmd_print(memoryp, statep, args) {
   if (DEBUG) {
     console.log(`cmd_print( ${memoryp} / ${statep} / ${args} )`);
@@ -1897,7 +1950,7 @@ function cmd_print(memoryp, statep, args) {
   var regs = statep.slice(GR0,GR7+1);
   if (DEBUG) {
     console.log(`statep[ ${statep} ]`);
-    console.log('regs[' + regs + ']');
+    console.log(`regs[ ${ regs } ]`);
   }
 
   // obtain instruction and operand at current PC
@@ -1919,21 +1972,23 @@ function cmd_help ( memoryp, statep, args ) {
     console.log(`cmd_help( ${memoryp} / ${statep} / ${args} )`);
   }
 
+  cometprint("\n");
   cometprint("List of commands:");
-  cometprint("r,  run		Start execution of program.");
-  cometprint("s,  step	Step execution.  Argument N means do this N times.");
-  cometprint("b,  break	Set a breakpoint at specified address.");
-  cometprint("d,  delete	Delete some breakpoints.");
-  cometprint("i,  info        Print information on breakpoints.");
-  cometprint("p,  print	Print status of PC/FR/SP/GR0..GR7 registers.");
-  cometprint("du, dump	Dump 128 words of memory image from specified address.");
-  cometprint("st, stack	Dump 128 words of stack image.");
+  cometprint("r,  run \tStart execution of program.");
+  cometprint("s,  step\tStep execution.  Argument N means do this N times.");
+  cometprint("b,  break\tSet a breakpoint at specified address.");
+  cometprint("d,  delete\tDelete some breakpoints.");
+  cometprint("i,  info\tPrint information on breakpoints.");
+  cometprint("p,  print\tPrint status of PC/FR/SP/GR0..GR7 registers.");
+  cometprint("c,  clear\tClear terminal.");
+  cometprint("du, dump\tDump 128 words of memory image from specified address.");
+  cometprint("st, stack\tDump 128 words of stack image.");
 //  cometprint("f,  file	Use FILE as program to be debugged.");
-  cometprint("j,  jump	Continue program at specifed address.");
-  cometprint("m,  memory	Change the memory at ADDRESS to VALUE.");
-  cometprint("di, disasm      Disassemble 32 words from specified address.");
-  cometprint("h,  help	Print list of commands.");
-  cometprint("q,  quit	Exit comet.");
+  cometprint("j,  jump\tContinue program at specifed address.");
+  cometprint("m,  memory\tChange the memory at ADDRESS to VALUE.");
+  cometprint("di, disasm\tDisassemble 32 words from specified address.");
+  cometprint("h,  help\tPrint list of commands.");
+  cometprint("q,  quit\tExit comet.");
 	return 1;
 }
 
