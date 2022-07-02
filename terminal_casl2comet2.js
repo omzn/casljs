@@ -1008,7 +1008,7 @@ function pass1(source, symtblp, memoryp, bufp) {
 
         // IN/OUT macro is expanded to push two operands onto the
         // stack, call SYS_IN / SYS_OUT, and restore stack.
-        entry = (type == 'in') ? SYS_IN : SYS_OUT;
+        var entry = (type == 'in') ? SYS_IN : SYS_OUT;
         gen_code2(memoryp, address, CASL2TBL['PUSH']['code'], 0, 0, 1);
         gen_code2(memoryp, address + 2, CASL2TBL['PUSH']['code'], 0, 0, 2);
         gen_code2(
@@ -1207,7 +1207,9 @@ var comet2mem = COMET2MEM_INIT;
 var state = [0x0000, FR_ZERO, 0, 0, 0, 0, 0, 0, 0, 0, STACK_TOP, []];
 
 var run_stop = 0;
-var last_cmd;
+var last_cmd = "p";
+var opt_q = 0;
+var last_ret ;
 
 function hex(val,len) {
 	return zeroPadding(val.toString(16),len);
@@ -1342,6 +1344,8 @@ function step_exec(memoryp, statep) {
   var xr = mem_get(memoryp, pc) & 0xf;
   var adr = mem_get(memoryp, pc + 1);
   var eadr = adr;
+
+  var retval = 1;
 
   var val;
 
@@ -1708,16 +1712,18 @@ function step_exec(memoryp, statep) {
     sp++;
     if (sp > STACK_TOP) {  // RET on main routine
       //            exit 1;
-      return 0;
+      retval = 0;
     }
 
   } else if (inst == 'SVC') {
     if (eadr == SYS_IN) {
-//      exec_in(memoryp, statep);
+      exec_in(memoryp, statep);
+      pc +=2;
+      retval = 0;
     } else if (eadr == SYS_OUT) {
 //      exec_out(memoryp, statep);
+      pc +=2;
     }
-    pc += 2;
 
   } else if (inst == 'NOP') {
     pc++;
@@ -1733,18 +1739,69 @@ function step_exec(memoryp, statep) {
   for (var i = GR0; i <= GR7; i++) {
     statep[i] = regs[i - GR0];
   }
-	return 1;
+	return retval;
 }
 
-var last_ret ;
+var exec_in_end = 0;
 
-function cmd_run(memoryp, statep, arg) {
+// Handler of the IN system call --- extract two arguments from the
+// stack, read a line from STDIN, store it in specified place.
+function exec_in(memoryp, statep) {
   if (DEBUG) {
-    console.log('cmd_run(' + memoryp + ',' + statep + ',' + arg + ')');
+    console.log(`exec_in( ${ memoryp } / ${statep} )`);
+  }
+  var regs = statep.slice(GR0, GR7 + 1);
+  var lenp = regs[2];
+  var bufp = regs[1];
+
+  if (DEBUG) {
+    console.log('LENP: ' + lenp + ', BUFP: ' + bufp);
+  }
+
+  exec_in_end = 0;
+
+  t1.setPrompt('IN> ');
+  t1.input('', function (text) {
+    text.trim();
+    if (text.length() > 256) {
+      text = text.substr(0, 256);  //      # must be shorter than 256 characters
+    }
+    mem_put(memoryp, lenp, text.length());
+    var ainput = unpack_C(text);
+    for (var i = 0; i < ainput.length(); i++) {
+      mem_put(memoryp, bufp++, ainput[i]);
+    }
+    t1.setPrompt('comet2> ');
+    exec_in_end = 1;
+    });
+
+  return 1;
+}
+
+// Handler of the OUT system call --- extract two arguments from the
+// stack, write a string to STDOUT.
+function exec_out(memoryp, statep) {
+  if (DEBUG) {
+    console.log(`exec_out( ${ memoryp } / ${statep} )`);
+  }
+  var regs = statep.slice(GR0, GR7 + 1);
+  var lenp = regs[2];
+  var bufp = regs[1];
+  var len = mem_get(memoryp, lenp);
+
+  //    print 'OUT> ' if !::opt_Q;
+  for (var i = 1; i <= len; i++) {
+    // [TODO] must put output to somewhere.
+    console.log(mem_get(memoryp, bufp + (i - 1)) & 0xff);
+  }
+}
+
+function cmd_run(memoryp, statep, args) {
+  if (DEBUG) {
+    console.log(`cmd_run( ${memoryp} / ${statep} / ${args} )`);
   }
   run_stop = 0;
 	last_ret = 1;
-//  const intervalId = setInterval(() => {
 	while (!run_stop) {
     if (step_exec(memoryp, statep) == 0) {
 			run_stop = 1;
@@ -1758,12 +1815,7 @@ function cmd_run(memoryp, statep, arg) {
         break;
       }
     }
-//    if (run_stop) {
-//      clearInterval(intervalId);
-//    }
-//  }, 10);
 	}
-//	console.log(`last_ret:${last_ret}`);
 	return last_ret;
 }
 
@@ -2019,7 +2071,9 @@ let terminal1 = function() {
 								var result = CMDTBL[key].subr(comet2mem,state,cmds);
 								//t1.print(`command - ${key}`);
 								if (CMDTBL[key].list) {
-									cmd_print(comet2mem,state,cmds);
+									if (!opt_q) {
+                    cmd_print(comet2mem,state,cmds);
+                  }
 								}
 								found = 1;
 								break;
@@ -2041,8 +2095,10 @@ function comet2init() {
 	// PC, FR, GR0, GR1, GR2, GR3, GR4, GR5, GR6, GR7, SP, break points
 	state = [0x0000, FR_ZERO, 0, 0, 0, 0, 0, 0, 0, 0, STACK_TOP, []];
 	t1.clear();
-	t1.print(`This is COMET II, version ${VERSION}.\n(c) 2001-2022, Osamu Mizuno.\n\n`);
-	cmd_print(comet2mem,state,[]);
+  if (!opt_q) {
+    t1.print(`This is COMET II, version ${VERSION}.\n(c) 2001-2022, Osamu Mizuno.\n\n`);
+	  cmd_print(comet2mem,state,[]);
+  }
 	terminal1();	
 }
 
@@ -2070,6 +2126,16 @@ terminal2();
 // refresh buttons
 document.getElementById("terminal-refresh").addEventListener("click", comet2init);
 document.getElementById("assemble").addEventListener("click", assemble);
+document.getElementById("stop").addEventListener("click", function () {
+  run_stop = 1;  
+});
+document.getElementById("quiet").addEventListener("click", function () {
+  if (document.getElementById("quiet").checked) {
+    opt_q = 1;
+  } else {
+    opt_q = 0;
+  } 
+});
 //function() {
 //	comet2mem = COMET2MEM_INIT;
 //	// PC, FR, GR0, GR1, GR2, GR3, GR4, GR5, GR6, GR7, SP, break points

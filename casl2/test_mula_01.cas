@@ -1,4 +1,5 @@
 PGMULA01  START
+          IN      INBUF,INLEN;
           LAD     GR0,5
           MULA    GR0,GR0
           MULA    GR0,GR0
@@ -9,4 +10,6 @@ PGMULA01  START
           LAD     GR1,0
           DIVA    GR0,GR1
           RET
+INLEN     DS      1
+INBUF     DS      100
           END
