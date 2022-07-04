@@ -394,6 +394,7 @@ var comet2ops = [];
 
 function getCasl2Src() {
 	var text = document.getElementById("casl2src").value;
+  document.cookie = "casl2src=" + encodeURIComponent(text);
 	return text;
 }
 
@@ -1094,6 +1095,35 @@ function pass2(file, symtblp, memoryp, bufp) {
       }
     }
   }
+
+/*  if (opt_a) {
+    outdump.push("\nDEFINED SYMBOLS\n");
+    var where;
+    for ( const key in symtblp ) {
+        where[symtblp[key]['line']] = key;
+    }
+    for ( sort { $a <=> $b } keys %where ) {
+        my $label = $where{$_};
+
+        $label =~ /([A-Za-z\d]+)\.([A-Za-z\d]+)$/;
+        my $label_view;
+        if ( $1 eq $2 ) {
+            $label_view = "$2";
+        }
+        else {
+            $label_view = "$2 ($1)";
+        }
+
+        printf(
+            "\t%s:%d:\t%04x\t%s\n",
+            $symtblp->{$label}->{file},
+            $symtblp->{$label}->{line},
+            expand_label( $symtblp, $label ), $label_view
+        );
+    }
+}
+*/
+
   if (opt_a) {
     for (var i = 0; i < outdump.length; i++) {
       caslprint(outdump[i]);

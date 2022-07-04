@@ -172,6 +172,18 @@
 			height: 240px;					
 		}				
     </style>
+    <script>
+        window.onload = function () {
+            var cookies = document.cookie;
+            var cookiesArray = cookies.split(';');
+            for(var c of cookiesArray){
+                var cArray = c.split('=');
+                if( cArray[0] == 'casl2src'){
+                    document.getElementById("casl2src").value = decodeURIComponent(cArray[1]);
+                }
+            }
+        }
+    </script>
 </head>
 <body>
     <div id="wrap" class="fixed">
