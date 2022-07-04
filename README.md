@@ -17,16 +17,13 @@ CASL2, COMET2のJavaScript実装です．
 
 ### terminal_casl2comet2.js
 
-* 状況: 80%
+* 状況: 90%
   * terminal.jsを利用して，Webページ上の簡易ターミナルで動かすようにした． そのため，インタラクティブインターフェイスがそのまま利用できる．
+  * exec_inの実装完了．メインループのinputをIN命令のinputに流用することで，callback問題を解決した．
+  * cmd_run はステップ数を指定して実行するcmd_stepの特殊ケースに実装を変更した．
 
 * TODO:
-  * `exec_in`, `exec_out`を実装する．
-  * シミュレータで動かしているプログラムで無限ループが発生する場合，それを安全に止める方法が必要になる．
-    * 具体的には，runコマンドでの実行で意図的に無限ループとなる場合．
-    * `run_stop`を1にすれば止まる．
-  * `cmd_hoge`の関数群を実装する．
-  * 出力を標準入出力にもできるように実装する．(node.jsでの実行もサポート)
+  * `exec_out`を実装する．
 
 ### 独自拡張
 
@@ -36,3 +33,16 @@ CASL2, COMET2のJavaScript実装です．
   * DIVA, DIVLについては，0除算を行おうとするとZFとOFが同時に立って，計算は行われずに先に進みます．
 * comet2にclearコマンドを追加．ターミナルをクリアする．
 
+### License
+
+* terminaljs
+
+The MIT License (MIT)
+
+Copyright (c) 2014 Erik Österberg
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.

@@ -1196,6 +1196,10 @@ var BP = 11;
 var MAX_SIGNED = 32767;
 var MIN_SIGNED = -32768;
 
+var INPUT_MODE_CMD = 0;
+var INPUT_MODE_IN = 1;
+
+
 var COMET2MEM_INIT = [	4608,     5, 11264, 11264,
 	11264,  4608,     5,  4624,
 			2, 11521,  4624,     0,
@@ -1206,6 +1210,7 @@ var comet2mem = COMET2MEM_INIT;
 // PC, FR, GR0, GR1, GR2, GR3, GR4, GR5, GR6, GR7, SP, break points
 var state = [0x0000, FR_ZERO, 0, 0, 0, 0, 0, 0, 0, 0, STACK_TOP, []];
 
+var run_count = 0;
 var run_stop = 0;
 var last_cmd = "p";
 var opt_q = 0;
@@ -1328,7 +1333,7 @@ function parse(memoryp, statep) {
 // update registers, and advance the PC by the instruction's size.
 function step_exec(memoryp, statep) {
   if (DEBUG) {
-    console.log('step_exec(' + memoryp + ',' + statep + ')');
+    console.log(`step_exec( ${statep} )`);
   }
   // obtain the mnemonic and the operand for the current address
   var res = parse(memoryp, statep);
@@ -1717,9 +1722,10 @@ function step_exec(memoryp, statep) {
 
   } else if (inst == 'SVC') {
     if (eadr == SYS_IN) {
-      exec_in(memoryp, statep);
-      pc +=2;
-      retval = 0;
+      if (input_mode == INPUT_MODE_CMD) {
+        t1.setPrompt('IN> ');  
+        input_mode = INPUT_MODE_IN;
+      }
     } else if (eadr == SYS_OUT) {
 //      exec_out(memoryp, statep);
       pc +=2;
@@ -1742,47 +1748,32 @@ function step_exec(memoryp, statep) {
 	return retval;
 }
 
-var exec_in_end = 0;
-
 // Handler of the IN system call --- extract two arguments from the
 // stack, read a line from STDIN, store it in specified place.
-function exec_in(memoryp, statep) {
+function exec_in(memoryp, statep, text) {
   if (DEBUG) {
-    console.log(`exec_in( ${ memoryp } / ${statep} )`);
+    console.log(`exec_in(  ${statep} )`);
+  }
+  text.trim();
+  if (text.length > 256) {
+    text = text.substr(0, 256);  //      # must be shorter than 256 characters
   }
   var regs = statep.slice(GR0, GR7 + 1);
   var lenp = regs[2];
   var bufp = regs[1];
-
-  if (DEBUG) {
-    console.log('LENP: ' + lenp + ', BUFP: ' + bufp);
+  mem_put(memoryp, lenp, text.length);
+  var ainput = unpack_C(text);
+  for (var i = 0; i < ainput.length; i++) {
+    mem_put(memoryp, bufp++, ainput[i]);
   }
-
-  exec_in_end = 0;
-
-  t1.setPrompt('IN> ');
-  t1.input('', function (text) {
-    text.trim();
-    if (text.length() > 256) {
-      text = text.substr(0, 256);  //      # must be shorter than 256 characters
-    }
-    mem_put(memoryp, lenp, text.length());
-    var ainput = unpack_C(text);
-    for (var i = 0; i < ainput.length(); i++) {
-      mem_put(memoryp, bufp++, ainput[i]);
-    }
-    t1.setPrompt('comet2> ');
-    exec_in_end = 1;
-    });
-
-  return 1;
+  statep[PC] += 2;
 }
 
 // Handler of the OUT system call --- extract two arguments from the
 // stack, write a string to STDOUT.
 function exec_out(memoryp, statep) {
   if (DEBUG) {
-    console.log(`exec_out( ${ memoryp } / ${statep} )`);
+    console.log(`exec_out(  ${statep} )`);
   }
   var regs = statep.slice(GR0, GR7 + 1);
   var lenp = regs[2];
@@ -1798,10 +1789,11 @@ function exec_out(memoryp, statep) {
 
 function cmd_run(memoryp, statep, args) {
   if (DEBUG) {
-    console.log(`cmd_run( ${memoryp} / ${statep} / ${args} )`);
+    console.log(`cmd_run( {memoryp} / ${statep} / ${args} )`);
   }
-  run_stop = 0;
-	last_ret = 1;
+  run_count = -1;
+  return cmd_step(memoryp, statep, run_count);
+/*  last_ret = 1;
 	while (!run_stop) {
     if (step_exec(memoryp, statep) == 0) {
 			run_stop = 1;
@@ -1817,37 +1809,41 @@ function cmd_run(memoryp, statep, args) {
     }
 	}
 	return last_ret;
+  */
 }
 
 function cmd_step(memoryp, statep, args) {
   if (DEBUG) {
-    console.log(`cmd_step( ${memoryp} / ${statep} / ${args} )`);
+    console.log(`cmd_step( {memoryp} / ${statep} / ${args} )`);
   }
 	var count = 1;	
-	if (args != []) { 
-	  count = expand_number(args);
-  	if (!count) {
-    	count = 1;
-  	}
-	}
-  for (var i = 1; i <= count; i++) {
-    if (step_exec(memoryp, statep) == 0) {
-			return 0;
-		}
+  count = expand_number(args);
+	if (!count) {
+  	count = 1;
+ 	}
+  run_count = count;
+  if (run_count > 0) {
+    run_count--;
   }
+  if (DEBUG) {
+    console.log(`run_count = ${run_count}`);
+  }
+  if (step_exec(memoryp, statep) == 0) {
+		return 0;
+	}
 	return 1;
 }
 
 function cmd_dump(memoryp, statep, args) {
   if (DEBUG) {
-    console.log(`cmd_dump( ${memoryp} / ${statep} / ${args} )`);
+    console.log(`cmd_dump( {memoryp} / ${statep} / ${args} )`);
   }
 
 	var val = expand_number( args[0] );
 	if (val == null) {
 	  val = statep[PC];
 	}
-
+  
 	var row, col, base;
 	for (row = 0; row < 16; row++) {
 			var line = '';
@@ -1868,7 +1864,7 @@ function cmd_dump(memoryp, statep, args) {
 
 function cmd_stack( memoryp, statep, args ) {
   if (DEBUG) {
-    console.log(`cmd_stack( ${memoryp} / ${statep} / ${args} )`);
+    console.log(`cmd_stack( {memoryp} / ${statep} / ${args} )`);
   }
 
 	var val = statep[SP];
@@ -1879,7 +1875,7 @@ function cmd_stack( memoryp, statep, args ) {
 
 function cmd_jump( memoryp, statep, args ) {
   if (DEBUG) {
-    console.log(`cmd_jump( ${memoryp} / ${statep} / ${args} )`);
+    console.log(`cmd_jump( {memoryp} / ${statep} / ${args} )`);
   }
 
 	var val = expand_number( args[0] );
@@ -1895,7 +1891,7 @@ function cmd_jump( memoryp, statep, args ) {
 
 function cmd_memory( memoryp, statep, args ) {
   if (DEBUG) {
-    console.log(`cmd_memory( ${memoryp} / ${statep} / ${args} )`);
+    console.log(`cmd_memory( {memoryp} / ${statep} / ${args} )`);
   }
 
 	var adr = expand_number( args[0] );
@@ -1911,7 +1907,7 @@ function cmd_memory( memoryp, statep, args ) {
 
 function cmd_disasm ( memoryp, statep, args ) {
   if (DEBUG) {
-    console.log(`cmd_disasm( ${memoryp} / ${statep} / ${args} )`);
+    console.log(`cmd_disasm( {memoryp} / ${statep} / ${args} )`);
   }
 
 	var val = null;
@@ -1936,7 +1932,7 @@ function cmd_disasm ( memoryp, statep, args ) {
 
 function cmd_break ( memoryp, statep, args ) {
   if (DEBUG) {
-    console.log(`cmd_break( ${memoryp} / ${statep} / ${args} )`);
+    console.log(`cmd_break( {memoryp} / ${statep} / ${args} )`);
   }
 
 	var val = expand_number( args[0] );
@@ -1951,7 +1947,7 @@ function cmd_break ( memoryp, statep, args ) {
 
 function cmd_delete ( memoryp, statep, args ) {
   if (DEBUG) {
-    console.log(`cmd_delete( ${memoryp} / ${statep} / ${args} )`);
+    console.log(`cmd_delete( {memoryp} / ${statep} / ${args} )`);
   }
 
 	var val = expand_number( args[0] );
@@ -1973,7 +1969,7 @@ function cmd_delete ( memoryp, statep, args ) {
 
 function cmd_info ( memoryp, statep, args ) {
   if (DEBUG) {
-    console.log(`cmd_info( ${memoryp} / ${statep} / ${args} )`);
+    console.log(`cmd_info( {memoryp} / ${statep} / ${args} )`);
   }
 
 	for ( var i = 0; i < statep[BP].length; i++ ) {
@@ -1984,7 +1980,7 @@ function cmd_info ( memoryp, statep, args ) {
 
 function cmd_clear( memoryp, statep, args ) {
   if (DEBUG) {
-    console.log(`cmd_clear( ${memoryp} / ${statep} / ${args} )`);
+    console.log(`cmd_clear( {memoryp} / ${statep} / ${args} )`);
   }
 	t1.clear();
 	return 1;
@@ -1993,7 +1989,7 @@ function cmd_clear( memoryp, statep, args ) {
 
 function cmd_print(memoryp, statep, args) {
   if (DEBUG) {
-    console.log(`cmd_print( ${memoryp} / ${statep} / ${args} )`);
+    console.log(`cmd_print( {memoryp} / ${statep} / ${args} )`);
   }
 
   var pc   = statep[PC];
@@ -2021,7 +2017,7 @@ function cmd_print(memoryp, statep, args) {
 
 function cmd_help ( memoryp, statep, args ) {
   if (DEBUG) {
-    console.log(`cmd_help( ${memoryp} / ${statep} / ${args} )`);
+    console.log(`cmd_help( {memoryp} / ${statep} / ${args} )`);
   }
 
   cometprint("\n");
@@ -2055,38 +2051,71 @@ t1
 .setWidth("640px")
 .setPrompt("comet2> ");
 
+var input_mode = INPUT_MODE_CMD;
+
 let terminal1 = function() {
+  if (run_count == 0 || input_mode == INPUT_MODE_IN) {
     t1
-        .input(``, function (cmd) {
-						if (cmd == '') {
-							cmd = last_cmd;
-						} else {
-							last_cmd = cmd;
-						}
-						var cmds = cmd.replace(/\s+/,' ').split(' ');
-						cmd = cmds.shift();
-						var found = 0;
-						for (const key in CMDTBL) {
-							if (cmd.match('^('+key+')$')) {
-								var result = CMDTBL[key].subr(comet2mem,state,cmds);
-								//t1.print(`command - ${key}`);
-								if (CMDTBL[key].list) {
-									if (!opt_q) {
+      .input(``, function (cmd) {
+        if (input_mode == INPUT_MODE_CMD) {
+          if (cmd == '') {
+            cmd = last_cmd;
+          } else {
+            last_cmd = cmd;
+          }
+          var cmds = cmd.replace(/\s+/,' ').split(' ');
+          cmd = cmds.shift();
+          var found = 0;
+          for (const key in CMDTBL) {
+            if (cmd.match('^('+key+')$')) {
+              var result = CMDTBL[key].subr(comet2mem,state,cmds);
+              //t1.print(`command - ${key}`);
+              if (input_mode == INPUT_MODE_CMD) {
+                if (CMDTBL[key].list) {
+                  if (run_count == 0 && !opt_q) {
                     cmd_print(comet2mem,state,cmds);
                   }
-								}
-								found = 1;
-								break;
-							}
-						}
-						if (!found) {
-							t1.print(`Undefined command "${cmd}". Try "help".`);
-							terminal1();
-						}
-						if (result) {
-							terminal1();
-						}
-					});
+                }
+              }
+              found = 1;
+              break;
+            }
+          }
+          if (!found) {
+            t1.print(`Undefined command "${cmd}". Try "help".`);
+            terminal1();
+          }
+          if (result) {
+            terminal1();
+          }
+        } else {
+          // exec_in
+          exec_in(comet2mem,state,cmd);
+          t1.setPrompt('comet2> ');
+          input_mode = INPUT_MODE_CMD;     
+          if (run_count == 0 && !opt_q) {
+            cmd_print(comet2mem,state,[]);
+          }
+          terminal1();
+        }
+        });
+  } else {
+    var result = cmd_step(comet2mem,state,run_count);
+    for (var i = 0; i < state[BP].length; i++) {
+      var pnt = state[BP][i];
+      if (pnt == state[PC]) {
+        cometprint(`Breakpoint ${i}, #${hex(pnt,4)}`);
+        run_count = 0;
+        break;
+      }
+    }
+    if (run_count == 0 && !opt_q) {
+      cmd_print(comet2mem,state,[]);
+    }
+    if (result) {
+      terminal1();
+    }
+  }
 //        document.getElementById('version').innerHTML = t1.getVersion();
 }
 
@@ -2127,7 +2156,7 @@ terminal2();
 document.getElementById("terminal-refresh").addEventListener("click", comet2init);
 document.getElementById("assemble").addEventListener("click", assemble);
 document.getElementById("stop").addEventListener("click", function () {
-  run_stop = 1;  
+  run_count = 0;  
 });
 document.getElementById("quiet").addEventListener("click", function () {
   if (document.getElementById("quiet").checked) {
