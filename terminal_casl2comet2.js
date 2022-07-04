@@ -2120,7 +2120,7 @@ let terminal1 = function() {
 }
 
 function comet2init() {
-	comet2mem = comet2ops;
+	comet2mem = comet2ops.slice(0,comet2ops.length);
 	// PC, FR, GR0, GR1, GR2, GR3, GR4, GR5, GR6, GR7, SP, break points
 	state = [0x0000, FR_ZERO, 0, 0, 0, 0, 0, 0, 0, 0, STACK_TOP, []];
 	t1.clear();
