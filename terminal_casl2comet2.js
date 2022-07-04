@@ -1727,7 +1727,7 @@ function step_exec(memoryp, statep) {
         input_mode = INPUT_MODE_IN;
       }
     } else if (eadr == SYS_OUT) {
-//      exec_out(memoryp, statep);
+      exec_out(memoryp, statep);
       pc +=2;
     }
 
@@ -1779,12 +1779,17 @@ function exec_out(memoryp, statep) {
   var lenp = regs[2];
   var bufp = regs[1];
   var len = mem_get(memoryp, lenp);
+  var outstr = '';
 
   //    print 'OUT> ' if !::opt_Q;
   for (var i = 1; i <= len; i++) {
-    // [TODO] must put output to somewhere.
-    console.log(mem_get(memoryp, bufp + (i - 1)) & 0xff);
+    outstr += String.fromCharCode(mem_get(memoryp, bufp + (i - 1)) & 0xff);
   }
+  if (!opt_q) {
+    outstr = "OUT> " + outstr;
+  }
+  cometprint(outstr);
+  return 1;
 }
 
 function cmd_run(memoryp, statep, args) {
@@ -1793,23 +1798,6 @@ function cmd_run(memoryp, statep, args) {
   }
   run_count = -1;
   return cmd_step(memoryp, statep, run_count);
-/*  last_ret = 1;
-	while (!run_stop) {
-    if (step_exec(memoryp, statep) == 0) {
-			run_stop = 1;
-			last_ret = 0;
-		}
-    for (var i = 0; i < statep[BP].length; i++) {
-      var pnt = statep[BP][i];
-      if (pnt == statep[PC]) {
-        cometprint(`Breakpoint ${i}, #${hex(pnt,4)}`);
-        run_stop = 1;
-        break;
-      }
-    }
-	}
-	return last_ret;
-  */
 }
 
 function cmd_step(memoryp, statep, args) {
@@ -2036,7 +2024,7 @@ function cmd_help ( memoryp, statep, args ) {
   cometprint("m,  memory\tChange the memory at ADDRESS to VALUE.");
   cometprint("di, disasm\tDisassemble 32 words from specified address.");
   cometprint("h,  help\tPrint list of commands.");
-  cometprint("q,  quit\tExit comet.");
+//  cometprint("q,  quit\tExit comet.");
 	return 1;
 }
 
