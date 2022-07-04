@@ -387,6 +387,7 @@ var symtbl = {};
 var buf = [];
 var outdump = [];
 var outref = [];
+var comet2startAddress = 0;
 
 var opt_a = 1;
 
@@ -400,7 +401,14 @@ function getCasl2Src() {
 
 const assemble = () => {
   try {
-//    const fs = require('fs');
+    t2.clear();
+    comet2ops = [];
+    outdump = [];
+    buf = [];
+    memory = {};
+    symtbl = {};
+    comet2startAddress = 0;
+        //    const fs = require('fs');
 //    const inputFilepath = process.argv[2];
 //    const casl2code = fs.readFileSync(inputFilepath, 'utf-8');
 		var casl2code = getCasl2Src();
@@ -724,8 +732,8 @@ function pass1(source, symtblp, memoryp, bufp) {
             // string mode
             mode = 'str';
           } else if (
-              mode == 'str' && opr.substring(opr, opid, opid + 1) == '\'') {
-            if (opr.substring(opr, opid, 2) == '\'\'') {
+              mode == 'str' && opr.substring(opid, opid + 1) == '\'') {
+            if (opr.substring(opid, opid + 2) == '\'\'') {
               opid += 2;
               continue;
             } else {
@@ -831,7 +839,7 @@ function pass1(source, symtblp, memoryp, bufp) {
         address += 2;
         // instructions only with optional GR
       } else if (type == 'op3') {
-        if (opr_array.length == 1) {
+        if (opr_array.length != 1) {
           error('Invalid operand "' + opr + '"');
         }
         gen_code3(memoryp, address, CASL2TBL[inst]['code'], opr_array[0], 0);
@@ -906,7 +914,7 @@ function pass1(source, symtblp, memoryp, bufp) {
 
         if (first_start == 1) {
           first_start = 0;
-          memoryp['-1'] = (opr_array.length) ? label + '.' + opr_array[0] : 0;
+          comet2startAddress = (opr_array.length) ? label + '.' + opr_array[0] : 0;
         } else {
           actual_label = (opr_array.length) ? opr_array[0] : 0;
           virtual_label = label;
@@ -1061,10 +1069,12 @@ function pass2(file, symtblp, memoryp, bufp) {
     return Number(a) - Number(b);
   });
 
+  comet2startAddress = expand_label(symtblp, comet2startAddress);
+
   for (var i = 0; i < memkeys.length; i++) {
     address = Number(memkeys[i]);
     // skip if start address
-    if (address < 0) continue;
+    if (address < 0) continue; // TODO preserve START address
     __line = memoryp[address]['line'];
     var val = expand_label(symtblp, memoryp[address]['val']);
     //    console.log(__line);
@@ -1238,7 +1248,7 @@ var COMET2MEM_INIT = [	4608,     5, 11264, 11264,
 // memory image
 var comet2mem = COMET2MEM_INIT;
 // PC, FR, GR0, GR1, GR2, GR3, GR4, GR5, GR6, GR7, SP, break points
-var state = [0x0000, FR_ZERO, 0, 0, 0, 0, 0, 0, 0, 0, STACK_TOP, []];
+var state = [comet2startAddress, FR_ZERO, 0, 0, 0, 0, 0, 0, 0, 0, STACK_TOP, []];
 
 var run_count = 0;
 var run_stop = 0;
@@ -2105,6 +2115,8 @@ let terminal1 = function() {
           }
           if (result) {
             terminal1();
+          } else {
+            t1.print("[Program finished]");
           }
         } else {
           // exec_in
@@ -2132,6 +2144,9 @@ let terminal1 = function() {
     }
     if (result) {
       terminal1();
+    } else {
+      t1.print("[Program finished]");
+      run_count = 0;
     }
   }
 //        document.getElementById('version').innerHTML = t1.getVersion();
@@ -2140,8 +2155,10 @@ let terminal1 = function() {
 function comet2init() {
 	comet2mem = comet2ops.slice(0,comet2ops.length);
 	// PC, FR, GR0, GR1, GR2, GR3, GR4, GR5, GR6, GR7, SP, break points
-	state = [0x0000, FR_ZERO, 0, 0, 0, 0, 0, 0, 0, 0, STACK_TOP, []];
+	state = [comet2startAddress, FR_ZERO, 0, 0, 0, 0, 0, 0, 0, 0, STACK_TOP, []];
+  run_count = 0;
 	t1.clear();
+  t1.setPrompt("comet2> ");
   if (!opt_q) {
     t1.print(`This is COMET II, version ${VERSION}.\n(c) 2001-2022, Osamu Mizuno.\n\n`);
 	  cmd_print(comet2mem,state,[]);
@@ -2182,6 +2199,7 @@ document.getElementById("quiet").addEventListener("click", function () {
   } else {
     opt_q = 0;
   } 
+  document.cookie = `quiet=${opt_q}`;
 });
 //function() {
 //	comet2mem = COMET2MEM_INIT;
