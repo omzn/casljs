@@ -22,9 +22,6 @@ CASL2, COMET2のJavaScript実装です．
   * exec_inの実装完了．メインループのinputをIN命令のinputに流用することで，callback問題を解決した．
   * cmd_run はステップ数を指定して実行するcmd_stepの特殊ケースに実装を変更した．
 
-* TODO:
-  * `exec_out`を実装する．
-
 ### 独自拡張
 
 * ラベルにはスコープがあります．スコープはプログラム内(START命令からEND命令で囲まれた部分)のみです．
