@@ -1636,7 +1636,7 @@ function step_exec(memoryp, statep) {
       if (val < MIN_SIGNED) {
         val = MIN_SIGNED;
       }
-      fr = get_flag(unsigned(_));
+      fr = get_flag(unsigned(val));
       pc += 2;
 
     } else {
@@ -1647,7 +1647,7 @@ function step_exec(memoryp, statep) {
       if (val < MIN_SIGNED) {
         val = MIN_SIGNED;
       }
-      fr = get_flag(unsigned(_));
+      fr = get_flag(unsigned(val));
       pc += 1;
     }
 
@@ -1660,7 +1660,7 @@ function step_exec(memoryp, statep) {
       if (val < MIN_SIGNED) {
         val = MIN_SIGNED;
       }
-      fr = get_flag(unsigned(_));
+      fr = get_flag(unsigned(val));
       pc += 2;
     } else {
       val = regs[gr] - regs[xr];
@@ -1670,7 +1670,7 @@ function step_exec(memoryp, statep) {
       if (val < MIN_SIGNED) {
         val = MIN_SIGNED;
       }
-      fr = get_flag(unsigned(_));
+      fr = get_flag(unsigned(val));
       pc += 1;
     }
 
