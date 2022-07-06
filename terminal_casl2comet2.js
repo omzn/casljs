@@ -388,6 +388,7 @@ var buf = [];
 var outdump = [];
 var outref = [];
 var comet2startAddress = 0;
+var comet2startLabel;
 
 var opt_a = 1;
 
@@ -402,6 +403,10 @@ function getCasl2Src() {
 const assemble = () => {
   try {
     t2.clear();
+    actual_label = '';
+    virtual_label = '';
+    first_start = 1;
+    var_scope = '';
     comet2ops = [];
     outdump = [];
     buf = [];
@@ -914,7 +919,7 @@ function pass1(source, symtblp, memoryp, bufp) {
 
         if (first_start == 1) {
           first_start = 0;
-          comet2startAddress = (opr_array.length) ? label + '.' + opr_array[0] : 0;
+          comet2startLabel = (opr_array.length) ? `${label}.${opr_array[0]}` : `${label}.${label}`;
         } else {
           actual_label = (opr_array.length) ? opr_array[0] : 0;
           virtual_label = label;
@@ -1069,7 +1074,7 @@ function pass2(file, symtblp, memoryp, bufp) {
     return Number(a) - Number(b);
   });
 
-  comet2startAddress = expand_label(symtblp, comet2startAddress);
+  comet2startAddress = expand_label(symtblp, comet2startLabel);
 
   for (var i = 0; i < memkeys.length; i++) {
     address = Number(memkeys[i]);
@@ -2133,7 +2138,7 @@ let terminal1 = function() {
           terminal1();
         }
         });
-  } else {
+  } else { // runコマンドを実行している場合
     var result = cmd_step(comet2mem,state,run_count);
     for (var i = 0; i < state[BP].length; i++) {
       var pnt = state[BP][i];
