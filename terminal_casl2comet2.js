@@ -315,7 +315,7 @@ var __webpack_exports__ = {};
 
 //// Both casl2 and commet2
 
-var VERSION = '0.2 kit js (June 30, 2022)';
+var VERSION = '0.8 KIT version (July 5, 2022)';
 var DEBUG = 1;
 var DDEBUG = 0;
 
@@ -1106,33 +1106,37 @@ function pass2(file, symtblp, memoryp, bufp) {
     }
   }
 
-/*  if (opt_a) {
+  if (opt_a) {
     outdump.push("\nDEFINED SYMBOLS\n");
-    var where;
+    var where = [];
     for ( const key in symtblp ) {
-        where[symtblp[key]['line']] = key;
+      //outdump.push(key);
+      //outdump.push(symtblp[key]['line']);
+      where[symtblp[key]['line']] = key;
+      //outdump.push(where[symtblp[key]['line']]);
     }
-    for ( sort { $a <=> $b } keys %where ) {
-        my $label = $where{$_};
 
-        $label =~ /([A-Za-z\d]+)\.([A-Za-z\d]+)$/;
-        my $label_view;
-        if ( $1 eq $2 ) {
-            $label_view = "$2";
+    where.sort(function(a, b) {
+      return Number(a) - Number(b);
+    });
+  
+    for ( const key2 in where ) {
+      //outdump.push(where[key2]);
+      var label = where[key2];
+      if (!label.match(/^=/)) {
+        const marray = label.match(/([A-Za-z\d]+)\.([A-Za-z\d]+)$/);
+        var label_view;
+        if ( marray[1] == marray[2] ) {
+            label_view = marray[2];
+        } else {
+            label_view = `${marray[2]} (${marray[1]})`;
         }
-        else {
-            $label_view = "$2 ($1)";
-        }
-
-        printf(
-            "\t%s:%d:\t%04x\t%s\n",
-            $symtblp->{$label}->{file},
-            $symtblp->{$label}->{line},
-            expand_label( $symtblp, $label ), $label_view
-        );
+        outdump.push(`${symtblp[label]['line']}:\t${hex(expand_label( symtblp, label ),4)}\t${label_view}\n`);
+      }
+      
     }
-}
-*/
+    
+  } 
 
   if (opt_a) {
     for (var i = 0; i < outdump.length; i++) {

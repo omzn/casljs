@@ -4,12 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CASL2/COMET2 JS</title>
-
-<!--    <link rel="preconnect" href="https://fonts.gstatic.com">
-    <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
--->
-		<link rel="stylesheet" href="https://unpkg.com/purecss@2.1.0/build/pure-min.css" integrity="sha384-yHIFVG6ClnONEA5yB5DJXfW2/KC173DIQrYoZMEtBvGzmf0PKiGyNEqe9N6BNDBH" crossorigin="anonymous">
-
+	<link rel="stylesheet" href="https://unpkg.com/purecss@2.1.0/build/pure-min.css" integrity="sha384-yHIFVG6ClnONEA5yB5DJXfW2/KC173DIQrYoZMEtBvGzmf0PKiGyNEqe9N6BNDBH" crossorigin="anonymous">
     <style>
         * {
             padding: 0;
@@ -17,8 +12,8 @@
         }
         body {
             background-color: rgb(235, 235, 235);
-            font-family: 'Roboto', sans-serif;
-						font-size: 0.8rem;
+/*			font-family: 'Ubuntu Mono', Monaco, Courier; */
+			font-size: 0.8rem;
         }
         #wrap {
             padding: 1rem;
@@ -158,14 +153,14 @@
             vertical-align: middle;
         }				
 		#casl2src {
-			font-family: 'Ubuntu Mono', Monaco, Courier;
+			font-family: Monaco, Courier;
 			/*font-family: 'Roboto', sans-serif;*/
 			font-size: 0.8rem;
 			width: 600px;
 			height: 480px;					
 		}				
 		#casl2msg {
-			font-family: 'Ubuntu Mono', Monaco, Courier;
+			font-family: Monaco, Courier;
 			/*font-family: 'Roboto', sans-serif;*/
 			font-size: 0.8rem;
 			width: 600px;
@@ -191,6 +186,8 @@
             }
         }
     </script>
+    <script src="https://code.jquery.com/jquery-2.1.3.min.js"></script>
+    <script src="./js/bcralnit.js"></script>
 </head>
 <body>
     <div id="wrap" class="fixed">
@@ -235,6 +232,15 @@
             </div>
         </div>
 	</div>
-   	<script src="./terminal_casl2comet2.js"></script>
+    <script>
+		$(function() {
+			$("#casl2src").bcralnit({
+		        width: '30px',
+		        background: '#75BAFF',
+		        color: '#fff'
+		    });
+		});
+		</script>
+        <script src="./terminal_casl2comet2.js"></script>
 </body>
 </html>
