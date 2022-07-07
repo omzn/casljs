@@ -164,105 +164,92 @@ COMET IIシミュレータには機械語プログラムの実行中、あらか
 
 この機能を有効に使うためには、casl2アセンブラの -a オプションで生成される詳細なアセンブル結果が必須です。（慣れた人なら dump の結果だけでも適切なブレークポイントを判別できるかも知れません。）
 
-CASL II/COMET II リファレンス
-CASL II アセンブラ: コマンドラインリファレンス
-詳細出力 (-a)
+### CASL II アセンブラ: リファレンス
 
--a オプションはアセンブル結果の詳細を出力します。
+* [Assemble]ボタン
 
-COMET II シミュレータ: コマンドラインリファレンス
-出力抑制 (-q)
+入力したCASLののソースコードをアセンブルします．
+アセンブルに成功すると，右側のCOMET2こ機械語がロードされ，実行準備が整います．
 
--q オプションはIN/OUTマクロでのプロンプト以外の出力を抑制します。
+### COMET II シミュレータ: コマンドリファレンス
 
-出力抑制 (-Q)
+* 実行 r (run)
 
--Q オプションはOUTマクロでの出力以外の出力を抑制します。これを指定すると通常のアプリケーションでの実行とほぼ同様の使い方になります。
+  Start execution of program.
 
-COMET II シミュレータ: コマンドリファレンス
-実行 r (run)
+  プログラムの実行を開始します。設定されたブレークポイントが存在すると、実行を一旦停止し、コマンド待ち状態に戻ります。ブレークポイントが無い場合は、プログラムの最後まで実行を続けるため、必要に応じて Ctrl-C でcomet2シミュレータの動作自体を停止する必要があります。
 
-Start execution of program.
+* ステップ実行 s (step)
 
-プログラムの実行を開始します。設定されたブレークポイントが存在すると、実行を一旦停止し、コマンド待ち状態に戻ります。ブレークポイントが無い場合は、プログラムの最後まで実行を続けるため、必要に応じて Ctrl-C でcomet2シミュレータの動作自体を停止する必要があります。
+  Step execution. Argument N means do this N times.
 
-ステップ実行 s (step)
+  ステップ実行を行います。引数を指定しないと、1命令分だけ前に進みます。
+```
+comet2> s 20
+```
+  のように引数を指定すると、指定した数だけ命令を実行して停止します。
 
-Step execution. Argument N means do this N times.
+* ブレークポイント設定 b (break)
 
-ステップ実行を行います。引数を指定しないと、1命令分だけ前に進みます。
+  Set a breakpoint at specified address.
 
-comet> s 20
-のように引数を指定すると、指定した数だけ命令を実行して停止します。
-
-ブレークポイント設定 b (break)
-
-Set a breakpoint at specified address.
-
-ブレークポイントの設定を行います。引数は必須で、
-
+  ブレークポイントの設定を行います。引数は必須で、
+```
 comet> b #0010
-のように指定します。引数はプログラムを停止すべきアドレスを表します。アドレスには10進、16進の表記を使うことができますが、casl2プログラムで指定したラベルを用いることはできません。任意の場所で実行を止めるためには、casl2 -a で出力される詳細なアセンブル結果を利用することが必要です。
+```
+  のように指定します。引数はプログラムを停止すべきアドレスを表します。アドレスには10進、16進の表記を使うことができますが、casl2プログラムで指定したラベルを用いることはできません。任意の場所で実行を止めるためには、caslで出力される詳細なアセンブル結果を利用することが必要です。
 
-ブレークポイント情報表示 i (info)
+* ブレークポイント情報表示 i (info)
 
-Print information on breakpoints.
+  Print information on breakpoints.
 
-ブレークポイント削除 d (delete)
+* ブレークポイント削除 d (delete)
 
-Delete some breakpoints.
+  Delete some breakpoints.
 
-ブレークポイントを削除します。引数を指定しない場合はすべてのブレークポイントを削除するかの確認がされます。info コマンドで表示されるブレークポイント番号を引数をして指定することで、任意のブレークポイントを削除できます。
+  ブレークポイントを削除します。引数を指定しない場合はすべてのブレークポイントを削除するかの確認がされます。`info` コマンドで表示されるブレークポイント番号を引数をして指定することで、任意のブレークポイントを削除できます。
 
-レジスタ表示 p (print)
+* レジスタ表示 p (print)
 
-Print status of PC/FR/SP/GR0..GR7 registers.
+  Print status of PC/FR/SP/GR0..GR7 registers.
 
-レジスタの状態を表示します。step の後には必ず実行されます。
+  レジスタの状態を表示します。`step` の後には必ず実行されます。
 
-メモリダンプ du (dump)
+* メモリダンプ du (dump)
 
-Dump 128 words of memory image from specified address.
+  Dump 128 words of memory image from specified address.
 
-128語分のメモリイメージを表示します。引数を与えない場合は現在のPCのアドレスから表示されます。引数を与えることで、任意のアドレスからのダンプを行います。
+  128語分のメモリイメージを表示します。引数を与えない場合は現在のPCのアドレスから表示されます。引数を与えることで、任意のアドレスからのダンプを行います。
 
-スタックダンプ st (stack)
+* スタックダンプ st (stack)
 
-Dump 128 words of stack image.
+  Dump 128 words of stack image.
 
-スタックの内容を128ワード分表示します。
+  スタックの内容を128ワード分表示します。
 
-ファイル読込 f (file)
+* ジャンプ j (jump)
 
-Use FILE as program to be debugged.
+  Continue program at specifed address.
 
-引数は必須です。引数としてファイル名を指定し、そのファイルをオブジェクトコードとして読み込みます。オブジェクトコードの拡張子には.comが必要です。
+  引数は必須です。PCを引数で指定したアドレスに強制的に指定し、その番地からプログラムを実行させます。
 
-ジャンプ j (jump)
+* メモリ書き込み m (memory)
 
-Continue program at specifed address.
+  Change the memory at ADDRESS to VALUE.
 
-引数は必須です。PCを引数で指定したアドレスに強制的に指定し、その番地からプログラムを実行させます。
+  引数は2つが必須です。
 
-メモリ書き込み m (memory)
+```
+comet2> m ADDRESS VALUE
+```
+`ADDRESS` に番地を、`VALUE` には値を指定し、`ADDRESS`で示した番地に`VALUE`を強制的に書き込みます。
 
-Change the memory at ADDRESS to VALUE.
+* 逆アセンブル di (disasm)
 
-引数は2つが必須です。
+  Disassemble 32 words from specified address.
 
-comet> m ADDRESS VALUE
-ADDRESS に番地を、VALUE には値を指定し、ADDRESSで示した番地にVALUEを強制的に書き込みます。
+  引数で指定した番地から32ワード分を逆アセンブルします。引数を省略すると、現在の`PC`が示す番地からになります。
 
-逆アセンブル di (disasm)
+* ヘルプ表示 h (help)
 
-Disassemble 32 words from specified address.
-
-引数で指定した番地から32ワード分を逆アセンブルします。引数を省略すると、現在のPCが示す番地からになります。
-
-ヘルプ表示 h (help)
-
-Print list of commands.
-
-終了 q (quit)
-
-Exit comet2.
+  Print list of commands.

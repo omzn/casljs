@@ -2176,6 +2176,16 @@ let terminal1 = function() {
   //        document.getElementById('version').innerHTML = t1.getVersion();
 }
 
+var t2 = new (terminal_js_emulator__WEBPACK_IMPORTED_MODULE_0___default())('terminal-2');
+let terminal2 = function() {
+	t2
+			.clear()
+			.setHeight("240px")
+			.setWidth('600px')
+			.setBackgroundColor('#205191')
+			.print('CASL2 log');
+}
+
 function comet2init() {
 	comet2mem = comet2ops.slice(0,comet2ops.length);
 	// PC, FR, GR0, GR1, GR2, GR3, GR4, GR5, GR6, GR7, SP, break points
@@ -2188,16 +2198,6 @@ function comet2init() {
 	  cmd_print(comet2mem,state,[]);
   }
 	terminal1();	
-}
-
-var t2 = new (terminal_js_emulator__WEBPACK_IMPORTED_MODULE_0___default())('terminal-2');
-let terminal2 = function() {
-	t2
-			.clear()
-			.setHeight("240px")
-			.setWidth('600px')
-			.setBackgroundColor('#205191')
-			.print('CASL2 log');
 }
 
 function cometprint(msg) {
