@@ -8,7 +8,7 @@ PGMULA01  START
           LAD     GR1,2
           DIVA    GR0,GR1
           LAD     GR1,0
-          DIVA    GR0,GR1
+          DIVA    GR0,GR1 ; OV = 1
           RET
 INLEN     DS      1
 INBUF     DS      100

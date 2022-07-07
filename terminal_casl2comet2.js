@@ -316,7 +316,7 @@ var __webpack_exports__ = {};
 //// Both casl2 and commet2
 
 var VERSION = '0.8 KIT version (July 5, 2022)';
-var DEBUG = 1;
+var DEBUG = 0;
 var DDEBUG = 0;
 
 // addresses of IN/OUT system calls --- these MACROs are expanded
@@ -1064,7 +1064,7 @@ function pass1(source, symtblp, memoryp, bufp) {
 
 function pass2(file, symtblp, memoryp, bufp) {
   if (opt_a) {
-    console.log('CASL LISTING\n');
+    caslprint('CASL LISTING\n');
   }
   var address;
   var last_line = -1;
@@ -1257,7 +1257,7 @@ var COMET2MEM_INIT = [	4608,     5, 11264, 11264,
 // memory image
 var comet2mem = COMET2MEM_INIT;
 // PC, FR, GR0, GR1, GR2, GR3, GR4, GR5, GR6, GR7, SP, break points
-var state = [comet2startAddress, FR_ZERO, 0, 0, 0, 0, 0, 0, 0, 0, STACK_TOP, []];
+var state = [comet2startAddress, FR_PLUS, 0, 0, 0, 0, 0, 0, 0, 0, STACK_TOP, []];
 
 var run_count = 0;
 var run_stop = 0;
@@ -1339,30 +1339,30 @@ function parse(memoryp, statep) {
   var adr = mem_get(memoryp, pc + 1);
 
   var inst_sym = 'DC';
-  var opr_sym = '#' + zeroPadding(mem_get(memoryp, pc).toString(16), 4);
+  var opr_sym = `#${hex(mem_get(memoryp, pc), 4)}`;
   var size = 1;
-  var key = '0x' + zeroPadding(inst.toString(16), 2);
+  var key = '0x' + hex(inst, 2);
 
   if (COMET2TBL[key]) {
     inst_sym = COMET2TBL[key]['id'];
     var type = COMET2TBL[key]['type'];
     // instructions with GR, adr, and XR
     if (type == 'op1') {
-      opr_sym = 'GR' + String(gr) + ', #' + zeroPadding(adr.toString(16));
+      opr_sym = `GR${gr},   #${hex(adr,4)}`;
       if (xr > 0) {
-        opr_sym += ', GR' + String(xr);
+        opr_sym += `, GR${xr}`;
       }
       size = 2;
       // instructions with adr and XR
     } else if (type == 'op2') {  //    # with adr, (XR)
-      opr_sym = '#' + zeroPadding(adr.toString(16), 4);
+      opr_sym = `#${hex(adr,4)}`;
       if (xr > 0) {
-        opr_sym += ', GR' + xr;
+        opr_sym += `, GR${xr}`;
       }
       size = 2;
       // instructions with GR
     } else if (type == 'op3') {  // only with GR
-      opr_sym = 'GR' + String(gr);
+      opr_sym = `GR${gr}`;
       size = 1;
       // instructions without operand
     } else if (type == 'op4') {  // no operand
@@ -1370,7 +1370,7 @@ function parse(memoryp, statep) {
       size = 1;
       // instructions with GR and GR
     } else if (type == 'op5') {  // with GR, GR
-      opr_sym = 'GR' + String(gr) + ', GR' + String(xr);
+      opr_sym = `GR${gr}, GR${xr}`;
       size = 1;
     }
   }
@@ -1550,6 +1550,9 @@ function step_exec(memoryp, statep) {
       var m = mem_get(memoryp, eadr);
       if (m == 0) {
         fr = FR_OVER | FR_ZERO;
+        if (!opt_q) {
+          caslprint("Waring: Division by zero in DIVA.");
+        }
       } else {
         regs[gr] /= m;
         var ofr1 = regs[gr] > MAX_SIGNED ? FR_OVER : 0;
@@ -1564,6 +1567,9 @@ function step_exec(memoryp, statep) {
       regs[xr] = signed(regs[xr]);
       if (regs[xr] == 0) {
         fr = FR_OVER | FR_ZERO;
+        if (!opt_q) {
+          caslprint("Waring: Division by zero in DIVA.");
+        }
       } else {
         regs[gr] /= regs[xr];
         var ofr1 = regs[gr] > MAX_SIGNED ? FR_OVER : 0;
@@ -1579,6 +1585,9 @@ function step_exec(memoryp, statep) {
       var m = mem_get(memoryp, eadr);
       if (m == 0) {
         fr = FR_OVER | FR_ZERO;
+        if (!opt_q) {
+          caslprint("Waring: Division by zero in DIVL.");
+        }
       } else {
         regs[gr] /= m;
         var ofr1 = regs[gr] > 0xffff ? FR_OVER : 0;
@@ -1590,6 +1599,9 @@ function step_exec(memoryp, statep) {
     } else {
       if (regs[xr] == 0) {
         fr = FR_OVER | FR_ZERO;
+        if (!opt_q) {
+          caslprint("Waring: Division by zero in DIVL.");
+        }
       } else {
         regs[gr] /= regs[xr];
         var ofr1 = regs[gr] > 0xffff ? FR_OVER : 0;
@@ -1843,7 +1855,7 @@ function exec_out(memoryp, statep) {
 
 function cmd_run(memoryp, statep, args) {
   if (DEBUG) {
-    console.log(`cmd_run( {memoryp} / ${statep} / ${args} )`);
+    console.log(`cmd_run( / ${statep} / ${args} )`);
   }
   run_count = -1;
   return cmd_step(memoryp, statep, run_count);
@@ -1851,11 +1863,12 @@ function cmd_run(memoryp, statep, args) {
 
 function cmd_step(memoryp, statep, args) {
   if (DEBUG) {
-    console.log(`cmd_step( {memoryp} / ${statep} / ${args} )`);
+    console.log(`cmd_step( / ${statep} / ${args} )`);
   }
-	var count = 1;	
-  count = expand_number(args);
-	if (!count) {
+	var count;	
+//  count = expand_number(args);
+  count = Number(args);
+  if (count == 0) {
   	count = 1;
  	}
   run_count = count;
@@ -1873,7 +1886,7 @@ function cmd_step(memoryp, statep, args) {
 
 function cmd_dump(memoryp, statep, args) {
   if (DEBUG) {
-    console.log(`cmd_dump( {memoryp} / ${statep} / ${args} )`);
+    console.log(`cmd_dump( / ${statep} / ${args} )`);
   }
 
 	var val = expand_number( args[0] );
@@ -2044,9 +2057,9 @@ function cmd_print(memoryp, statep, args) {
   var opr = res[1];
  
   cometprint("\n");
-  cometprint(`PR  #${hex(pc,4)} [ ${inst} ${opr} ]`);
+  cometprint(`PR  #${hex(pc,4)} [ ${inst}\t\t${opr} ]`);
   var fr_str = ((fr >> 2) % 2).toString() + ((fr > 2) % 2).toString()  + (fr % 2).toString();  
-  cometprint(`SP  #${hex(sp,4)}(${ spacePadding(signed(sp),6) })    FR  ${fr_str}  (${fr})`);
+  cometprint(`SP  #${hex(sp,4)}(${ spacePadding(signed(sp),6) })  FR    ${fr_str}(${spacePadding(fr,6)})`);
   cometprint(`GR0 #${hex(regs[0],4)}(${ spacePadding(signed(regs[0]),6) })  GR1 #${hex(regs[1],4)}(${ spacePadding(signed(regs[1]),6) })  GR2 #${hex(regs[2],4)}(${ spacePadding(signed(regs[2]),6) })  GR3 #${hex(regs[3],4)}(${ spacePadding(signed(regs[3]),6) })`);
   cometprint(`GR4 #${hex(regs[4],4)}(${ spacePadding(signed(regs[4]),6) })  GR5 #${hex(regs[5],4)}(${ spacePadding(signed(regs[5]),6) })  GR6 #${hex(regs[6],4)}(${ spacePadding(signed(regs[6]),6) })  GR7 #${hex(regs[7],4)}(${ spacePadding(signed(regs[7]),6) })`);
 	return 1;
@@ -2156,15 +2169,17 @@ let terminal1 = function() {
     } else {
       t1.print("[Program finished]");
       run_count = 0;
+      return 0;
     }
   }
-//        document.getElementById('version').innerHTML = t1.getVersion();
+  return 0;
+  //        document.getElementById('version').innerHTML = t1.getVersion();
 }
 
 function comet2init() {
 	comet2mem = comet2ops.slice(0,comet2ops.length);
 	// PC, FR, GR0, GR1, GR2, GR3, GR4, GR5, GR6, GR7, SP, break points
-	state = [comet2startAddress, FR_ZERO, 0, 0, 0, 0, 0, 0, 0, 0, STACK_TOP, []];
+	state = [comet2startAddress, FR_PLUS, 0, 0, 0, 0, 0, 0, 0, 0, STACK_TOP, []];
   run_count = 0;
 	t1.clear();
   t1.setPrompt("comet2> ");

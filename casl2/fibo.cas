@@ -31,6 +31,7 @@ ENTRY    PUSH   0,GR2
          POP    GR1
          POP    GR2
          RET
+	 END
 ;
 ; BINDEC 符号無しバイナリ→10進文字列
 ; 入力  GR0=値
@@ -38,7 +39,8 @@ ENTRY    PUSH   0,GR2
 ; 出力  5語のバッファに文字がうまる（右詰、左はスペース）
 ;       GR0とGR1は不定になる
 ;
-BINDEC   PUSH   0,GR2
+BINDEC   START	
+	 PUSH   0,GR2
 ; バッファの初期化
          LAD    GR2,#0020   ; スペースの文字コード
          ST     GR2,0,GR1   ; バッファをスペースクリア
@@ -58,6 +60,7 @@ BDLOOP   DS     0
 ; 終わり。
          POP    GR2
          RET
+	 END
 ;
 ; DIVL 符号無し除算ルーチン
 ; 入力  GR0=被除数
@@ -66,7 +69,8 @@ BDLOOP   DS     0
 ;       GR1=商
 ; 条件  除数は0でないこと。
 ;
-DIVL     PUSH   0,GR2          ; レジスタ待避
+DIVL     START
+	 PUSH   0,GR2          ; レジスタ待避
          PUSH   0,GR3
 ;
          LAD    GR2,1          ; マスク
