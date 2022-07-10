@@ -1,0 +1,71 @@
+WSTEST    START
+          LAD       GR2,           0
+          LAD       GR1,           OUTBUF
+          CALL      WRITESTR
+          CALL      WRITLINE
+          RET
+;WRITESTR
+; GR1が指す文字列をGR2のけた数で出力する．
+; GR2が0なら必要最小限の桁数で出力する
+; p = GR1;
+; while(*p != '\0') {
+;     p++;
+;     c--;
+;     q = OBUFSIZE;
+; }
+; while(--c >= 0) {
+;     *q++ = ' ';
+; }
+; while(*GR1 != '\0') {
+;     *q++ = *GR1++;
+; }
+; OBUFSIZE = q;
+WRITESTR  RPUSH
+          LD        GR6,      GR1  ; p = GR1;
+;WS1
+WS1       LD        GR4,      0,        GR6  ; while(*p != '\0') {
+          JZE       WS2
+          ADDA      GR6,      ONE  ;  p++;
+          SUBA      GR2,      ONE  ;  c--;
+          JUMP      WS1  ; }
+;WS2
+WS2       LD        GR7,      OBUFSIZE  ; q = OBUFSIZE;
+          LD        GR5,      SPACE
+;WS3
+WS3       SUBA      GR2,      ONE  ; while(--c >= 0) {
+          JMI       WS4
+          ST        GR5,      OBUF,     GR7  ;  *q++ = ' ';
+;          CALL      BOVFCHCK
+          JUMP      WS3  ; }
+;WS4
+WS4       LD        GR4,      0,        GR1  ; while(*GR1 != '\0') {
+          JZE       WS5
+          ST        GR4,      OBUF,     GR7  ;  *q++ = *GR1++;
+          ADDA      GR1,      ONE
+;          CALL      BOVFCHCK
+          JUMP      WS4  ; }
+;WS5
+WS5       ST        GR7,      OBUFSIZE  ; OBUFSIZE = q;
+          RPOP
+          RET
+;
+;WRITLINE
+; 改行を出力する
+WRITLINE  RPUSH
+          LD        GR7,      OBUFSIZE
+          LD        GR6,      NEWLINE
+          ST        GR6,      OBUF,     GR7
+          ADDA      GR7,      ONE
+          ST        GR7,      OBUFSIZE
+          OUT       OBUF,     OBUFSIZE
+          ST        GR0,      OBUFSIZE
+          RPOP
+          RET
+;
+OUTBUF    DC        'Hello, CASL2'
+ONE       DC        1
+OBUFSIZE  DC        0
+SPACE     DC        #0020 ; ' '
+NEWLINE   DC        #000A ; '\n'
+OBUF      DS        257
+          END
