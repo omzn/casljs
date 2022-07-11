@@ -1,6 +1,10 @@
 WSTEST    START
+          LAD       GR0,           0
+          CALL      L0001
+          CALL      FLUSH
+          SVC       0
+L0001     LAD       GR1,           OUTBUF
           LAD       GR2,           0
-          LAD       GR1,           OUTBUF
           CALL      WRITESTR
           CALL      WRITLINE
           RET
@@ -60,6 +64,15 @@ WRITLINE  RPUSH
           OUT       OBUF,     OBUFSIZE
           ST        GR0,      OBUFSIZE
           RPOP
+          RET
+;
+;FLUSH
+FLUSH     RPUSH
+          LD        GR7,      OBUFSIZE
+          JZE       FL1
+          CALL      WRITLINE
+;FL1
+FL1       RPOP
           RET
 ;
 OUTBUF    DC        'Hello, CASL2'
