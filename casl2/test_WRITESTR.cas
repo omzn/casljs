@@ -2,7 +2,8 @@ WSTEST    START
           LAD       GR0,           0
           CALL      L0001
           CALL      FLUSH
-          SVC       0
+;          SVC       0
+          RET
 L0001     LAD       GR1,           OUTBUF
           LAD       GR2,           0
           CALL      WRITESTR
