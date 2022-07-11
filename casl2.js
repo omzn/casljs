@@ -652,6 +652,8 @@ function pass1(source, symtblp, memoryp, bufp) {
                 gen_code1(memoryp, address, vals[k]);
                 address++;
               }
+              gen_code1(memoryp, address, 0); // '\0'
+              address++;
             } else if (opr_array[j].match(/^[A-Z][a-zA-Z\d]*$/)) {
               opr_array[j] = var_scope + '.' + opr_array[j];
               gen_code1(memoryp, address, opr_array[j]);
