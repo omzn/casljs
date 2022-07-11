@@ -87,6 +87,7 @@ FL1       RPOP
           RET
 ;
 OUTBUF    DC        'Hello, CASL2'
+OUTBUF2   DC        'No loading strings'
 ONE       DC        1
 OBUFSIZE  DC        0
 SPACE     DC        #0020 ; ' '
