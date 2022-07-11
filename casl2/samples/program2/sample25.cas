@@ -1,296 +1,301 @@
-IFST 	START
-	LAD 	GR0, 	0
+$$ifst 	START
+	LAD 	gr0, 	0
 	CALL 	L0001
 	CALL 	FLUSH
 	SVC 	0
-CH 	DC 	0
-L0001	LAD 	GR1, 	CH
-	PUSH 	0, 	GR1
-	POP 	GR1
+$ch 	DC 	0
+L0001	DS	0
+	LAD 	gr1, 	$ch
+	PUSH 	0, 	gr1
+	POP 	gr1
 	CALL 	READCHAR
 	CALL 	READLINE
-	LD 	GR1, 	CH
-	PUSH 	0, 	GR1
-	LAD 	GR1, 	97
-	PUSH 	0, 	GR1
-	POP 	GR2
-	POP 	GR1
-	CPA 	GR1, 	GR2
+	LD 	gr1, 	$ch
+	PUSH 	0, 	gr1
+	LAD 	gr1, 	97
+	PUSH 	0, 	gr1
+	POP 	gr2
+	POP 	gr1
+	CPA 	gr1, 	gr2
 	JZE 	L0002
-	LD 	GR1, 	GR0
-	PUSH 	0, 	GR1
+	LD 	gr1, 	gr0
+	PUSH 	0, 	gr1
 	JUMP 	L0003
-L0002	LAD 	GR1, 	1
-	PUSH 	0, 	GR1
-L0003	POP 	GR1
-	CPA 	GR1, 	GR0
+L0002	DS	0
+	LAD 	gr1, 	1
+	PUSH 	0, 	gr1
+L0003	DS	0
+	POP 	gr1
+	CPA 	gr1, 	gr0
 	JZE 	L0004
-	LAD 	GR1, L0005
-	LD 	GR2, 	GR0
+	LAD 	gr1, L0005
+	LD 	gr2, 	gr0
 	CALL 	WRITESTR
-	CALL 	WRITLINE
+	CALL 	WRITELINE
 	JUMP 	L0006
-L0004	LAD 	GR1, L0007
-	LD 	GR2, 	GR0
+L0004	DS	0
+	LAD 	gr1, L0007
+	LD 	gr2, 	gr0
 	CALL 	WRITESTR
-	CALL 	WRITLINE
-L0006	RET
+	CALL 	WRITELINE
+L0006	DS	0
+	RET
 L0007 	DC 	'It is not ''a'' '
 L0005 	DC 	'It is ''a'' '
 ;-- Library --
-;EOVF
-EOVF  CALL  WRITLINE
-  LAD  GR1, EOVF1
-  LD  GR2, GR0
+EOVF	DS	0
+  CALL  WRITELINE
+  LAD  gr1, EOVF1
+  LD  gr2, gr0
   CALL  WRITESTR
-  CALL  WRITLINE
+  CALL  WRITELINE
   SVC  1  ;  overflow error stop
 EOVF1    DC  '***** Run-Time Error : Overflow *****'
-;E0DIV
-E0DIV  JNZ  EOVF
-  CALL  WRITLINE
-  LAD  GR1, E0DIV1
-  LD  GR2, GR0
+E0DIV	DS	0
+  JNZ  EOVF
+  CALL  WRITELINE
+  LAD  gr1, E0DIV1
+  LD  gr2, gr0
   CALL  WRITESTR
-  CALL  WRITLINE
+  CALL  WRITELINE
   SVC  2  ;  0-divide error stop
 E0DIV1    DC  '***** Run-Time Error : Zero-Divide *****'
-;EROV
-EROV  CALL  WRITLINE
-  LAD  GR1, EROV1
-  LD  GR2, GR0
+EROV	DS	0
+  CALL  WRITELINE
+  LAD  gr1, EROV1
+  LD  gr2, gr0
   CALL  WRITESTR
-  CALL  WRITLINE
+  CALL  WRITELINE
   SVC  3  ;  range-over error stop
 EROV1    DC  '***** Run-Time Error : Range-Over in Array Index *****'
-;WRITCHAR
-; GR1の値（文字）をGR2のけた数で出力する．
-; GR2が0なら必要最小限の桁数で出力する
-WRITCHAR  RPUSH
-  LD  GR6, SPACE
-  LD  GR7, OBUFSIZE
-;WC1
-WC1  SUBA  GR2, ONE  ; while(--c > 0) {
+WRITECHAR	DS	0
+; gr1の値（文字）をgr2のけた数で出力する．
+; gr2が0なら必要最小限の桁数で出力する
+  RPUSH
+  LD  gr6, SPACE
+  LD  gr7, OBUFSIZE
+WC1	DS	0
+  SUBA  gr2, ONE  ; while(--c > 0) {
   JZE  WC2
   JMI  WC2
-  ST  GR6, OBUF,GR7  ;  *p++ = ' ';
-  CALL  BOVFCHCK
+  ST  gr6, OBUF,gr7  ;  *p++ = ' ';
+  CALL  BOVFCHECK
   JUMP  WC1  ; }
-;WC2
-WC2  ST  GR1, OBUF,GR7  ; *p++ = GR1;
-  CALL  BOVFCHCK
-  ST  GR7, OBUFSIZE
+WC2	DS	0
+  ST  gr1, OBUF,gr7  ; *p++ = gr1;
+  CALL  BOVFCHECK
+  ST  gr7, OBUFSIZE
   RPOP
   RET
-;WRITESTR
-; GR1が指す文字列をGR2のけた数で出力する．
-; GR2が0なら必要最小限の桁数で出力する
-WRITESTR  RPUSH
-  LD  GR6, GR1  ; p = GR1;
-;WS1
-WS1  LD  GR4, 0,GR6  ; while(*p != '\0') {
+WRITESTR	DS	0
+; gr1が指す文字列をgr2のけた数で出力する．
+; gr2が0なら必要最小限の桁数で出力する
+  RPUSH
+  LD  gr6, gr1  ; p = gr1;
+WS1	DS	0
+  LD  gr4, 0,gr6  ; while(*p != '\0') {
   JZE  WS2
-  ADDA  GR6, ONE  ;  p++;
-  SUBA  GR2, ONE  ;  c--;
+  ADDA  gr6, ONE  ;  p++;
+  SUBA  gr2, ONE  ;  c--;
   JUMP  WS1  ; }
-;WS2
-WS2  LD  GR7, OBUFSIZE  ; q = OBUFSIZE;
-  LD  GR5, SPACE
-;WS3
-WS3  SUBA  GR2, ONE  ; while(--c >= 0) {
+WS2	DS	0
+  LD  gr7, OBUFSIZE  ; q = OBUFSIZE;
+  LD  gr5, SPACE
+WS3	DS	0
+  SUBA  gr2, ONE  ; while(--c >= 0) {
   JMI  WS4
-  ST  GR5, OBUF,GR7  ;  *q++ = ' ';
-  CALL  BOVFCHCK
+  ST  gr5, OBUF,gr7  ;  *q++ = ' ';
+  CALL  BOVFCHECK
   JUMP  WS3  ; }
-;WS4
-WS4  LD  GR4, 0,GR1  ; while(*GR1 != '\0') {
+WS4	DS	0
+  LD  gr4, 0,gr1  ; while(*gr1 != '\0') {
   JZE  WS5
-  ST  GR4, OBUF,GR7  ;  *q++ = *GR1++;
-  ADDA  GR1, ONE
-  CALL  BOVFCHCK
+  ST  gr4, OBUF,gr7  ;  *q++ = *gr1++;
+  ADDA  gr1, ONE
+  CALL  BOVFCHECK
   JUMP  WS4  ; }
-;WS5
-WS5  ST  GR7, OBUFSIZE  ; OBUFSIZE = q;
+WS5	DS	0
+  ST  gr7, OBUFSIZE  ; OBUFSIZE = q;
   RPOP
   RET
-;BOVFCHCK
-BOVFCHCK    ADDA  GR7, ONE
-    CPA   GR7, BOVFLEVE
+BOVFCHECK	DS	0
+    ADDA  gr7, ONE
+    CPA   gr7, BOVFLEVEL
     JMI  BOVF1
-    CALL  WRITLINE
-    LD GR7, OBUFSIZE
-;BOVF1
-BOVF1    RET
-BOVFLEVE  DC 256
-;WRITEINT
-; GR1の値（整数）をGR2のけた数で出力する．
-; GR2が0なら必要最小限の桁数で出力する
-WRITEINT  RPUSH
-  LD  GR7, GR0  ; flag = 0;
-  CPA  GR1, GR0  ; if(GR1>=0) goto WI1;
+    CALL  WRITELINE
+    LD gr7, OBUFSIZE
+BOVF1	DS	0
+    RET
+BOVFLEVEL  DC 256
+WRITEINT	DS	0
+; gr1の値（整数）をgr2のけた数で出力する．
+; gr2が0なら必要最小限の桁数で出力する
+  RPUSH
+  LD  gr7, gr0  ; flag = 0;
+  CPA  gr1, gr0  ; if(gr1>=0) goto WI1;
   JPL  WI1
   JZE  WI1
-  LD  GR4, GR0  ; GR1= - GR1;
-  SUBA  GR4, GR1
-  CPA  GR4, GR1
+  LD  gr4, gr0  ; gr1= - gr1;
+  SUBA  gr4, gr1
+  CPA  gr4, gr1
   JZE  WI6
-  LD  GR1, GR4
-  LD  GR7, ONE  ; flag = 1;
-;WI1
-WI1  LD  GR6, SIX  ; p = INTBUF+6;
-  ST  GR0, INTBUF,GR6  ; *p = '\0';
-  SUBA  GR6, ONE  ; p--;
-  CPA  GR1, GR0  ; if(GR1 == 0)
+  LD  gr1, gr4
+  LD  gr7, ONE  ; flag = 1;
+WI1	DS	0
+  LD  gr6, SIX  ; p = INTBUF+6;
+  ST  gr0, INTBUF,gr6  ; *p = '\0';
+  SUBA  gr6, ONE  ; p--;
+  CPA  gr1, gr0  ; if(gr1 == 0)
   JNZ  WI2
-  LD  GR4, ZERO  ;  *p = '0';
-  ST  GR4, INTBUF,GR6
+  LD  gr4, ZERO  ;  *p = '0';
+  ST  gr4, INTBUF,gr6
   JUMP  WI5  ; }
-;WI2      ; else {
-WI2  CPA  GR1, GR0  ;  while(GR1 != 0) {
+WI2	DS	0      ; else {
+  CPA  gr1, gr0  ;  while(gr1 != 0) {
   JZE  WI3
-  LD  GR5, GR1  ;   GR5 = GR1 - (GR1 / 10) * 10;
-  DIVA  GR1, TEN  ;   GR1 /= 10;
-  LD  GR4, GR1
-  MULA  GR4, TEN
-  SUBA  GR5, GR4
-  ADDA  GR5, ZERO  ;   GR5 += '0';
-  ST  GR5, INTBUF,GR6  ;   *p = GR5;
-  SUBA  GR6, ONE  ;   p--;
+  LD  gr5, gr1  ;   gr5 = gr1 - (gr1 / 10) * 10;
+  DIVA  gr1, TEN  ;   gr1 /= 10;
+  LD  gr4, gr1
+  MULA  gr4, TEN
+  SUBA  gr5, gr4
+  ADDA  gr5, ZERO  ;   gr5 += '0';
+  ST  gr5, INTBUF,gr6  ;   *p = gr5;
+  SUBA  gr6, ONE  ;   p--;
   JUMP  WI2  ;  }
-;WI3
-WI3  CPA  GR7, GR0  ;  if(flag != 0) {
+WI3	DS	0
+  CPA  gr7, gr0  ;  if(flag != 0) {
   JZE  WI4
-  LD  GR4, MINUS  ;   *p = '-';
-  ST  GR4, INTBUF,GR6
+  LD  gr4, MINUS  ;   *p = '-';
+  ST  gr4, INTBUF,gr6
   JUMP  WI5  ;  }
-;WI4
-WI4  ADDA  GR6, ONE  ;  else p++;
+WI4	DS	0
+  ADDA  gr6, ONE  ;  else p++;
     ; }
-;WI5
-WI5  LAD  GR1, INTBUF,GR6  ; GR1 = p;
+WI5	DS	0
+  LAD  gr1, INTBUF,gr6  ; gr1 = p;
   CALL  WRITESTR  ; WRITESTR();
   RPOP
   RET
-;WI6
-WI6  LAD  GR1, MMINT
+WI6	DS	0
+  LAD  gr1, MMINT
   CALL  WRITESTR  ; WRITESTR();
   RPOP
   RET
 MMINT    DC  '-32768'
-;WRITBOOL
-; GR1の値（真理値）が0なら'FALSE'を
-; 0以外なら'TRUE'をGR2のけた数で出力する．
-; GR2が0なら必要最小限の桁数で出力する
-WRITBOOL  RPUSH
-  CPA  GR1, GR0  ; if(GR1 != 0)
+WRITEBOOL	DS	0
+; gr1の値（真理値）が0なら'FALSE'を
+; 0以外なら'TRUE'をgr2のけた数で出力する．
+; gr2が0なら必要最小限の桁数で出力する
+  RPUSH
+  CPA  gr1, gr0  ; if(gr1 != 0)
   JZE  WB1
-  LAD  GR1, WBTRUE  ;  GR1 = " TRUE ";
+  LAD  gr1, WBTRUE  ;  gr1 = " TRUE ";
   JUMP  WB2
-;WB1      ; else
-WB1  LAD  GR1, WBFALSE  ;  GR1 = " FALSE ";
-;WB2
-WB2  CALL  WRITESTR  ; WRITESTR();
+WB1	DS	0      ; else
+  LAD  gr1, WBFALSE  ;  gr1 = " FALSE ";
+WB2	DS	0
+  CALL  WRITESTR  ; WRITESTR();
   RPOP
   RET
 WBTRUE    DC  'TRUE'
 WBFALSE    DC  'FALSE'
-;WRITLINE
+WRITELINE	DS	0
 ; 改行を出力する
-WRITLINE  RPUSH
-  LD  GR7, OBUFSIZE
-  LD  GR6, NEWLINE
-  ST  GR6, OBUF,GR7
-  ADDA  GR7, ONE
-  ST  GR7, OBUFSIZE
+  RPUSH
+  LD  gr7, OBUFSIZE
+  LD  gr6, NEWLINE
+  ST  gr6, OBUF,gr7
+  ADDA  gr7, ONE
+  ST  gr7, OBUFSIZE
   OUT  OBUF, OBUFSIZE
-  ST  GR0, OBUFSIZE
+  ST  gr0, OBUFSIZE
   RPOP
   RET
-;FLUSH
-FLUSH  RPUSH
-  LD GR7, OBUFSIZE
+FLUSH	DS	0
+  RPUSH
+  LD gr7, OBUFSIZE
   JZE FL1
-  CALL WRITLINE
-;FL1
-FL1  RPOP
+  CALL WRITELINE
+FL1	DS	0
+  RPOP
   RET
-;READCHAR
-; GR1が指す番地に文字一つを読み込む
-READCHAR  RPUSH
-  LD  GR5, RPBBUF  ; if(RPBBUF != '\0') {
+READCHAR	DS	0
+; gr1が指す番地に文字一つを読み込む
+  RPUSH
+  LD  gr5, RPBBUF  ; if(RPBBUF != '\0') {
   JZE  RC0
-  ST  GR5, 0,GR1  ;  *GR1 = RPBBUF;
-  ST  GR0, RPBBUF  ;  RPBBUF = '\0'
+  ST  gr5, 0,gr1  ;  *gr1 = RPBBUF;
+  ST  gr0, RPBBUF  ;  RPBBUF = '\0'
   JUMP  RC3  ;  return; }
-;RC0
-RC0  LD  GR7, INP  ; inp = INP;
-  LD  GR6, IBUFSIZE  ; if(IBUFSIZE == 0) {
+RC0	DS	0
+  LD  gr7, INP  ; inp = INP;
+  LD  gr6, IBUFSIZE  ; if(IBUFSIZE == 0) {
   JNZ  RC1
   IN  IBUF, IBUFSIZE  ;  IN();
-  LD  GR7, GR0  ;  inp = 0;
+  LD  gr7, gr0  ;  inp = 0;
     ; }
-;RC1
-RC1  CPA  GR7, IBUFSIZE  ; if(inp == IBUFSIZE) {
+RC1	DS	0
+  CPA  gr7, IBUFSIZE  ; if(inp == IBUFSIZE) {
   JNZ  RC2
-  LD  GR5, NEWLINE  ;  *GR1 = '\n';
-  ST  GR5, 0,GR1
-  ST  GR0, IBUFSIZE  ;  IBUFSIZE = INP = 0;
-  ST  GR0, INP
+  LD  gr5, NEWLINE  ;  *gr1 = '\n';
+  ST  gr5, 0,gr1
+  ST  gr0, IBUFSIZE  ;  IBUFSIZE = INP = 0;
+  ST  gr0, INP
   JUMP  RC3  ; }
-;RC2      ; else {
-RC2  LD  GR5, IBUF,GR7  ;  *GR1 = *inp++;
-  ADDA  GR7, ONE
-  ST  GR5, 0,GR1
-  ST  GR7, INP  ;  INP = inp;
-;RC3      ; }
-RC3  RPOP
+RC2	DS	0      ; else {
+  LD  gr5, IBUF,gr7  ;  *gr1 = *inp++;
+  ADDA  gr7, ONE
+  ST  gr5, 0,gr1
+  ST  gr7, INP  ;  INP = inp;
+RC3	DS	0      ; }
+  RPOP
   RET
-;READINT
-;GR1が指す番地に整数値一つを読み込む
-READINT  RPUSH
-;RI1      ; do {
-RI1  CALL  READCHAR  ;  ch = READCHAR();
-  LD  GR7, 0,GR1
-  CPA  GR7, SPACE  ; } while(ch == ' ' || ch == '\t' || ch == '\n');
-  JZE  RI1
-  CPA  GR7, TAB
-  JZE  RI1
-  CPA  GR7, NEWLINE
-  JZE  RI1
-  LD  GR5, ONE  ; flag = 1
-  CPA  GR7, MINUS  ; if(ch == '-') {
-  JNZ  RI4
-  LD  GR5, GR0  ;  flag = 0;
+READINT	DS	0
+;gr1が指す番地に整数値一つを読み込む
+  RPUSH
+RI1	DS	0      ; do {
   CALL  READCHAR  ;  ch = READCHAR();
-  LD  GR7, 0,GR1
-;RI4      ; }
-RI4  LD  GR6, GR0  ; v = 0;
-;RI2
-RI2  CPA  GR7, ZERO  ; while('0' <= ch && ch <= '9') {
+  LD  gr7, 0,gr1
+  CPA  gr7, SPACE  ; } while(ch == ' ' || ch == '\t' || ch == '\n');
+  JZE  RI1
+  CPA  gr7, TAB
+  JZE  RI1
+  CPA  gr7, NEWLINE
+  JZE  RI1
+  LD  gr5, ONE  ; flag = 1
+  CPA  gr7, MINUS  ; if(ch == '-') {
+  JNZ  RI4
+  LD  gr5, gr0  ;  flag = 0;
+  CALL  READCHAR  ;  ch = READCHAR();
+  LD  gr7, 0,gr1
+RI4	DS	0      ; }
+  LD  gr6, gr0  ; v = 0;
+RI2	DS	0
+  CPA  gr7, ZERO  ; while('0' <= ch && ch <= '9') {
   JMI  RI3
-  CPA  GR7, NINE
+  CPA  gr7, NINE
   JPL  RI3
-  MULA  GR6, TEN  ;  v = v*10+ch-'0';
-  ADDA  GR6, GR7
-  SUBA  GR6, ZERO
+  MULA  gr6, TEN  ;  v = v*10+ch-'0';
+  ADDA  gr6, gr7
+  SUBA  gr6, ZERO
   CALL  READCHAR  ;  ch = READSCHAR();
-  LD  GR7, 0,GR1
+  LD  gr7, 0,gr1
   JUMP  RI2  ; }
-;RI3
-RI3  ST  GR7, RPBBUF  ; ReadPushBack();
-  ST  GR6, 0,GR1  ; *GR1 = v;
-  CPA  GR5, GR0  ; if(flag == 0) {
+RI3	DS	0
+  ST  gr7, RPBBUF  ; ReadPushBack();
+  ST  gr6, 0,gr1  ; *gr1 = v;
+  CPA  gr5, gr0  ; if(flag == 0) {
   JNZ  RI5
-  SUBA  GR5, GR6  ;  *GR1 = -v;
-  ST  GR5, 0,GR1
-;RI5      ; }
-RI5  RPOP
+  SUBA  gr5, gr6  ;  *gr1 = -v;
+  ST  gr5, 0,gr1
+RI5	DS	0      ; }
+  RPOP
   RET
-;READLINE
+READLINE	DS	0
 ; 入力を改行コードまで（改行コードも含む）読み飛ばす
-READLINE  ST  GR0, IBUFSIZE
-  ST  GR0, INP
-  ST  GR0, RPBBUF
+  ST  gr0, IBUFSIZE
+  ST  gr0, INP
+  ST  gr0, RPBBUF
   RET
 ONE    DC  1
 SIX    DC  6
