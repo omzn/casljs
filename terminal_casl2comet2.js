@@ -502,7 +502,7 @@ function expand_label(hashref, val) {
       }
     } else if (!val.match(/^[+-]?\d+$/)) {
       var sym = val;
-      if (result = val.match(/([A-Za-z\d]+)\.([A-Za-z\d]+)$/)) {
+      if (result = val.match(/([A-Z][a-zA-Z\d]+)\.([A-Z][A-Za-z\d]+)$/)) {
         if (result[1] == result[2]) {
           sym = result[2];
         } else {
@@ -1129,7 +1129,7 @@ function pass2(file, symtblp, memoryp, bufp) {
       //outdump.push(where[key2]);
       var label = where[key2];
       if (!label.match(/^=/)) {
-        const marray = label.match(/([A-Za-z\d]+)\.([A-Za-z\d]+)$/);
+        const marray = label.match(/^([A-Z][A-Za-z\d]+)\.([A-Z][A-Za-z\d]+)$/);
         var label_view;
         if ( marray[1] == marray[2] ) {
             label_view = marray[2];

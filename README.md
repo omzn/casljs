@@ -47,9 +47,10 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 * casl2/comet2
 
 CASL assembler / COMET emulator
-Copyright (C) 1998-2000 Hiroyuki Ohsaki (oosaki@ist.osaka-u.ac.jp)
+Copyright (C) 1998-2000 Hiroyuki Ohsaki (oosaki (at) ist.osaka-u.ac.jp)
+
 CASL II assembler / COMET II emulator
-Copyright (C) 2001-2022 Osamu Mizuno (o-mizuno@kit.ac.jp)
+Copyright (C) 2001-2022 Osamu Mizuno (o-mizuno (at) kit.ac.jp)
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by the
