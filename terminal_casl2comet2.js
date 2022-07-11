@@ -473,7 +473,7 @@ function check_label(label) {
   if (DEBUG) {
     console.log('check_label(' + label + ')');
   }
-  if (!label.match(/^[A-Z][0-9A-Za-z]{0,7}$/)) {
+  if (!label.match(/^[a-zA-Z\$%_\.][0-9a-zA-Z\$%_\.]*$/)) {
     error('Invalid label "' + label + '"');
   }
 }
@@ -494,15 +494,15 @@ function expand_label(hashref, val) {
       var lbl = result[1];
       if (lbl in hashref) {
         nval = hashref[lbl]['val'];
-      } else if (result = val.match(/\.([A-Za-z\d]+)$/)) {
-        var k = result[1] + '.' + result[1];
+      } else if (result = val.match(/:([a-zA-Z\$%_\.][0-9a-zA-Z\$%_\.]*)$/)) {
+        var k = `${result[1]}:${result[1]}`;
         if (hashref[k]) {
           nval = hashref[k]['val'];
         }
       }
     } else if (!val.match(/^[+-]?\d+$/)) {
       var sym = val;
-      if (result = val.match(/([A-Z][a-zA-Z\d]+)\.([A-Z][A-Za-z\d]+)$/)) {
+      if (result = val.match(/([a-zA-Z\$%_\.][0-9a-zA-Z\$%_\.]*):([a-zA-Z\$%_\.][0-9a-zA-Z\$%_\.]*)$/)) {
         if (result[1] == result[2]) {
           sym = result[2];
         } else {
@@ -525,7 +525,7 @@ function expand_label(hashref, val) {
 function add_label(hashref, label, val) {
   check_label(label);
   // On addition of a label, add var_scope.
-  var uniq_label = var_scope + '.' + label;
+  var uniq_label = `${var_scope}:${label}`;
   if (hashref[uniq_label]) {
     error('Label "' + label + '" already defined');
   }
@@ -540,7 +540,7 @@ function add_label(hashref, label, val) {
 // VAL.  If LABEL has not defined yet, display error and exit.
 function update_label(hashref, label, val) {
   check_label(label);
-  var uniq_label = var_scope + '.' + label;
+  var uniq_label = `${var_scope}:${label}`;
   if (!hashref[uniq_label]) {
     error('Label "' + label + '" is not defined');
   }
@@ -579,7 +579,7 @@ function check_register(register) {
   if (DEBUG) {
     console.log('check_register(' + sregister + ')');
   }
-  var result = sregister.match(/^(GR)?([0-7])$/);
+  var result = sregister.match(/^(GR)?([0-7])$/i);
   if (!result) {
     error('Invalid register "' + sregister + '"');
   } else {
@@ -692,7 +692,7 @@ function pass1(source, symtblp, memoryp, bufp) {
     // keep every line in @buf for later use
     var uniq_label;
     if (label != '') {
-      uniq_label = var_scope + '.' + label;
+      uniq_label = `${var_scope}:${label}`;
     } else {
       uniq_label = '';
     }
@@ -809,9 +809,9 @@ function pass1(source, symtblp, memoryp, bufp) {
             console.log('Literal:' + opr_array[1]);
           }
         } else if (
-            opr_array[1].match(/^[A-Z][a-zA-Z0-9]*/) &&
-            !opr_array[1].match(/^GR[0-7]$/)) {
-          opr_array[1] = var_scope + '.' + opr_array[1];
+            opr_array[1].match(/^[a-zA-Z\$%_\.][0-9a-zA-Z\$%_\.]*/) &&
+            !opr_array[1].match(/^GR[0-7]$/i)) {
+          opr_array[1] = `${var_scope}:${opr_array[1]}`;
         }
         gen_code2(
             memoryp, address, CASL2TBL[inst]['code'], opr_array[0], opr_array[1],
@@ -822,7 +822,7 @@ function pass1(source, symtblp, memoryp, bufp) {
         if (!(1 <= opr_array.length && opr_array.length <= 2)) {
           error('Invalid operand "' + opr + '"');
         }
-        if (opr_array[1] && opr_array[1].match(/^(GR)?0$/)) {
+        if (opr_array[1] && opr_array[1].match(/^(GR)?0$/i)) {
           error('Can\'t use GR0 as an index register');
         }
 
@@ -830,12 +830,12 @@ function pass1(source, symtblp, memoryp, bufp) {
           opr_array[1] = 0;
         }
 
-        if (!opr_array[0].match(/^GR[0-7]$/) &&
-            opr_array[0].match(/^[A-Z][a-zA-Z0-9]*/)) {
+        if (!opr_array[0].match(/^GR[0-7]$/i) &&
+            opr_array[0].match(/^[a-zA-Z\$%_\.][0-9a-zA-Z\$%_\.]*/)) {
           if (inst.match(/CALL/i)) {
-            opr_array[0] = 'CALL_' + var_scope + '.' + opr_array[0];
+            opr_array[0] = `CALL_${var_scope}:${opr_array[0]}`;
           } else {
-            opr_array[0] = var_scope + '.' + opr_array[0];
+            opr_array[0] = `${var_scope}:${opr_array[0]}`;
           }
         }
         gen_code2(
@@ -896,12 +896,12 @@ function pass1(source, symtblp, memoryp, bufp) {
             console.log('Literal:' + opr_array[1]);
           }
         } else if (
-            opr_array[1].match(/^[A-Z][a-zA-Z0-9]*/) &&
+            opr_array[1].match(/^[a-zA-Z\$%_\.][0-9a-zA-Z\$%_\.]*/) &&
             !opr_array[1].match(/^GR[0-7]$/)) {
-          opr_array[1] = var_scope + '.' + opr_array[1];
+          opr_array[1] = `${var_scope}:${opr_array[1]}`;
         }
         // instructions with GR, GR.
-        if (opr_array[1].match(/^GR[0-7]$/)) {
+        if (opr_array[1].match(/^GR[0-7]$/i)) {
           var instcode = CASL2TBL[inst]['code'] + 4;
           gen_code3(memoryp, address, instcode, opr_array[0], opr_array[1]);
           address++;
@@ -919,7 +919,7 @@ function pass1(source, symtblp, memoryp, bufp) {
 
         if (first_start == 1) {
           first_start = 0;
-          comet2startLabel = (opr_array.length) ? `${label}.${opr_array[0]}` : `${label}.${label}`;
+          comet2startLabel = (opr_array.length) ? `${label}:${opr_array[0]}` : `${label}:${label}`;
         } else {
           actual_label = (opr_array.length) ? opr_array[0] : 0;
           virtual_label = label;
@@ -993,8 +993,8 @@ function pass1(source, symtblp, memoryp, bufp) {
               }
               gen_code1(memoryp, address, 0); // '\0'
               address++;
-            } else if (opr_array[j].match(/^[A-Z][a-zA-Z\d]*$/)) {
-              opr_array[j] = var_scope + '.' + opr_array[j];
+            } else if (opr_array[j].match(/^[a-zA-Z\$%_\.][0-9a-zA-Z\$%_\.]*$/)) {
+              opr_array[j] = `${var_scope}:${opr_array[j]}`;
               gen_code1(memoryp, address, opr_array[j]);
               address++;
               //            } else if (result =
@@ -1019,8 +1019,8 @@ function pass1(source, symtblp, memoryp, bufp) {
         check_label(opr_array[0]);
         check_label(opr_array[1]);
 
-        opr_array[0] = var_scope + '.' + opr_array[0];
-        opr_array[1] = var_scope + '.' + opr_array[1];
+        opr_array[0] = `${var_scope}:${opr_array[0]}`;
+        opr_array[1] = `${var_scope}:${opr_array[1]}`;
 
         // IN/OUT macro is expanded to push two operands onto the
         // stack, call SYS_IN / SYS_OUT, and restore stack.
@@ -1090,7 +1090,7 @@ function pass2(file, symtblp, memoryp, bufp) {
     if (opt_a) {
       var result;
       var aLine = bufp[__line - 1].split(/\t/);
-      if (result = aLine[0].match(/\.([A-Za-z\d]+)$/)) {
+      if (result = aLine[0].match(/:([a-zA-Z\$%_\.][0-9a-zA-Z\$%_\.]*)$/)) {
         aLine[0] = result[1];
       }
       var bufline = aLine.join('\t');
@@ -1131,7 +1131,7 @@ function pass2(file, symtblp, memoryp, bufp) {
       //outdump.push(where[key2]);
       var label = where[key2];
       if (!label.match(/^=/)) {
-        const marray = label.match(/^([A-Z][A-Za-z\d]+)\.([A-Z][A-Za-z\d]+)$/);
+        const marray = label.match(/^([a-zA-Z\$%_\.][0-9a-zA-Z\$%_\.]*):([a-zA-Z\$%_\.][0-9a-zA-Z\$%_\.]*)$/);
         var label_view;
         if ( marray[1] == marray[2] ) {
             label_view = marray[2];
