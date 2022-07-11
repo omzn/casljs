@@ -39,19 +39,29 @@ WS2       LD        GR7,      OBUFSIZE  ; q = OBUFSIZE;
 WS3       SUBA      GR2,      ONE  ; while(--c >= 0) {
           JMI       WS4
           ST        GR5,      OBUF,     GR7  ;  *q++ = ' ';
-;          CALL      BOVFCHCK
+          CALL      BOVFCHCK
           JUMP      WS3  ; }
 ;WS4
 WS4       LD        GR4,      0,        GR1  ; while(*GR1 != '\0') {
           JZE       WS5
           ST        GR4,      OBUF,     GR7  ;  *q++ = *GR1++;
           ADDA      GR1,      ONE
-;          CALL      BOVFCHCK
+          CALL      BOVFCHCK
           JUMP      WS4  ; }
 ;WS5
 WS5       ST        GR7,      OBUFSIZE  ; OBUFSIZE = q;
           RPOP
           RET
+;
+;BOVFCHCK
+BOVFCHCK  ADDA      GR7,      ONE
+          CPA       GR7,      BOVFLEVE
+          JMI       BOVF1
+          CALL      WRITLINE
+          LD        GR7,      OBUFSIZE
+;BOVF1
+BOVF1     RET
+BOVFLEVE  DC        256
 ;
 ;WRITLINE
 ; 改行を出力する
