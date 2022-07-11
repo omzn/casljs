@@ -768,7 +768,7 @@ function pass1(source, symtblp, memoryp, bufp) {
       }
 
       // GR0 cannot be used as an index register.
-      if (opr_array[2] && opr_array[2].match(/^(GR)?0$/)) {
+      if (opr_array[2] && opr_array[2].match(/^(GR)?0$/i)) {
         error('Can\'t use GR0 as an index register');
       }
 
@@ -897,7 +897,7 @@ function pass1(source, symtblp, memoryp, bufp) {
           }
         } else if (
             opr_array[1].match(/^[a-zA-Z\$%_\.][0-9a-zA-Z\$%_\.]*/) &&
-            !opr_array[1].match(/^GR[0-7]$/)) {
+            !opr_array[1].match(/^GR[0-7]$/i)) {
           opr_array[1] = `${var_scope}:${opr_array[1]}`;
         }
         // instructions with GR, GR.
@@ -1411,7 +1411,7 @@ function step_exec(memoryp, statep) {
   eadr &= 0xffff;
 
   if (inst == 'LD') {
-    if (!opr.match(/GR[0-7], GR[0-7]/)) {
+    if (!opr.match(/GR[0-7], GR[0-7]/i)) {
       regs[gr] = mem_get(memoryp, eadr);
       fr = get_flag(regs[gr]);
       pc += 2;
@@ -1430,7 +1430,7 @@ function step_exec(memoryp, statep) {
     pc += 2;
 
   } else if (inst == 'ADDA') {
-    if (!opr.match(/GR[0-7], GR[0-7]/)) {
+    if (!opr.match(/GR[0-7], GR[0-7]/i)) {
       regs[gr] = signed(regs[gr]);
       regs[gr] += mem_get(memoryp, eadr);
       var ofr1 = regs[gr] > MAX_SIGNED ? FR_OVER : 0;
@@ -1452,7 +1452,7 @@ function step_exec(memoryp, statep) {
     }
 
   } else if (inst == 'SUBA') {
-    if (!opr.match(/GR[0-7], GR[0-7]/)) {
+    if (!opr.match(/GR[0-7], GR[0-7]/i)) {
       regs[gr] = signed(regs[gr]);
       regs[gr] -= mem_get(memoryp, eadr);
       var ofr1 = regs[gr] > MAX_SIGNED ? FR_OVER : 0;
@@ -1474,7 +1474,7 @@ function step_exec(memoryp, statep) {
     }
 
   } else if (inst == 'ADDL') {
-    if (!opr.match(/GR[0-7], GR[0-7]/)) {
+    if (!opr.match(/GR[0-7], GR[0-7]/i)) {
       regs[gr] += mem_get(memoryp, eadr);
       var ofr1 = regs[gr] > 0xffff ? FR_OVER : 0;
       var ofr2 = regs[gr] < 0 ? FR_OVER : 0;
@@ -1492,7 +1492,7 @@ function step_exec(memoryp, statep) {
     }
 
   } else if (inst == 'SUBL') {
-    if (!opr.match(/GR[0-7], GR[0-7]/)) {
+    if (!opr.match(/GR[0-7], GR[0-7]/i)) {
       regs[gr] -= mem_get(memoryp, eadr);
       var ofr1 = regs[gr] > 0xffff ? FR_OVER : 0;
       var ofr2 = regs[gr] < 0 ? FR_OVER : 0;
@@ -1509,7 +1509,7 @@ function step_exec(memoryp, statep) {
     }
 
   } else if (inst == 'MULA') {
-    if (!opr.match(/GR[0-7], GR[0-7]/)) {
+    if (!opr.match(/GR[0-7], GR[0-7]/i)) {
       regs[gr] = signed(regs[gr]);
       regs[gr] *= mem_get(memoryp, eadr);
       var ofr1 = regs[gr] > MAX_SIGNED ? FR_OVER : 0;
@@ -1530,7 +1530,7 @@ function step_exec(memoryp, statep) {
       pc += 1;
     }
   } else if (inst == 'MULL') {
-    if (!opr.match(/GR[0-7], GR[0-7]/)) {
+    if (!opr.match(/GR[0-7], GR[0-7]/i)) {
       regs[gr] *= mem_get(memoryp, eadr);
       var ofr1 = regs[gr] > 0xffff ? FR_OVER : 0;
       var ofr2 = regs[gr] < 0 ? FR_OVER : 0;
@@ -1547,7 +1547,7 @@ function step_exec(memoryp, statep) {
       pc += 1;
     }
   } else if (inst == 'DIVA') {
-    if (!opr.match(/GR[0-7], GR[0-7]/)) {
+    if (!opr.match(/GR[0-7], GR[0-7]/i)) {
       regs[gr] = signed(regs[gr]);
       var m = mem_get(memoryp, eadr);
       if (m == 0) {
@@ -1583,7 +1583,7 @@ function step_exec(memoryp, statep) {
       pc += 1;
     }
   } else if (inst == 'DIVL') {
-    if (!opr.match(/GR[0-7], GR[0-7]/)) {
+    if (!opr.match(/GR[0-7], GR[0-7]/i)) {
       var m = mem_get(memoryp, eadr);
       if (m == 0) {
         fr = FR_OVER | FR_ZERO;
@@ -1615,7 +1615,7 @@ function step_exec(memoryp, statep) {
       pc += 1;
     }
   } else if (inst == 'AND') {
-    if (!opr.match(/GR[0-7], GR[0-7]/)) {
+    if (!opr.match(/GR[0-7], GR[0-7]/i)) {
       regs[gr] &= mem_get(memoryp, eadr);
       fr = get_flag(regs[gr]);
       pc += 2;
@@ -1627,7 +1627,7 @@ function step_exec(memoryp, statep) {
     }
 
   } else if (inst == 'OR') {
-    if (!opr.match(/GR[0-7], GR[0-7]/)) {
+    if (!opr.match(/GR[0-7], GR[0-7]/i)) {
       regs[gr] |= mem_get(memoryp, eadr);
       fr = get_flag(regs[gr]);
       pc += 2;
@@ -1639,7 +1639,7 @@ function step_exec(memoryp, statep) {
     }
 
   } else if (inst == 'XOR') {
-    if (!opr.match(/GR[0-7], GR[0-7]/)) {
+    if (!opr.match(/GR[0-7], GR[0-7]/i)) {
       regs[gr] ^= mem_get(memoryp, eadr);
       fr = get_flag(regs[gr]);
       pc += 2;
@@ -1651,7 +1651,7 @@ function step_exec(memoryp, statep) {
     }
 
   } else if (inst == 'CPA') {
-    if (!opr.match(/GR[0-7], GR[0-7]/)) {
+    if (!opr.match(/GR[0-7], GR[0-7]/i)) {
       val = signed(regs[gr]) - signed(mem_get(memoryp, eadr));
       if (val > MAX_SIGNED) {
         val = MAX_SIGNED;
@@ -1675,7 +1675,7 @@ function step_exec(memoryp, statep) {
     }
 
   } else if (inst == 'CPL') {
-    if (!opr.match(/GR[0-7], GR[0-7]/)) {
+    if (!opr.match(/GR[0-7], GR[0-7]/i)) {
       val = regs[gr] - mem_get(memoryp, eadr);
       if (val > MAX_SIGNED) {
         val = MAX_SIGNED;
