@@ -2147,10 +2147,10 @@ let terminal1 = function() {
           }
           if (!found) {
             t1.print(`Undefined command "${cmd}". Try "help".`);
-            terminal1();
+            setTimeout(terminal1(),0);
           }
           if (result) {
-            terminal1();
+            setTimeout(terminal1(),0);
           } else {
             t1.print("[Program finished]");
           }
@@ -2162,7 +2162,7 @@ let terminal1 = function() {
           if (run_count == 0 && !opt_q) {
             cmd_print(comet2mem,state,[]);
           }
-          terminal1();
+          setTimeout(terminal1(),0);
         }
         });
   } else { // runコマンドを実行している場合
@@ -2179,7 +2179,7 @@ let terminal1 = function() {
       cmd_print(comet2mem,state,[]);
     }
     if (result) {
-      terminal1();
+      setTimeout(terminal1(),0);
     } else {
       t1.print("[Program finished]");
       run_count = 0;
