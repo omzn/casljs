@@ -323,6 +323,10 @@ var DDEBUG = 0;
 // to call this address after pushing its arguments on stack.
 var SYS_IN = 0xfff0;
 var SYS_OUT = 0xfff2;
+var EXIT_USR = 0x0000;
+var EXIT_OVF = 0x0001;
+var EXIT_DVZ = 0x0002;
+var EXIT_ROV = 0x0003;
 
 //// casl2
 
@@ -1792,6 +1796,14 @@ function step_exec(memoryp, statep) {
     } else if (eadr == SYS_OUT) {
       exec_out(memoryp, statep);
       pc +=2;
+    } else if (eadr == EXIT_USR) {
+      retval = 0;
+    } else if (eadr == EXIT_OVF) {
+      retval = 0;
+    } else if (eadr == EXIT_DVZ) {
+      retval = 0;
+    } else if (eadr == EXIT_ROV) {
+      retval = 0;
     }
 
   } else if (inst == 'NOP') {
