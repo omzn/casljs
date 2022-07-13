@@ -2176,6 +2176,7 @@ let terminal1 = function() {
           if (!found) {
             t1.print(`Undefined command "${cmd}". Try "help".`);
             terminal1();
+            return;
           }
           if (result) {
             terminal1();
@@ -2284,6 +2285,13 @@ comet2init();
 //terminal1();
 terminal2();
 // refresh buttons
+document.addEventListener("keydown", function(e) {
+  if (e.code == 'KeyC' && e.ctrlKey) {
+    run_count = 0;  
+    run_mode = 0;
+    //alert('Ctrl-C!');
+  }
+});
 document.getElementById("terminal-refresh").addEventListener("click", comet2init);
 document.getElementById("assemble").addEventListener("click", assemble);
 document.getElementById("stop").addEventListener("click", function () {
