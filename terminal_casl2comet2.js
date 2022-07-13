@@ -1118,7 +1118,7 @@ function pass2(file, symtblp, memoryp, bufp) {
   }
 
   if (opt_a) {
-    outdump.push("\nDEFINED SYMBOLS\n");
+    outdump.push("\nDEFINED SYMBOLS");
     var where = [];
     for ( const key in symtblp ) {
       //outdump.push(key);
@@ -1142,7 +1142,7 @@ function pass2(file, symtblp, memoryp, bufp) {
         } else {
             label_view = `${marray[2]} (${marray[1]})`;
         }
-        outdump.push(`${symtblp[label]['line']}:\t${hex(expand_label( symtblp, label ),4)}\t${label_view}\n`);
+        outdump.push(`${symtblp[label]['line']}:\t${hex(expand_label( symtblp, label ),4)}\t${label_view}`);
       }
       
     }
@@ -1150,9 +1150,12 @@ function pass2(file, symtblp, memoryp, bufp) {
   } 
 
   if (opt_a) {
-    for (var i = 0; i < outdump.length; i++) {
-      caslprint(outdump[i]);
+    var outdump_buf = ""
+    for (var i = 0; i < outdump.length - 1; i++) {
+      outdump_buf += outdump[i] + "\n"
     }
+    outdump_buf += outdump[outdump.length - 1]
+    caslprint(outdump_buf);
   }
 }
 
