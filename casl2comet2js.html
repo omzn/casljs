@@ -169,20 +169,12 @@
     </style>
     <script>
         window.onload = function () {
-            var cookies = document.cookie;
-            var cookiesArray = cookies.split(';');
-            for(var c of cookiesArray){
-                var cArray = c.split('=');
-                if( cArray[0] == 'casl2src'){
-                    document.getElementById("casl2src").value = decodeURIComponent(cArray[1]);
-                }
-                if( cArray[0] == 'quiet'){
-                    if (cArray[1] == 1) {
-                        document.getElementById("quiet").checked = true;
-                    } else {
-                        document.getElementById("quiet").checked = false;
-                    }
-                }
+            document.getElementById("casl2src").value = decodeURIComponent(localStorage.getItem('casl2src'));
+            var q = localStorage.getItem('quiet');
+            if (q == 1) {
+                document.getElementById("quiet").checked = true;
+            } else {
+                document.getElementById("quiet").checked = false;
             }
         }
     </script>

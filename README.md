@@ -12,9 +12,6 @@ CASL2, COMET2 の JavaScript 実装です．
 
 * 開く Web ページ
 
-* TODO:
-  * Assemble したソースコードを Cookie に保存して，リロードしても消えないようにする．
-
 ### terminal_casl2comet2.js
 
 * 状況: 90%

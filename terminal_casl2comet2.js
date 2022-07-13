@@ -315,7 +315,7 @@ var __webpack_exports__ = {};
 
 //// Both casl2 and commet2
 
-var VERSION = '0.8 KIT version (July 5, 2022)';
+var VERSION = '0.9.0 KIT version (July 13, 2022)';
 var DEBUG = 0;
 var DDEBUG = 0;
 
@@ -400,7 +400,7 @@ var comet2ops = [];
 
 function getCasl2Src() {
 	var text = document.getElementById("casl2src").value;
-  document.cookie = "casl2src=" + encodeURIComponent(text);
+  localStorage.setItem("casl2src",encodeURIComponent(text));
 	return text;
 }
 
@@ -2304,7 +2304,7 @@ document.getElementById("quiet").addEventListener("click", function () {
   } else {
     opt_q = 0;
   } 
-  document.cookie = `quiet=${opt_q}`;
+  localStorage.setItem('quiet',opt_q);
 });
 //function() {
 //	comet2mem = COMET2MEM_INIT;
