@@ -2213,6 +2213,7 @@ let terminal1 = function() {
       } else {
         t1.print("[Program finished]");
         run_count = 0;
+        run_mode = 0;
         return 0;
       }
     }
