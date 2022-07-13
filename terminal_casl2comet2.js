@@ -1269,7 +1269,7 @@ var comet2mem = COMET2MEM_INIT;
 var state = [comet2startAddress, FR_PLUS, 0, 0, 0, 0, 0, 0, 0, 0, STACK_TOP, []];
 
 var run_count = 0;
-var run_stop = 0;
+var run_mode = 0;
 var last_cmd = "p";
 var opt_q = 0;
 var last_ret ;
@@ -1874,7 +1874,8 @@ function cmd_run(memoryp, statep, args) {
   if (DEBUG) {
     console.log(`cmd_run( / ${statep} / ${args} )`);
   }
-  run_count = -1;
+  run_count = 10000;
+  run_mode = 1;
   return cmd_step(memoryp, statep, run_count);
 }
 
@@ -1887,11 +1888,10 @@ function cmd_step(memoryp, statep, args) {
   count = Number(args);
   if (count == 0) {
   	count = 1;
- 	}
-  run_count = count;
-  if (run_count > 0) {
-    run_count--;
+ 	} else if (count > 0) {
+    count--;
   }
+  run_count = count;
   if (DEBUG) {
     console.log(`run_count = ${run_count}`);
   }
@@ -2168,25 +2168,52 @@ let terminal1 = function() {
           setTimeout(terminal1(),0);
         }
         });
-  } else { // runコマンドを実行している場合
-    var result = cmd_step(comet2mem,state,run_count);
-    for (var i = 0; i < state[BP].length; i++) {
-      var pnt = state[BP][i];
-      if (pnt == state[PC]) {
-        cometprint(`Breakpoint ${i}, #${hex(pnt,4)}`);
-        run_count = 0;
-        break;
-      }
-    }
-    if (run_count == 0 && !opt_q) {
-      cmd_print(comet2mem,state,[]);
-    }
-    if (result) {
-      setTimeout(terminal1(),0);
+  } else { 
+    // runコマンドを実行している場合
+    // stepコマンドに回数を指定した場合
+    if (run_mode == 1 && run_count == 1) {
+      run_count = 10000;
+      setTimeout(function () {
+        var result = cmd_step(comet2mem,state,run_count);
+        for (var i = 0; i < state[BP].length; i++) {
+          var pnt = state[BP][i];
+          if (pnt == state[PC]) {
+            cometprint(`Breakpoint ${i}, #${hex(pnt,4)}`);
+            run_count = 0;
+            break;
+          }
+        }
+        if (run_count == 0 && !opt_q) {
+          cmd_print(comet2mem,state,[]);
+        }
+        if (result) {
+          terminal1();
+        } else {
+          t1.print("[Program finished]");
+          run_count = 0;
+          return 0;
+        }    
+      },0);
     } else {
-      t1.print("[Program finished]");
-      run_count = 0;
-      return 0;
+      var result = cmd_step(comet2mem,state,run_count);
+      for (var i = 0; i < state[BP].length; i++) {
+        var pnt = state[BP][i];
+        if (pnt == state[PC]) {
+          cometprint(`Breakpoint ${i}, #${hex(pnt,4)}`);
+          run_count = 0;
+          break;
+        }
+      }
+      if (run_count == 0 && !opt_q) {
+        cmd_print(comet2mem,state,[]);
+      }
+      if (result) {
+        terminal1();
+      } else {
+        t1.print("[Program finished]");
+        run_count = 0;
+        return 0;
+      }
     }
   }
   return 0;
