@@ -1257,6 +1257,7 @@ var MIN_SIGNED = -32768;
 var INPUT_MODE_CMD = 0;
 var INPUT_MODE_IN = 1;
 
+var RUN_COUNT_NUM = 5000;
 
 var COMET2MEM_INIT = [	4608,     5, 11264, 11264,
 	11264,  4608,     5,  4624,
@@ -1874,7 +1875,7 @@ function cmd_run(memoryp, statep, args) {
   if (DEBUG) {
     console.log(`cmd_run( / ${statep} / ${args} )`);
   }
-  run_count = 10000;
+  run_count = RUN_COUNT_NUM;
   run_mode = 1;
   return cmd_step(memoryp, statep, run_count);
 }
@@ -1888,6 +1889,10 @@ function cmd_step(memoryp, statep, args) {
   count = Number(args);
   if (count == 0) {
   	count = 1;
+  } else if (count > RUN_COUNT_NUM) {
+    count = RUN_COUNT_NUM;
+    cometprint(`Step execution is limited to ${RUN_COUNT_NUM}.`);
+    count--;
  	} else if (count > 0) {
     count--;
   }
@@ -1895,10 +1900,7 @@ function cmd_step(memoryp, statep, args) {
   if (DEBUG) {
     console.log(`run_count = ${run_count}`);
   }
-  if (step_exec(memoryp, statep) == 0) {
-		return 0;
-	}
-	return 1;
+  return step_exec(memoryp, statep);
 }
 
 function cmd_dump(memoryp, statep, args) {
@@ -2120,6 +2122,29 @@ t1
 
 var input_mode = INPUT_MODE_CMD;
 
+function cmd_step_in_run() {
+  var result = cmd_step(comet2mem,state,run_count);
+  for (var i = 0; i < state[BP].length; i++) {
+    var pnt = state[BP][i];
+    if (pnt == state[PC]) {
+      cometprint(`Breakpoint ${i}, #${hex(pnt,4)}`);
+      run_count = 0;
+      break;
+    }
+  }
+  if (run_count == 0 && !opt_q) {
+    cmd_print(comet2mem,state,[]);
+  }
+  if (result) {
+    terminal1();
+  } else {
+    t1.print("[Program finished]");
+    run_count = 0;
+    run_mode = 0;
+    return 0;
+  }    
+}
+
 let terminal1 = function() {
   if (run_count == 0 || input_mode == INPUT_MODE_IN) {
     t1
@@ -2150,10 +2175,10 @@ let terminal1 = function() {
           }
           if (!found) {
             t1.print(`Undefined command "${cmd}". Try "help".`);
-            setTimeout(terminal1(),0);
+            terminal1();
           }
           if (result) {
-            setTimeout(terminal1(),0);
+            terminal1();
           } else {
             t1.print("[Program finished]");
           }
@@ -2165,14 +2190,13 @@ let terminal1 = function() {
           if (run_count == 0 && !opt_q) {
             cmd_print(comet2mem,state,[]);
           }
-          setTimeout(terminal1(),0);
+          terminal1();
         }
         });
   } else { 
-    // runコマンドを実行している場合
-    // stepコマンドに回数を指定した場合
+    // runコマンドを実行していて，run_countが尽きかけたら，run_countを回復してcallbackにする．
     if (run_mode == 1 && run_count == 1) {
-      run_count = 10000;
+      run_count = RUN_COUNT_NUM;
       setTimeout(function () {
         var result = cmd_step(comet2mem,state,run_count);
         for (var i = 0; i < state[BP].length; i++) {
@@ -2196,7 +2220,9 @@ let terminal1 = function() {
         }    
       },0);
     } else {
-      var result = cmd_step(comet2mem,state,run_count);
+    // runコマンドを実行している場合
+    // stepコマンドに回数を指定した場合
+    var result = cmd_step(comet2mem,state,run_count);
       for (var i = 0; i < state[BP].length; i++) {
         var pnt = state[BP][i];
         if (pnt == state[PC]) {
@@ -2262,6 +2288,7 @@ document.getElementById("terminal-refresh").addEventListener("click", comet2init
 document.getElementById("assemble").addEventListener("click", assemble);
 document.getElementById("stop").addEventListener("click", function () {
   run_count = 0;  
+  run_mode = 0;
 });
 document.getElementById("quiet").addEventListener("click", function () {
   if (document.getElementById("quiet").checked) {
