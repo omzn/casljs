@@ -71,21 +71,40 @@ var memory = {};
 var symtbl = {};
 var buf = [];
 var outdump = [];
-var outref = [];
+var comet2startAddress = 0;
+var comet2startLabel;
 
-var opt_a = 1;
-
+var opt_a = 0;
 var comet2ops = [];
 
+var comet2bin = "";
+const fs = require('fs');
+var program = require('commander');
+
+
 const main = () => {
+  program
+  .version(VERSION)
+  .usage('[options] <casl2 file>')
+  .option('-a, --all', 'show detailed info')
+  .parse(process.argv);
+
+  if (program._optionValues.all) {
+    opt_a = 1;
+  }
   try {
     const fs = require('fs');
-    const inputFilepath = process.argv[2];
+    const inputFilepath = program.args[0]; // process.argv[2];
+    if (!inputFilepath) {
+      throw('No casl2 source file specified.');
+    }
+    const basename = inputFilepath.split('/').pop().split('.').shift();
+    const outputFilepath = basename + ".com";
     const casl2code = fs.readFileSync(inputFilepath, 'utf-8');
     //    console.log(casl2code);
     pass1(casl2code, symtbl, memory, buf);
-    pass2(comet2ops, symtbl, memory, buf);
-    // fs.writeFileSync(outputFilepath, data);
+    comet2bin = pass2(comet2ops, symtbl, memory, buf);
+    fs.writeFileSync(outputFilepath, comet2bin);
     // console.log(`Write to ${outputFilepath}`);
   } catch (e) {
     //エラー処理
@@ -93,7 +112,7 @@ const main = () => {
   }
   //  console.log(memory);
   //  console.log(symtbl);
-  console.log(comet2ops);
+  //  console.log(comet2ops);
 };
 
 function unpack_C(string) {
@@ -726,17 +745,28 @@ function pass1(source, symtblp, memoryp, bufp) {
   if (in_block) error('NO "END" instruction found');
 }
 
-function pass2(file, symtblp, memoryp, bufp) {
+function pass2(result_arr, symtblp, memoryp, bufp) {
   if (opt_a) {
     console.log('CASL LISTING\n');
   }
   var address;
   var last_line = -1;
   var memkeys = Object.keys(memoryp);
+  var result_str = "";
 
   memkeys.sort(function(a, b) {
     return Number(a) - Number(b);
   });
+  comet2startAddress = expand_label(symtblp, comet2startLabel);
+
+//  printf OUT
+//  pack( "a4nx10", 'CASL', expand_label( $symtblp, $memoryp->{-1} ) );
+  result_str += 'CASL';
+  result_str += String.fromCharCode(comet2startAddress & 0xff);
+  result_str += String.fromCharCode(comet2startAddress >> 8 & 0xff);
+  for (var i = 0; i < 10; i++ ) {
+    result_str += String.fromCharCode(0);  
+  }
 
   for (var i = 0; i < memkeys.length; i++) {
     address = Number(memkeys[i]);
@@ -744,9 +774,10 @@ function pass2(file, symtblp, memoryp, bufp) {
     if (address < 0) continue;
     __line = memoryp[address]['line'];
     var val = expand_label(symtblp, memoryp[address]['val']);
-    //    console.log(__line);
-    file.push(val);
     // print OUT pack( 'n', $val );
+    result_str += String.fromCharCode(val & 0xff);
+    result_str += String.fromCharCode(val >> 8 & 0xff);
+    result_arr.push(val);
     if (opt_a) {
       var result;
       var aLine = bufp[__line - 1].split(/\t/);
@@ -777,6 +808,7 @@ function pass2(file, symtblp, memoryp, bufp) {
       console.log(outdump[i]);
     }
   }
+  return result_str;
 }
 
 main();
