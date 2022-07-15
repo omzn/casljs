@@ -169,7 +169,10 @@
     </style>
     <script>
         window.onload = function () {
-            document.getElementById("casl2src").value = decodeURIComponent(localStorage.getItem('casl2src'));
+            var casl2src_item = localStorage.getItem('casl2src');
+            if (casl2src_item != null) {
+                document.getElementById("casl2src").value = decodeURIComponent(casl2src_item);
+            }
             var q = localStorage.getItem('quiet');
             if (q == 1) {
                 document.getElementById("quiet").checked = true;
