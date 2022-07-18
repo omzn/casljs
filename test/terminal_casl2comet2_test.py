@@ -51,6 +51,7 @@ def init_chrome_driver():
         driver = webdriver.Chrome(options=options)
     return driver
 
+
 def common_task(driver, casl2_file, out_file, timeout):
     driver.refresh()
     with open(casl2_file, encoding="utf-8") as fp:
@@ -118,6 +119,7 @@ TEST_EXPECT_DIR = "test_expects"
 browsers = ["Firefox", "Chrome"]
 sample_files = sorted(glob.glob("samples/**/*.cas", recursive=True))
 test_data = list(itertools.product(browsers, sample_files))
+
 
 @pytest.fixture(scope="module")
 def Firefox():
