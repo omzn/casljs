@@ -1,2 +1,2 @@
-selenium
-pytest
+selenium == 4.3.*
+pytest == 7.1.*
