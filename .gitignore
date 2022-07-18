@@ -5,10 +5,12 @@ node_modules
 *.com
 *.json
 
+# test用
 __pycache__
 .pytest_cache
 test_result
 *.log
 *.exe
 geckodriver
+chromedriver
 !test/input.json

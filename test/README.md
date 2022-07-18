@@ -1,27 +1,32 @@
 # casl2comet2js.htmlテスト
 
 pytestとseleniumで`casl2comet2js.html`のrunコマンドをテストします．  
-テストに使用する入力データとして`sample*.cas`を使用します．
+テストに使用する入力データとして`sample*.cas`および`input.json`を使用します．
+
+`terminal_casl2comet2_test.py`がテストコードの本体です．  
+このテストコードはActionsからも実行されます．
 
 ## テストのセットアップ
 
-Firefox，Chrome，Python3をインストールし，`setup_test.sh`または`setup_test.ps1`を実行してください
+`terminal_casl2comet2_test.py`を実行するには以下のセットアップが必要です．
 
-```bash
-# bashの場合
-cd test
-./setup_test.sh
-```
+1. Firefox，Chrome，Python3をインストールする
+2. `setup_test.sh`または`setup_test.ps1`を実行する
+    ```bash
+    # Linux, MacOSの場合
+    cd test
+    ./setup_test.sh
+    ```
 
-```powershell
-# Windows powershellの場合
-cd test
-./setup_test.ps1
-```
+    ```powershell
+    # Windowsの場合
+    cd test
+    ./setup_test.ps1
+    ```
 
 ## テスト入力
 
-CASL2ファイルとして`sample*.cas`を使用します．
+CASL2ファイルとして`sample*.cas`を使用します．`samples`フォルダ内に入ってあります．
 
 IN命令から入力される文字列は`input.json`ファイルに記述します．
 
@@ -48,8 +53,10 @@ python ./terminal_casl2comet2_test.py chrome
 
 ## テスト結果
 
-テスト結果は，`sample*.cas`から期待される出力(OUT)が行われたかどうかで判定されます．
+テスト結果は，`sample*.cas`から期待される出力(COMET2ターミナルの出力)が行われたかどうかで判定されます．
 
-アセンブラエラーや実行のタイムアウト(3秒，sample16のみ60秒)が発生した場合は失敗扱いとなります．
+`sampleN.cas`から期待される出力は`test_expect/sampleN.cas.out`に記載されてあります．
 
-Github Actionsの欄からもテスト結果を見ることができます．
+期待される出力と実際の出力が異なる場合，そのテストは失敗となります．
+
+また，アセンブラエラーや実行のタイムアウト(3秒，sample16のみ60秒)が発生した場合も失敗扱いとなります．
