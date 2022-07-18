@@ -1,10 +1,10 @@
-import sys
 import os
 import glob
 import re
 import json
 import itertools
 import pytest
+from pathlib import Path
 from selenium import webdriver
 from selenium.webdriver import FirefoxOptions
 from selenium.webdriver import ChromeOptions
@@ -24,15 +24,12 @@ class Casl2AssembleError(Exception):
 def init_firefox_driver():
     options = FirefoxOptions()
     options.add_argument("--headless")
-    if os.name == "nt" and os.path.exists("geckodriver.exe"):
+    if os.name == "nt" and Path("geckodriver.exe").exists():
         driver = webdriver.Firefox(service=FirefoxService(executable_path="geckodriver.exe"), options=options)
-    elif os.name == "posix" and os.path.exists("geckodriver"):
+    elif os.name == "posix" and Path("geckodriver").exists():
         driver = webdriver.Firefox(service=FirefoxService(executable_path="geckodriver"), options=options)
     else:
         driver = webdriver.Firefox(options=options)
-    path_to_html = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "casl2comet2js.html").replace(os.path.sep, "/")
-    driver.get("file://" + path_to_html)
-    driver.set_window_size(1440, 900)
     return driver
 
 
@@ -46,15 +43,12 @@ def init_chrome_driver():
     options.add_argument('--disable-desktop-notifications')
     options.add_argument("--disable-extensions")
     options.add_experimental_option('excludeSwitches', ['enable-logging'])
-    if os.name == "nt" and os.path.exists("chromedriver.exe"):
+    if os.name == "nt" and Path("chromedriver.exe").exists():
         driver = webdriver.Chrome(service=ChromeService(executable_path="chromedriver.exe"), options=options)
-    elif os.name == "posix" and os.path.exists("chromedriver"):
+    elif os.name == "posix" and Path("chromedriver").exists():
         driver = webdriver.Chrome(service=ChromeService(executable_path="chromedriver"), options=options)
     else:
         driver = webdriver.Chrome(options=options)
-    path_to_html = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "casl2comet2js.html").replace(os.path.sep, "/")
-    driver.get("file://" + path_to_html)
-    driver.set_window_size(1440, 900)
     return driver
 
 def common_task(driver, casl2_file, out_file, timeout):
@@ -81,8 +75,8 @@ def common_task(driver, casl2_file, out_file, timeout):
             .perform()
         with open("input.json") as fp:
             input = json.load(fp)
-        if os.path.basename(casl2_file) in input.keys():
-            for in_str in input[os.path.basename(casl2_file)]:
+        if Path(casl2_file).name in input.keys():
+            for in_str in input[Path(casl2_file).name]:
                 ActionChains(driver)\
                     .move_to_element(e)\
                     .click()\
@@ -114,94 +108,45 @@ def common_task(driver, casl2_file, out_file, timeout):
         raise err
 
 
-if __name__ == "__main__":
-    sample_files = glob.glob("samples/**/*.cas", recursive=True)
-    if len(sys.argv) != 2:
-        print("Please specify the browser to use in the argument.(firefox|chrome)")
-        sys.exit(-1)
-    if sys.argv[1] == "firefox":
-        driver = init_firefox_driver()
-    elif sys.argv[1] == "chrome":
-        driver = init_chrome_driver()
-    else:
-        print("You can only specify firefox or chrome for your browser.")
-        sys.exit(-1)
-    passed = 0
-    failed = 0
-    if not os.path.exists("test_result"):
-        os.mkdir("test_result")
-    try:
-        for src in sample_files:
-            print(os.path.basename(src) + ": ", end="")
-            sys.stdout.flush()
-            if (os.path.basename(src) == "sample16.cas"):
-                timeout = 60
-            else:
-                timeout = 3
-            try:
-                out_file = os.path.join("test_result", os.path.basename(src) + ".out")
-                expect_file = os.path.join("test_expect", os.path.basename(src) + ".out")
-                common_task(driver, src, out_file, timeout)
-                with open(out_file) as ofp, open(expect_file) as efp:
-                    assert ofp.read() == efp.read()
-            except AssertionError:
-                failed += 1
-                print("\033[31mFAILED\033[0m")
-            except Casl2AssembleError:
-                failed += 1
-                print("\033[34mASMERROR\033[0m")
-            except TimeoutException:
-                failed += 1
-                print("\033[33mTIMEOUT\033[0m")
-            except KeyboardInterrupt:
-                raise KeyboardInterrupt
-            except Exception:
-                failed += 1
-                print("\033[31mERROR\033[0m")
-            else:
-                passed += 1
-                print("\033[32mPASSED\033[0m")
-    except KeyboardInterrupt:
-        print("\033[33m==================Exit from Test with Ctrl+C!=================\033[0m")
-    finally:
-        driver.quit()
-        print(f"passed:{passed}, failed:{failed}")
-        sys.exit(0)
-
-
 # ===================================
 # pytest code
 # ===================================
 
+TEST_RESULT_DIR = "test_results"
+TEST_EXPECT_DIR = "test_expects"
 
 browsers = ["Firefox", "Chrome"]
 sample_files = sorted(glob.glob("samples/**/*.cas", recursive=True))
 test_data = list(itertools.product(browsers, sample_files))
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def Firefox():
     driver = init_firefox_driver()
     yield driver
     driver.quit()
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def Chrome():
     driver = init_chrome_driver()
     yield driver
     driver.quit()
 
 
-@pytest.mark.parametrize(("driver,casl2_file"), test_data)
-def test_casl2comet2_run(driver, casl2_file, request):
-    if not os.path.exists("test_result"):
-        os.mkdir("test_result")
-    out_file = os.path.join("test_result", os.path.basename(casl2_file) + ".out")
-    if (os.path.basename(casl2_file) == "sample16.cas"):
+@pytest.mark.parametrize(("driver_name,casl2_file"), test_data)
+def test_casl2comet2_run(driver_name, casl2_file, request):
+    driver = request.getfixturevalue(driver_name)
+    path_to_html = Path(__file__).parent.parent.joinpath("casl2comet2js.html")
+    driver.get("file://" + str(path_to_html))
+    driver.set_window_size(1920, 1080)
+    if not Path(TEST_RESULT_DIR).exists():
+        os.mkdir(TEST_RESULT_DIR)
+    out_file = Path(TEST_RESULT_DIR).joinpath(Path(casl2_file).name + ".out")
+    if (Path(casl2_file).name == "sample16.cas"):
         timeout = 60
     else:
         timeout = 3
-    common_task(request.getfixturevalue(driver), casl2_file, out_file, timeout)
-    expect_file = os.path.join("test_expect", os.path.basename(casl2_file) + ".out")
+    common_task(driver, casl2_file, out_file, timeout)
+    expect_file = Path(TEST_EXPECT_DIR).joinpath(Path(casl2_file).name + ".out")
     with open(out_file) as ofp, open(expect_file) as efp:
         assert ofp.read() == efp.read()

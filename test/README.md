@@ -37,18 +37,18 @@ IN命令から入力される文字列は`input.json`ファイルに記述しま
 pytestコマンドから実行できます．
 ```bash
 # testディレクトリ内で実行
-pytest
+pytest -v
 ```
 
-また，pythonからも簡易的なテストを実行することができます．
+また，ブラウザを指定してテストを実行する際には，`-k`オプションを使用してブラウザを指定することもできます．
 ```bash
 # testディレクトリ内で実行
 
 # Firefoxでテストする場合
-python ./terminal_casl2comet2_test.py firefox
+pytest -v -k Firefox
 
 # Chromeでテストする場合
-python ./terminal_casl2comet2_test.py chrome
+pytest -v -k Chrome
 ```
 
 ## テスト結果

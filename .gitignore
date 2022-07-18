@@ -8,7 +8,7 @@ node_modules
 # test用
 __pycache__
 .pytest_cache
-test_result
+test_results
 *.log
 *.exe
 geckodriver
