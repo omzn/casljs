@@ -60,7 +60,7 @@ jobs:
 
       # pytest を実行する
       - name: Run Test
-        run: python -m pytest --junit-xml result-${{ matrix.os }}.xml
+        run: python -m pytest -v --junit-xml result-${{ matrix.os }}.xml
         working-directory: ./test
 
       # テスト結果を出力する
