@@ -130,9 +130,7 @@ if __name__ == "__main__":
     if not os.path.exists("test_result"):
         os.mkdir("test_result")
     try:
-        # for src in sample_files:
-        src = "samples/program1/sample16.cas"
-        if src:
+        for src in sample_files:
             print(os.path.basename(src) + ": ", end="")
             sys.stdout.flush()
             if (os.path.basename(src) == "sample16.cas"):
