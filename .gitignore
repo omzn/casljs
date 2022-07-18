@@ -10,7 +10,5 @@ __pycache__
 .pytest_cache
 test_results
 *.log
-*.exe
-geckodriver
-chromedriver
+drivers
 !test/input.json

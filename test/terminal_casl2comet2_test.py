@@ -15,6 +15,11 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.firefox.service import Service as FirefoxService
 from selenium.webdriver.chrome.service import Service as ChromeService
 from selenium.common.exceptions import TimeoutException
+from webdriver_manager.chrome import ChromeDriverManager
+from webdriver_manager.firefox import GeckoDriverManager
+
+
+DRIVER_DESTINATION_PATH = "./driver"
 
 
 class Casl2AssembleError(Exception):
@@ -24,12 +29,7 @@ class Casl2AssembleError(Exception):
 def init_firefox_driver():
     options = FirefoxOptions()
     options.add_argument("--headless")
-    if os.name == "nt" and Path("geckodriver.exe").exists():
-        driver = webdriver.Firefox(service=FirefoxService(executable_path="geckodriver.exe"), options=options)
-    elif os.name == "posix" and Path("geckodriver").exists():
-        driver = webdriver.Firefox(service=FirefoxService(executable_path="geckodriver"), options=options)
-    else:
-        driver = webdriver.Firefox(options=options)
+    driver = webdriver.Firefox(service=FirefoxService(GeckoDriverManager(path=DRIVER_DESTINATION_PATH).install()), options=options)
     return driver
 
 
@@ -43,12 +43,7 @@ def init_chrome_driver():
     options.add_argument('--disable-desktop-notifications')
     options.add_argument("--disable-extensions")
     options.add_experimental_option('excludeSwitches', ['enable-logging'])
-    if os.name == "nt" and Path("chromedriver.exe").exists():
-        driver = webdriver.Chrome(service=ChromeService(executable_path="chromedriver.exe"), options=options)
-    elif os.name == "posix" and Path("chromedriver").exists():
-        driver = webdriver.Chrome(service=ChromeService(executable_path="chromedriver"), options=options)
-    else:
-        driver = webdriver.Chrome(options=options)
+    driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager(path=DRIVER_DESTINATION_PATH).install()), options=options)
     return driver
 
 

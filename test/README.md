@@ -11,17 +11,10 @@ pytestとseleniumで`casl2comet2js.html`のrunコマンドをテストします�
 `terminal_casl2comet2_test.py`を実行するには以下のセットアップが必要です．
 
 1. Firefox，Chrome，Python3をインストールする
-2. `setup_test.sh`または`setup_test.ps1`を実行する
+2. 依存するモジュールをpipからインストールする
     ```bash
-    # Linux, MacOSの場合
-    cd test
-    ./setup_test.sh
-    ```
-
-    ```powershell
-    # Windowsの場合
-    cd test
-    ./setup_test.ps1
+    # testディレクトリ内で実行
+    pip install -r requirements.txt
     ```
 
 ## テスト入力

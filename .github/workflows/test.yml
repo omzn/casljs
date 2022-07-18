@@ -47,21 +47,16 @@ jobs:
           chrome-version: stable
 
       # テストの依存モジュールをインストールする
-      - name: Set up Test Dependency modules(windows)
-        if: matrix.os == 'windows-latest'
-        shell: pwsh
-        run: powershell -NoProfile -ExecutionPolicy Unrestricted ./setup_test.ps1
-        working-directory: ./test
-      - name: Set up Test Dependency modules(posix)
-        if: matrix.os != 'windows-latest'
-        shell: bash
-        run: bash ./setup_test.sh
+      - name: Set up Test Dependency modules
+        run: python -m pip install -r requirements.txt
         working-directory: ./test
 
       # pytest を実行する
       - name: Run Test
         run: python -m pytest -v --junit-xml result-${{ matrix.os }}.xml
         working-directory: ./test
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       # テスト結果を出力する
       - name: Publish Test Report
