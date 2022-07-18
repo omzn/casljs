@@ -3,6 +3,7 @@ import os
 import glob
 import re
 import json
+import itertools
 import pytest
 from selenium import webdriver
 from selenium.webdriver import FirefoxOptions
@@ -173,65 +174,9 @@ if __name__ == "__main__":
 # ===================================
 
 
-test_data = [
-    ('Firefox', 'samples/program1/sample11.cas'),
-    ('Firefox', 'samples/program1/sample11p.cas'),
-    ('Firefox', 'samples/program1/sample11pp.cas'),
-    ('Firefox', 'samples/program1/sample12.cas'),
-    ('Firefox', 'samples/program1/sample13.cas'),
-    ('Firefox', 'samples/program1/sample14.cas'),
-    ('Firefox', 'samples/program1/sample14p.cas'),
-    ('Firefox', 'samples/program1/sample15.cas'),
-    ('Firefox', 'samples/program1/sample15a.cas'),
-    ('Firefox', 'samples/program1/sample16.cas'),
-    ('Firefox', 'samples/program1/sample17.cas'),
-    ('Firefox', 'samples/program1/sample18.cas'),
-    ('Firefox', 'samples/program1/sample19p.cas'),
-    ('Firefox', 'samples/program2/sample21.cas'),
-    ('Firefox', 'samples/program2/sample22.cas'),
-    ('Firefox', 'samples/program2/sample23.cas'),
-    ('Firefox', 'samples/program2/sample24.cas'),
-    ('Firefox', 'samples/program2/sample25.cas'),
-    ('Firefox', 'samples/program2/sample25t.cas'),
-    ('Firefox', 'samples/program2/sample26.cas'),
-    ('Firefox', 'samples/program2/sample27.cas'),
-    ('Firefox', 'samples/program2/sample28p.cas'),
-    ('Firefox', 'samples/program2/sample29p.cas'),
-    ('Firefox', 'samples/program2/sample2a.cas'),
-    ('Firefox', 'samples/program3/sample31p.cas'),
-    ('Firefox', 'samples/program3/sample33p.cas'),
-    ('Firefox', 'samples/program3/sample34.cas'),
-    ('Firefox', 'samples/program3/sample35.cas'),
-    ('Chrome', 'samples/program1/sample11.cas'),
-    ('Chrome', 'samples/program1/sample11p.cas'),
-    ('Chrome', 'samples/program1/sample11pp.cas'),
-    ('Chrome', 'samples/program1/sample12.cas'),
-    ('Chrome', 'samples/program1/sample13.cas'),
-    ('Chrome', 'samples/program1/sample14.cas'),
-    ('Chrome', 'samples/program1/sample14p.cas'),
-    ('Chrome', 'samples/program1/sample15.cas'),
-    ('Chrome', 'samples/program1/sample15a.cas'),
-    ('Chrome', 'samples/program1/sample16.cas'),
-    ('Chrome', 'samples/program1/sample17.cas'),
-    ('Chrome', 'samples/program1/sample18.cas'),
-    ('Chrome', 'samples/program1/sample19p.cas'),
-    ('Chrome', 'samples/program2/sample21.cas'),
-    ('Chrome', 'samples/program2/sample22.cas'),
-    ('Chrome', 'samples/program2/sample23.cas'),
-    ('Chrome', 'samples/program2/sample24.cas'),
-    ('Chrome', 'samples/program2/sample25.cas'),
-    ('Chrome', 'samples/program2/sample25t.cas'),
-    ('Chrome', 'samples/program2/sample26.cas'),
-    ('Chrome', 'samples/program2/sample27.cas'),
-    ('Chrome', 'samples/program2/sample28p.cas'),
-    ('Chrome', 'samples/program2/sample29p.cas'),
-    ('Chrome', 'samples/program2/sample2a.cas'),
-    ('Chrome', 'samples/program3/sample31p.cas'),
-    ('Chrome', 'samples/program3/sample33p.cas'),
-    ('Chrome', 'samples/program3/sample34.cas'),
-    ('Chrome', 'samples/program3/sample35.cas')
-]
-
+browsers = ["Firefox", "Chrome"]
+sample_files = sorted(glob.glob("samples/**/*.cas", recursive=True))
+test_data = list(itertools.product(browsers, sample_files))
 
 @pytest.fixture
 def Firefox():
