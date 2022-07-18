@@ -147,7 +147,7 @@ def test_casl2comet2_run(driver_name, casl2_file, request):
     if (Path(casl2_file).name == "sample16.cas"):
         timeout = 60
     else:
-        timeout = 3
+        timeout = 5
     common_task(driver, casl2_file, out_file, timeout)
     expect_file = Path(TEST_EXPECT_DIR).joinpath(Path(casl2_file).name + ".out")
     with open(out_file) as ofp, open(expect_file) as efp:
