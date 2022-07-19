@@ -34,6 +34,8 @@ jobs:
           firefox-version: 'latest'
 
       # windowsのときはFirefoxの84.0をインストールする
+      # windowsではfirefox-version: "latest"をサポートしていないことが報告されています
+      # https://github.com/browser-actions/setup-firefox/issues/252
       - name: Set up Firefox on Windows
         uses: browser-actions/setup-firefox@latest
         if: matrix.os == 'windows-latest'
