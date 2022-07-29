@@ -4,3 +4,11 @@ perl/comet2
 node_modules
 *.com
 *.json
+
+# test用
+__pycache__
+.pytest_cache
+test_results
+*.log
+drivers
+!test/input.json
