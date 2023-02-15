@@ -1,5 +1,3 @@
-var sprintf = require('sprintf-js').sprintf
-
 var VERSION = '0.1 kit (Dec 31, 2021)';
 var DEBUG = 1;
 
@@ -62,7 +60,7 @@ var CMDTBL = {
   'p|print'   : { subr : cmd_print,  list : 0 },
   'du|dump'   : { subr : cmd_dump,   list : 0 },
   'st|stack'  : { subr : cmd_stack,  list : 0 },
-  'f|file'    : { subr : cmd_file,   list : 1 },
+//  'f|file'    : { subr : cmd_file,   list : 1 },
   'j|jump'    : { subr : cmd_jump,   list : 1 },
   'm|memory'  : { subr : cmd_memory, list : 1 },
   'di|disasm' : { subr : cmd_disasm, list : 0 },
@@ -105,10 +103,6 @@ var state = [0x0000, FR_ZERO, 0, 0, 0, 0, 0, 0, 0, 0, STACK_TOP, []];
 
 var run_stop = 0;
 var last_cmd;
-
-import Terminal from 'terminal-js-emulator';
-var terminal = new Terminal('terminal');
-terminal.setHeight("400px");
 
 const main = () => {
   terminal.input(`comet> `, function (cmd) {
@@ -782,6 +776,129 @@ function cmd_delete(memoryp, statep, arg) {
     statep[BP] = [];
   }
 }
+
+function cmd_dump(memoryp, statep, args) {
+  if (DEBUG) {
+    console.log(`cmd_dump( / ${statep} / ${args} )`);
+  }
+
+	var val = expand_number( args[0] );
+	if (val == null) {
+	  val = statep[PC];
+	}
+  
+	var row, col, base;
+	for (row = 0; row < 16; row++) {
+			var line = '';
+			base = val + ( row << 3 );
+			line = hex(base,4) + ':';
+			for (col = 0; col < 8; col ++) {
+					line += ' ' + hex(mem_get( memoryp, base + col ),4) ;
+			}
+			line += ' ';
+			for (col = 0; col < 8; col ++) {
+				var c = mem_get( memoryp, base + col ) & 0xff;
+				line += ( ( c >= 0x20 && c <= 0x7f ) ? String.fromCharCode(c) : ".");
+			}
+			cometprint(line);
+	}
+	return 1;
+}
+
+function cmd_stack( memoryp, statep, args ) {
+  if (DEBUG) {
+    console.log(`cmd_stack( {memoryp} / ${statep} / ${args} )`);
+  }
+
+	var val = statep[SP];
+	cmd_dump( memoryp, statep, val );
+	return 1;
+}
+
+
+function cmd_jump( memoryp, statep, args ) {
+  if (DEBUG) {
+    console.log(`cmd_jump( {memoryp} / ${statep} / ${args} )`);
+  }
+
+	var val = expand_number( args[0] );
+	if ( val != null) {
+			statep[PC] = val;
+	}
+	else {
+			cometprint("Invalid argument.\n");
+	}
+	return 1;
+}
+
+
+function cmd_memory( memoryp, statep, args ) {
+  if (DEBUG) {
+    console.log(`cmd_memory( {memoryp} / ${statep} / ${args} )`);
+  }
+
+	var adr = expand_number( args[0] );
+	var val = expand_number( args[1] );
+	if ( adr != null && val != null ) {
+			mem_put( memoryp, adr, val );
+	} else {
+			cometprint("Invalid argument.\n");
+	}
+	return 1;
+}
+
+
+function cmd_disasm ( memoryp, statep, args ) {
+  if (DEBUG) {
+    console.log(`cmd_disasm( {memoryp} / ${statep} / ${args} )`);
+  }
+
+	var val = null;
+	if (args != []) {
+		val = expand_number( args[0] );
+	}
+	if (val == null) {
+		val = statep[PC];
+	}
+
+	var pc = statep[PC];    // save original PC
+	statep[PC] = val;
+
+	for ( var i = 0 ; i < 16 ; i++ ) {
+			var result  = parse( memoryp, statep );
+			cometprint(`#${hex(statep[PC],4)}\t${result[0]}\t${result[1]}\n`);
+			statep[PC] += result[2];
+	}
+	statep[PC] = pc;       // restore PC
+	return 1;
+}
+
+function cmd_break ( memoryp, statep, args ) {
+  if (DEBUG) {
+    console.log(`cmd_break( {memoryp} / ${statep} / ${args} )`);
+  }
+
+	var val = expand_number( args[0] );
+	if ( val != null) {
+			statep[BP].push(val);
+	}
+	else {
+			cometprint("Invalid argument.");
+	}
+	return 1;
+}
+
+function cmd_info ( memoryp, statep, args ) {
+  if (DEBUG) {
+    console.log(`cmd_info( {memoryp} / ${statep} / ${args} )`);
+  }
+
+	for ( var i = 0; i < statep[BP].length; i++ ) {
+			cometprint(`${spacePadding(i,2)}: #${hex(statep[BP][i],4)}`);
+	}
+	return 1;
+}
+
 
 function cmd_print(memoryp, statep, arg) {
   if (DEBUG) {
