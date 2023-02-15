@@ -316,7 +316,7 @@ var __webpack_exports__ = {};
 //// Both casl2 and commet2
 
 var VERSION = '0.9.1 KIT version (Feb 15, 2023)';
-var DEBUG = 1;
+var DEBUG = 0;
 var DDEBUG = 0;
 
 // addresses of IN/OUT system calls --- these MACROs are expanded
