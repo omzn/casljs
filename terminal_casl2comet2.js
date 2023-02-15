@@ -694,6 +694,13 @@ function pass1(source, symtblp, memoryp, bufp) {
       if (DEBUG) {
         console.log('label/inst/opr =' + label + '/' + inst + '/' + opr);
       }
+    } else if (result = lines[i].match(/^(\S+)\s*$/)) {
+        label = result[1];
+        inst = '';
+        opr = '';
+        if (DEBUG) {
+          console.log('label/inst/opr =' + label + '/' + inst + '/' + opr);
+        }
     } else {
       error('Syntax error:' + lines[i]);
     }
