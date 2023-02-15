@@ -1888,7 +1888,7 @@ function cmd_step(memoryp, statep, args) {
 //  count = expand_number(args);
   count = Number(args);
   if (count == 0) {
-  	count = 1;
+  	count = 0;
   } else if (count > RUN_COUNT_NUM) {
     count = RUN_COUNT_NUM;
     cometprint(`Step execution is limited to ${RUN_COUNT_NUM}.`);
