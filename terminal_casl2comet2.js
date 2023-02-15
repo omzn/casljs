@@ -1818,7 +1818,7 @@ function step_exec(memoryp, statep) {
     pc++;
 
   } else {
-    throw (`Illegal instruction ${inst} at #${ hex(pc,4)}`);
+    throw (`[Error] Illegal instruction ${inst} at #${ hex(pc,4)}`);
   }
 
   // update registers
@@ -1904,8 +1904,16 @@ function cmd_step(memoryp, statep, args) {
   if (DEBUG) {
     console.log(`run_count = ${run_count}`);
   }
-  return step_exec(memoryp, statep);
-}
+
+  var retval;
+  try {
+    retval = step_exec(memoryp, statep);
+  } catch (e) {
+    cometprint(e);
+    retval = 0;
+  }
+  return retval;
+} 
 
 function cmd_dump(memoryp, statep, args) {
   if (DEBUG) {
