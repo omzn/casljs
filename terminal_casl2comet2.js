@@ -315,8 +315,8 @@ var __webpack_exports__ = {};
 
 //// Both casl2 and commet2
 
-var VERSION = '0.9.0 KIT version (July 13, 2022)';
-var DEBUG = 0;
+var VERSION = '0.9.1 KIT version (Feb 15, 2023)';
+var DEBUG = 1;
 var DDEBUG = 0;
 
 // addresses of IN/OUT system calls --- these MACROs are expanded
@@ -502,7 +502,11 @@ function expand_label(hashref, val) {
         var k = `${result[1]}:${result[1]}`;
         if (hashref[k]) {
           nval = hashref[k]['val'];
+        } else {
+          error('Undefined label "' + lbl + '"');
         }
+      } else {
+        error('Undefined label "' + lbl + '"');
       }
     } else if (!val.match(/^[+-]?\d+$/)) {
       var sym = val;
