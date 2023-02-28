@@ -1,4 +1,4 @@
-var VERSION = '0.9.1 KIT version (Feb 15, 2023)';
+var VERSION = '0.9.9 KIT (Feb 28, 2023)';
 var DEBUG = 0;
 var DDEBUG = 0;
 
@@ -75,12 +75,11 @@ var comet2startAddress = 0;
 var comet2startLabel;
 
 var opt_a = 0;
-var comet2ops = [];
 
-var comet2bin = "";
 const fs = require('fs');
 var program = require('commander');
 
+let c2bin = Buffer.alloc(65535);
 
 const main = () => {
   program
@@ -88,12 +87,11 @@ const main = () => {
   .usage('[options] <casl2 file>')
   .option('-a, --all', 'show detailed info')
   .parse(process.argv);
-
-  if (program._optionValues.all) {
+  var options = program.opts();
+  if (options.all) {
     opt_a = 1;
   }
   try {
-    const fs = require('fs');
     const inputFilepath = program.args[0]; // process.argv[2];
     if (!inputFilepath) {
       throw('No casl2 source file specified.');
@@ -103,8 +101,8 @@ const main = () => {
     const casl2code = fs.readFileSync(inputFilepath, 'utf-8');
     //    console.log(casl2code);
     pass1(casl2code, symtbl, memory, buf);
-    comet2bin = pass2(comet2ops, symtbl, memory, buf);
-    fs.writeFileSync(outputFilepath, comet2bin);
+    pass2(symtbl, memory, buf);
+    fs.writeFileSync(outputFilepath, c2bin);
     // console.log(`Write to ${outputFilepath}`);
   } catch (e) {
     //エラー処理
@@ -371,7 +369,14 @@ function pass1(source, symtblp, memoryp, bufp) {
       if (DEBUG) {
         console.log('label/inst/opr =' + label + '/' + inst + '/' + opr);
       }
-    } else {
+    } else if (result = lines[i].match(/^(\S+)\s*$/)) {
+      label = result[1];
+      inst = '';
+      opr = '';
+      if (DEBUG) {
+        console.log('label/inst/opr =' + label + '/' + inst + '/' + opr);
+      }
+  } else {
       error('Syntax error:' + lines[i]);
     }
     // keep every line in @buf for later use
@@ -749,29 +754,27 @@ function pass1(source, symtblp, memoryp, bufp) {
   if (in_block) error('NO "END" instruction found');
 }
 
-function pass2(result_arr, symtblp, memoryp, bufp) {
+function pass2(symtblp, memoryp, bufp) {
   if (opt_a) {
     console.log('CASL LISTING\n');
   }
   var address;
   var last_line = -1;
   var memkeys = Object.keys(memoryp);
-  var result_str = "";
 
   memkeys.sort(function(a, b) {
     return Number(a) - Number(b);
   });
   comet2startAddress = expand_label(symtblp, comet2startLabel);
 
-//  printf OUT
-//  pack( "a4nx10", 'CASL', expand_label( $symtblp, $memoryp->{-1} ) );
-  result_str += 'CASL';
-  result_str += String.fromCharCode(comet2startAddress & 0xff);
-  result_str += String.fromCharCode(comet2startAddress >> 8 & 0xff);
+  c2bin.writeUInt8(0x43,0);  c2bin.writeUInt8(0x41,1);
+  c2bin.writeUInt8(0x53,2);  c2bin.writeUInt8(0x4c,3);
+  c2bin.writeUInt8(comet2startAddress >>> 8 & 0xff,4);
+  c2bin.writeUInt8(comet2startAddress & 0xff,5);
   for (var i = 0; i < 10; i++ ) {
-    result_str += String.fromCharCode(0);  
+    c2bin.writeUInt8(0, 6+i);
   }
-
+  var c2addr = 16;
   for (var i = 0; i < memkeys.length; i++) {
     address = Number(memkeys[i]);
     // skip if start address
@@ -779,9 +782,10 @@ function pass2(result_arr, symtblp, memoryp, bufp) {
     __line = memoryp[address]['line'];
     var val = expand_label(symtblp, memoryp[address]['val']);
     // print OUT pack( 'n', $val );
-    result_str += String.fromCharCode(val & 0xff);
-    result_str += String.fromCharCode(val >> 8 & 0xff);
-    result_arr.push(val);
+    var vh = (val >>> 8) & 0xff;
+    var vl = val & 0xff;
+    c2bin.writeUInt8(vh, c2addr++);
+    c2bin.writeUInt8(vl, c2addr++);
     if (opt_a) {
       var result;
       var aLine = bufp[__line - 1].split(/\t/);
@@ -807,12 +811,12 @@ function pass2(result_arr, symtblp, memoryp, bufp) {
       }
     }
   }
+  c2bin = c2bin.subarray(0,c2addr);
   if (opt_a) {
     for (var i = 0; i < outdump.length; i++) {
       console.log(outdump[i]);
     }
   }
-  return result_str;
 }
 
 main();

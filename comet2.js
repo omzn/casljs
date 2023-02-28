@@ -1,5 +1,5 @@
-var VERSION = '0.1 kit (Dec 31, 2021)';
-var DEBUG = 1;
+var VERSION = '0.9.9 KIT (Feb 28, 2023)';
+var DEBUG = 0;
 
 var COMET2TBL = {
   // COMET instructions
@@ -67,70 +67,190 @@ var CMDTBL = {
   'h|help'    : { subr : cmd_help,   list : 0 },
 };
 
+const SYS_IN   = 0xfff0;
+const SYS_OUT  = 0xfff2;
+const EXIT_USR = 0x0000;
+const EXIT_OVF = 0x0001;
+const EXIT_DVZ = 0x0002;
+const EXIT_ROV = 0x0003;
 
-var SYS_IN = 0xfff0;
-var SYS_OUT = 0xfff2;
-
-var FR_PLUS = 0;
-var FR_ZERO = 1;
-var FR_MINUS = 2;
-var FR_OVER = 4;
+const FR_PLUS  = 0;
+const FR_ZERO  = 1;
+const FR_MINUS = 2;
+const FR_OVER  = 4;
 
 // the top of the stack, which is the upper limit of the stack space.
-var STACK_TOP = 0xff00;
+const STACK_TOP = 0xff00;
 
 // indices for the state list, state
-var PC = 0;
-var FR = 1;
-var GR0 = 2;
-var GR1 = 3;
-var GR2 = 4;
-var GR3 = 5;
-var GR4 = 6;
-var GR5 = 7;
-var GR6 = 8;
-var GR7 = 9;
-var SP = 10;
-var BP = 11;
+const PC =  0;
+const FR =  1;
+const GR0 = 2;
+const GR1 = 3;
+const GR2 = 4;
+const GR3 = 5;
+const GR4 = 6;
+const GR5 = 7;
+const GR6 = 8;
+const GR7 = 9;
+const SP = 10;
+const BP = 11;
 // maximum/minimum of signed value
-var MAX_SIGNED = 32767;
-var MIN_SIGNED = -32768;
+const MAX_SIGNED = 32767;
+const MIN_SIGNED = -32768;
+
+const INPUT_MODE_CMD = 0;
+const INPUT_MODE_IN = 1;
 
 // memory image
 var comet2mem = [];
 // PC, FR, GR0, GR1, GR2, GR3, GR4, GR5, GR6, GR7, SP, break points
 var state = [0x0000, FR_ZERO, 0, 0, 0, 0, 0, 0, 0, 0, STACK_TOP, []];
+var comet2startAddress = 0;
+
+var input_mode = INPUT_MODE_CMD;
 
 var run_stop = 0;
 var last_cmd;
+var next_cmd = "";
 
-const main = () => {
-  terminal.input(`comet> `, function (cmd) {
-    if (cmd == '') {
-      cmd = last_cmd;
-    } else {
-      last_cmd = cmd;
+var opt_q = false;
+var opt_Q = false;
+var opt_r = false;
+
+const readline = require('readline/promises');
+const fs = require('fs');
+
+const readInterface = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout,
+});
+
+var program = require('commander');
+
+program
+.version(VERSION)
+.usage('[options] <comet2 file>')
+.option('-q, --quiet', 'quiet mode')
+.option('-r, --run',   'run mode')
+.option('-Q, --QuietRun', 'hard quiet mode (implies -q and -r)')
+.parse(process.argv);
+
+var options = program.opts();
+if (options.quiet) {
+  opt_q = true;
+}
+if (options.run) {
+  opt_r = true;
+  next_cmd = "r";
+}
+if (options.QuietRun) {
+  opt_q = true;
+  opt_Q = true;
+  opt_r = true;
+  next_cmd = "r";
+}
+
+(async ()=>{
+
+  try {
+    const inputFilepath = program.args[0]; 
+    if (!inputFilepath) {
+      throw('No comet2 binary file specified.');
     }
-    var cmds = cmd.replace(/\s+/,' ').split(' ');
-    cmd = cmds.shift();
-    for (const key in CMDTBL) {
-      if (cmd.match(key)) {
-        cmd.subr(comet2mem,state,cmds);
-        if (CMDTBL[key].list) {
-          cmd_print(comet2mem,state,cmds);
+    let buf = Buffer.alloc(65535);
+    buf = fs.readFileSync(inputFilepath);
+    if (!(buf.readUInt8(0) == 0x43 && buf.readUInt8(1) == 0x41 && buf.readUInt8(2) == 0x53 && buf.readUInt8(3) == 0x4c )) {
+      throw('The file is not a comet2 binary file.');
+    } 
+    comet2startAddress = buf.readUint8(5) | (buf.readUint8(4) << 8);
+    state[0] = comet2startAddress;
+    var addr = 0;
+    for (var i = 16; i < buf.length; i += 2) {
+      comet2mem[addr] = (buf.readUint8(i+1) | (buf.readUint8(i) << 8));
+      addr++;
+    }    
+//    console.log(state);
+//    console.log(comet2mem);
+  } catch (e) {
+    //エラー処理
+    console.log(e);
+    process.exit(0);
+  }
+  if (!opt_q) {
+    cmd_print(comet2mem,state, []);
+  }
+  var cmd;
+  var finish = 0;
+  while (1) {
+    if (input_mode == INPUT_MODE_CMD) {
+      if (next_cmd != "") {
+        cmd = next_cmd;
+        next_cmd = "";
+      } else {
+        cmd = await readInterface.question("comet2> ");
+      }
+      if (cmd == '') {
+        cmd = last_cmd;
+      } else {
+        last_cmd = cmd;
+      }
+      var cmds = cmd.replace(/\s+/,' ').split(' ');
+      var cmd2 = cmds.shift();
+      if (cmd2.match('^(quit|q)$')) {
+        cometprint('[Comet2 finished]');
+        break;
+      } 
+      for (const key in CMDTBL) {
+        if (cmd2.match('^('+key+')$')) {
+          found = 1;
+          try {
+            CMDTBL[key].subr(comet2mem,state,cmds);
+          } catch (e) {
+            if (!opt_q) {
+              cometprint(e);
+            }
+            finish = 1;
+            break;   
+          }
+          if (CMDTBL[key].list) {
+            if (!opt_q) {
+              cmd_print(comet2mem,state,cmds);
+            }
+          }
+          break;
         }
       }
+      if (!found) {
+        cometprint(`Undefined command "${cmd2}". Try "help".`);
+        continue;
+      }
+      if (finish) {
+        break;
+      }
+    } else if (input_mode == INPUT_MODE_IN) {
+      var ppt = "IN> ";
+      if (opt_Q) {
+        ppt = "";
+      }
+      cmd = await readInterface.question(ppt);
+      exec_in(comet2mem,state,cmd);
+      input_mode = INPUT_MODE_CMD;     
+      if (!opt_q) {
+        cmd_print(comet2mem,state,[]);
+      }
+    } else {
+      cometprint(`Unknown input mode.`);
+      break;
     }
-  });
-};
+  }
+  //console.log( string );
+  readInterface.close();
+})();
 
 function cometprint(str) {
   console.log(str);
 }
-
-//function cometprint(str) {
-//  console.log(str);
-//}
 
 function zeroPadding(val, len) {
   for (var i = 0; i < len; i++) {
@@ -145,6 +265,10 @@ function unpack_C(string) {
     ret.push(string.charCodeAt(i));
   }
   return ret;
+}
+
+function hex(val,len) {
+	return zeroPadding(val.toString(16),len);
 }
 
 function signed(val) {
@@ -208,7 +332,7 @@ function mem_put(memoryp, pc, val) {
 
 function parse(memoryp, statep) {
   if (DEBUG) {
-    console.log('parse(memoryp, statep)');
+    console.log(`parse( {memoryp} / ${statep} )`);
   }
   var pc = statep[PC];
   var inst = mem_get(memoryp, pc) >> 8;
@@ -217,30 +341,30 @@ function parse(memoryp, statep) {
   var adr = mem_get(memoryp, pc + 1);
 
   var inst_sym = 'DC';
-  var opr_sym = '#' + zeroPadding(mem_get(memoryp, pc).toString(16), 4);
+  var opr_sym = `#${hex(mem_get(memoryp, pc), 4)}`;
   var size = 1;
-  var key = '0x' + zeroPadding(inst.toString(16), 2);
+  var key = '0x' + hex(inst, 2);
 
   if (COMET2TBL[key]) {
     inst_sym = COMET2TBL[key]['id'];
     var type = COMET2TBL[key]['type'];
     // instructions with GR, adr, and XR
     if (type == 'op1') {
-      opr_sym = 'GR' + Srting(gr) + ', #' + zeroPadding(adr.toString(16));
+      opr_sym = `GR${gr},   #${hex(adr,4)}`;
       if (xr > 0) {
-        opr_sym += ', GR' + String(xr);
+        opr_sym += `, GR${xr}`;
       }
       size = 2;
       // instructions with adr and XR
     } else if (type == 'op2') {  //    # with adr, (XR)
-      opr_sym = '#' + zeroPadding(adr.toString(16), 4);
+      opr_sym = `#${hex(adr,4)}`;
       if (xr > 0) {
-        opr_sym += ', GR' + xr;
+        opr_sym += `, GR${xr}`;
       }
       size = 2;
       // instructions with GR
     } else if (type == 'op3') {  // only with GR
-      opr_sym = 'GR' + String(gr);
+      opr_sym = `GR${gr}`;
       size = 1;
       // instructions without operand
     } else if (type == 'op4') {  // no operand
@@ -248,7 +372,7 @@ function parse(memoryp, statep) {
       size = 1;
       // instructions with GR and GR
     } else if (type == 'op5') {  // with GR, GR
-      opr_sym = 'GR' + String(gr) + ', GR' + String(xr);
+      opr_sym = `GR${gr}, GR${xr}`;
       size = 1;
     }
   }
@@ -258,45 +382,43 @@ function parse(memoryp, statep) {
 
 // Handler of the IN system call --- extract two arguments from the
 // stack, read a line from STDIN, store it in specified place.
-function exec_in(memoryp, statep) {
+function exec_in(memoryp, statep, text) {
   if (DEBUG) {
-    console.log('exec_in(' + memoryp + ',' + statep + ')');
+    console.log(`exec_in( ${statep} / ${text})`);
+  }
+  text.trim();
+  if (text.length > 256) {
+    text = text.substr(0, 256);  //      # must be shorter than 256 characters
   }
   var regs = statep.slice(GR0, GR7 + 1);
   var lenp = regs[2];
   var bufp = regs[1];
-
-  if (DEBUG) {
-    console.log('LENP: ' + lenp + ', BUFP: ' + bufp);
-  }
-
-  var input;  // [TODO] must get input from somewhere.
-  input.trim();
-  if (input.length() > 256) {
-    input = input.substr(0, 256);  //      # must be shorter than 256 characters
-  }
-  mem_put(memoryp, lenp, input.length());
-  var ainput = unpack_C(input);
-  for (var i = 0; i < ainput.length(); i++) {
+  mem_put(memoryp, lenp, text.length);
+  var ainput = unpack_C(text);
+  for (var i = 0; i < ainput.length; i++) {
     mem_put(memoryp, bufp++, ainput[i]);
   }
+  statep[PC] += 2;
 }
 
 // Handler of the OUT system call --- extract two arguments from the
 // stack, write a string to STDOUT.
 function exec_out(memoryp, statep) {
   if (DEBUG) {
-    console.log('exec_out(' + memoryp + ',' + statep + ')');
+    console.log(`exec_out( {memoryp} / ${statep} )`);
   }
   var regs = statep.slice(GR0, GR7 + 1);
   var lenp = regs[2];
   var bufp = regs[1];
   var len = mem_get(memoryp, lenp);
-
-  //    print 'OUT> ' if !::opt_Q;
+  var obuf = Buffer.alloc(len);
   for (var i = 1; i <= len; i++) {
-    // [TODO] must put output to somewhere.
-    console.log(mem_get(memoryp, bufp + (i - 1)) & 0xff);
+    obuf.writeUInt8(mem_get(memoryp, bufp + (i-1)), i-1);
+  }
+  if (!opt_Q) {
+    cometprint(`OUT> ${obuf.toString()}`);
+  } else {
+    cometprint(`${obuf.toString()}`);
   }
 }
 
@@ -304,7 +426,7 @@ function exec_out(memoryp, statep) {
 // update registers, and advance the PC by the instruction's size.
 function step_exec(memoryp, statep) {
   if (DEBUG) {
-    console.log('exec_exec(' + memoryp + ',' + statep + ')');
+    console.log(`step_exec( {memoryp} / ${statep} )`);
   }
   // obtain the mnemonic and the operand for the current address
   var res = parse(memoryp, statep);
@@ -322,6 +444,8 @@ function step_exec(memoryp, statep) {
   var eadr = adr;
 
   var val;
+
+  var stop_flag = 0;
 
   if (1 <= xr && xr <= 7) {
     eadr += regs[xr]
@@ -348,7 +472,7 @@ function step_exec(memoryp, statep) {
     pc += 2;
 
   } else if (inst == 'ADDA') {
-    if (!opr.match(/GR[0-7], GR[0-7]/)) {
+    if (!opr.match(/GR[0-7], GR[0-7]/i)) {
       regs[gr] = signed(regs[gr]);
       regs[gr] += mem_get(memoryp, eadr);
       var ofr1 = regs[gr] > MAX_SIGNED ? FR_OVER : 0;
@@ -370,7 +494,7 @@ function step_exec(memoryp, statep) {
     }
 
   } else if (inst == 'SUBA') {
-    if (!opr.match(/GR[0-7], GR[0-7]/)) {
+    if (!opr.match(/GR[0-7], GR[0-7]/i)) {
       regs[gr] = signed(regs[gr]);
       regs[gr] -= mem_get(memoryp, eadr);
       var ofr1 = regs[gr] > MAX_SIGNED ? FR_OVER : 0;
@@ -392,7 +516,7 @@ function step_exec(memoryp, statep) {
     }
 
   } else if (inst == 'ADDL') {
-    if (!opr.match(/GR[0-7], GR[0-7]/)) {
+    if (!opr.match(/GR[0-7], GR[0-7]/i)) {
       regs[gr] += mem_get(memoryp, eadr);
       var ofr1 = regs[gr] > 0xffff ? FR_OVER : 0;
       var ofr2 = regs[gr] < 0 ? FR_OVER : 0;
@@ -410,7 +534,7 @@ function step_exec(memoryp, statep) {
     }
 
   } else if (inst == 'SUBL') {
-    if (!opr.match(/GR[0-7], GR[0-7]/)) {
+    if (!opr.match(/GR[0-7], GR[0-7]/i)) {
       regs[gr] -= mem_get(memoryp, eadr);
       var ofr1 = regs[gr] > 0xffff ? FR_OVER : 0;
       var ofr2 = regs[gr] < 0 ? FR_OVER : 0;
@@ -427,7 +551,7 @@ function step_exec(memoryp, statep) {
     }
 
   } else if (inst == 'MULA') {
-    if (!opr.match(/GR[0-7], GR[0-7]/)) {
+    if (!opr.match(/GR[0-7], GR[0-7]/i)) {
       regs[gr] = signed(regs[gr]);
       regs[gr] *= mem_get(memoryp, eadr);
       var ofr1 = regs[gr] > MAX_SIGNED ? FR_OVER : 0;
@@ -448,7 +572,7 @@ function step_exec(memoryp, statep) {
       pc += 1;
     }
   } else if (inst == 'MULL') {
-    if (!opr.match(/GR[0-7], GR[0-7]/)) {
+    if (!opr.match(/GR[0-7], GR[0-7]/i)) {
       regs[gr] *= mem_get(memoryp, eadr);
       var ofr1 = regs[gr] > 0xffff ? FR_OVER : 0;
       var ofr2 = regs[gr] < 0 ? FR_OVER : 0;
@@ -465,11 +589,14 @@ function step_exec(memoryp, statep) {
       pc += 1;
     }
   } else if (inst == 'DIVA') {
-    if (!opr.match(/GR[0-7], GR[0-7]/)) {
+    if (!opr.match(/GR[0-7], GR[0-7]/i)) {
       regs[gr] = signed(regs[gr]);
       var m = mem_get(memoryp, eadr);
       if (m == 0) {
         fr = FR_OVER | FR_ZERO;
+        if (!opt_q) {
+          caslprint("Waring: Division by zero in DIVA.");
+        }
       } else {
         regs[gr] /= m;
         var ofr1 = regs[gr] > MAX_SIGNED ? FR_OVER : 0;
@@ -484,6 +611,9 @@ function step_exec(memoryp, statep) {
       regs[xr] = signed(regs[xr]);
       if (regs[xr] == 0) {
         fr = FR_OVER | FR_ZERO;
+        if (!opt_q) {
+          caslprint("Waring: Division by zero in DIVA.");
+        }
       } else {
         regs[gr] /= regs[xr];
         var ofr1 = regs[gr] > MAX_SIGNED ? FR_OVER : 0;
@@ -495,10 +625,13 @@ function step_exec(memoryp, statep) {
       pc += 1;
     }
   } else if (inst == 'DIVL') {
-    if (!opr.match(/GR[0-7], GR[0-7]/)) {
+    if (!opr.match(/GR[0-7], GR[0-7]/i)) {
       var m = mem_get(memoryp, eadr);
       if (m == 0) {
         fr = FR_OVER | FR_ZERO;
+        if (!opt_q) {
+          caslprint("Waring: Division by zero in DIVL.");
+        }
       } else {
         regs[gr] /= m;
         var ofr1 = regs[gr] > 0xffff ? FR_OVER : 0;
@@ -510,6 +643,9 @@ function step_exec(memoryp, statep) {
     } else {
       if (regs[xr] == 0) {
         fr = FR_OVER | FR_ZERO;
+        if (!opt_q) {
+          caslprint("Waring: Division by zero in DIVL.");
+        }
       } else {
         regs[gr] /= regs[xr];
         var ofr1 = regs[gr] > 0xffff ? FR_OVER : 0;
@@ -521,7 +657,7 @@ function step_exec(memoryp, statep) {
       pc += 1;
     }
   } else if (inst == 'AND') {
-    if (!opr.match(/GR[0-7], GR[0-7]/)) {
+    if (!opr.match(/GR[0-7], GR[0-7]/i)) {
       regs[gr] &= mem_get(memoryp, eadr);
       fr = get_flag(regs[gr]);
       pc += 2;
@@ -533,7 +669,7 @@ function step_exec(memoryp, statep) {
     }
 
   } else if (inst == 'OR') {
-    if (!opr.match(/GR[0-7], GR[0-7]/)) {
+    if (!opr.match(/GR[0-7], GR[0-7]/i)) {
       regs[gr] |= mem_get(memoryp, eadr);
       fr = get_flag(regs[gr]);
       pc += 2;
@@ -545,7 +681,7 @@ function step_exec(memoryp, statep) {
     }
 
   } else if (inst == 'XOR') {
-    if (!opr.match(/GR[0-7], GR[0-7]/)) {
+    if (!opr.match(/GR[0-7], GR[0-7]/i)) {
       regs[gr] ^= mem_get(memoryp, eadr);
       fr = get_flag(regs[gr]);
       pc += 2;
@@ -557,7 +693,7 @@ function step_exec(memoryp, statep) {
     }
 
   } else if (inst == 'CPA') {
-    if (!opr.match(/GR[0-7], GR[0-7]/)) {
+    if (!opr.match(/GR[0-7], GR[0-7]/i)) {
       val = signed(regs[gr]) - signed(mem_get(memoryp, eadr));
       if (val > MAX_SIGNED) {
         val = MAX_SIGNED;
@@ -581,7 +717,7 @@ function step_exec(memoryp, statep) {
     }
 
   } else if (inst == 'CPL') {
-    if (!opr.match(/GR[0-7], GR[0-7]/)) {
+    if (!opr.match(/GR[0-7], GR[0-7]/i)) {
       val = regs[gr] - mem_get(memoryp, eadr);
       if (val > MAX_SIGNED) {
         val = MAX_SIGNED;
@@ -685,23 +821,34 @@ function step_exec(memoryp, statep) {
     pc = mem_get(memoryp, sp);
     sp++;
     if (sp > STACK_TOP) {  // RET on main routine
-      //            exit 1;
-      //[TODO] finish
+      throw('[Program finished (RET)]');
     }
 
   } else if (inst == 'SVC') {
     if (eadr == SYS_IN) {
-      exec_in(memoryp, statep);
+      //exec_in(memoryp, statep);
+      if (input_mode == INPUT_MODE_CMD) {
+        input_mode = INPUT_MODE_IN;
+        stop_flag = 1;
+      }
     } else if (eadr == SYS_OUT) {
       exec_out(memoryp, statep);
+      pc += 2;
+    } else if (eadr == EXIT_USR) {
+      throw(`[Program finished (SVC ${EXIT_USR})]`);
+    } else if (eadr == EXIT_OVF) {
+      throw(`[Program finished (SVC ${EXIT_OVF})]`);
+    } else if (eadr == EXIT_DVZ) {
+      throw(`[Program finished (SVC ${EXIT_DVZ})]`);
+    } else if (eadr == EXIT_ROV) {
+      throw(`[Program finished (SVC ${EXIT_ROV})]`);
     }
-    pc += 2;
 
   } else if (inst == 'NOP') {
     pc++;
 
   } else {
-    throw ('Illegal instruction ' + inst + ' at \#' + zeroPadding(pc, 4));
+    throw (`[Error] Illegal instruction ${inst} at #${ hex(pc,4)}`);
   }
 
   // update registers
@@ -709,45 +856,53 @@ function step_exec(memoryp, statep) {
   statep[FR] = fr;
   statep[SP] = sp;
   for (var i = GR0; i <= GR7; i++) {
-    statep[i] = regs[i];
+    statep[i] = regs[i - GR0];
   }
+  return stop_flag;
 }
 
-function cmd_step(memoryp, statep, arg) {
+function cmd_step(memoryp, statep, args) {
   if (DEBUG) {
-    console.log('cmd_step(' + memoryp + ',' + statep + ',' + arg + ')');
+    console.log(`cmd_step( {memoryp} / ${statep} / ${args} )`);
   }
 
-  var count = expand_number(arg);
+  var count = expand_number(args);
   if (!count) {
     count = 1;
   }
   for (var i = 1; i <= count; i++) {
-    step_exec(memoryp, statep);
+    if (step_exec(memoryp, statep)) {
+      // exec_inに依る中断
+      if (count-i > 0) {
+        next_cmd = `s ${count-i}`;
+      }
+      break;
+    }
   }
 }
 
-function cmd_run(memoryp, statep, arg) {
+function cmd_run(memoryp, statep, args) {
   if (DEBUG) {
-    console.log('cmd_run(' + memoryp + ',' + statep + ',' + arg + ')');
+    console.log(`cmd_run( {memoryp} / ${statep} / ${args} )`);
   }
   run_stop = 0;
   
-  const intervalId = setInterval(() => {
-    step_exec(memoryp, statep);
+  while (!run_stop) {
+    if (step_exec(memoryp, statep)) {
+      // exec_inに依る中断
+      // 次に実行するコマンドとして "r" を保存
+      next_cmd = `r`;
+      break;
+    }
     for (var i = 0; i < statep[BP].length; i++) {
       var pnt = statep[BP][i];
       if (pnt == statep[PC]) {
-        console.log(
-            'Breakpoint ' + i + ', \#' + zeroPadding(pnt.toString(16), 4));
+        cometprint(`Breakpoint ${i}, #${hex(pnt,4)}`);
         run_stop = 1;
         break;
       }
     }
-    if (run_stop) {
-      clearInterval(intervalId);
-    }
-  }, 10);
+  }
 }
 
 function cmd_break(memoryp, statep, arg) {
@@ -900,9 +1055,9 @@ function cmd_info ( memoryp, statep, args ) {
 }
 
 
-function cmd_print(memoryp, statep, arg) {
+function cmd_print(memoryp, statep, args) {
   if (DEBUG) {
-    console.log('cmd_print(' + memoryp + ',' + statep + ',' + arg + ')');
+    console.log(`cmd_print( {memoryp} / ${statep} / ${args} )`);
   }
 
   var pc   = statep[PC];

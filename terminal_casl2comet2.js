@@ -315,7 +315,7 @@ var __webpack_exports__ = {};
 
 //// Both casl2 and commet2
 
-var VERSION = '0.9.1 KIT version (Feb 15, 2023)';
+var VERSION = '0.9.9 KIT version (Feb 28, 2023)';
 var DEBUG = 0;
 var DDEBUG = 0;
 
