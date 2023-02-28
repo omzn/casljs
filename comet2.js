@@ -701,7 +701,7 @@ function step_exec(memoryp, statep) {
       if (val < MIN_SIGNED) {
         val = MIN_SIGNED;
       }
-      fr = get_flag(unsigned(_));
+      fr = get_flag(unsigned(val));
       pc += 2;
 
     } else {
@@ -712,7 +712,7 @@ function step_exec(memoryp, statep) {
       if (val < MIN_SIGNED) {
         val = MIN_SIGNED;
       }
-      fr = get_flag(unsigned(_));
+      fr = get_flag(unsigned(val));
       pc += 1;
     }
 
@@ -725,7 +725,7 @@ function step_exec(memoryp, statep) {
       if (val < MIN_SIGNED) {
         val = MIN_SIGNED;
       }
-      fr = get_flag(unsigned(_));
+      fr = get_flag(unsigned(val));
       pc += 2;
     } else {
       val = regs[gr] - regs[xr];
@@ -735,7 +735,7 @@ function step_exec(memoryp, statep) {
       if (val < MIN_SIGNED) {
         val = MIN_SIGNED;
       }
-      fr = get_flag(unsigned(_));
+      fr = get_flag(unsigned(val));
       pc += 1;
     }
 
@@ -907,7 +907,7 @@ function cmd_run(memoryp, statep, args) {
 
 function cmd_break(memoryp, statep, arg) {
   if (DEBUG) {
-    console.log('cmd_break(' + memoryp + ',' + statep + ',' + arg + ')');
+    console.log(`cmd_break( / ${statep} / ${arg} )`);
   }
 
   var val = expand_number(arg);
@@ -920,7 +920,7 @@ function cmd_break(memoryp, statep, arg) {
 
 function cmd_delete(memoryp, statep, arg) {
   if (DEBUG) {
-    console.log('cmd_delete(' + memoryp + ',' + statep + ',' + arg + ')');
+    console.log(`cmd_delete( / ${statep} / ${arg} )`);
   }
 
   var val = expand_number( arg );
@@ -981,7 +981,7 @@ function cmd_jump( memoryp, statep, args ) {
 			statep[PC] = val;
 	}
 	else {
-			cometprint("Invalid argument.\n");
+			cometprint("Invalid argument.");
 	}
 	return 1;
 }
@@ -997,7 +997,7 @@ function cmd_memory( memoryp, statep, args ) {
 	if ( adr != null && val != null ) {
 			mem_put( memoryp, adr, val );
 	} else {
-			cometprint("Invalid argument.\n");
+			cometprint("Invalid argument.");
 	}
 	return 1;
 }
@@ -1021,7 +1021,7 @@ function cmd_disasm ( memoryp, statep, args ) {
 
 	for ( var i = 0 ; i < 16 ; i++ ) {
 			var result  = parse( memoryp, statep );
-			cometprint(`#${hex(statep[PC],4)}\t${result[0]}\t${result[1]}\n`);
+			cometprint(`#${hex(statep[PC],4)}\t${result[0]}\t${result[1]}`);
 			statep[PC] += result[2];
 	}
 	statep[PC] = pc;       // restore PC

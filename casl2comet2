@@ -1,0 +1,3 @@
+#!/bin/sh
+node casl2.js $1
+node comet2.js -r -q `basename $1 .cas`.com
