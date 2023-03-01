@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CASL2/COMET2 JS</title>
     <link rel="stylesheet" href="./css/pure-min.css">
+    <script async src="encoding.min.js"></script>
     <style>
         * {
             padding: 0;
@@ -40,6 +41,7 @@
         }
 
         h1 span {
+            font-size: 1rem;
             color: rgb(94, 1, 1);
         }
 
@@ -48,6 +50,11 @@
             margin-bottom: .5rem;
             color: #333;
             width: 90%;
+        }
+
+        h2 span {
+            font-size: 1rem;
+            color: #333;
         }
 
         h2 small a {
@@ -192,6 +199,10 @@
             width: 600px;
             height: 240px;
         }
+
+        #casl2src.ddefect {
+            border: 3px dotted #000;
+        }
     </style>
     <script>
         window.onload = function () {
@@ -206,6 +217,86 @@
                 document.getElementById("quiet").checked = false;
             }
         }
+        window.addEventListener("DOMContentLoaded", () => {
+            const ddarea = document.getElementById("casl2src");
+            const tarea = document.getElementById("casl2src");
+            const fname = document.getElementById("fname");
+            let dropDisabled = false;
+            const isValid = e => e.dataTransfer.types.indexOf("Files") >= 0 && e.dataTransfer.items.length <= 1;
+            const ddEvent = {
+                "dragover": e => {
+                    e.preventDefault(); // 既定の処理をさせない
+                    e.stopPropagation(); // イベント伝播を止める
+                    if (dropDisabled || !e.currentTarget.isEqualNode(ddarea)) {
+                        // ドロップエリア外ならドロップを無効にする
+                        e.dataTransfer.dropEffect = "none"; return;
+                    }
+                    if (!isValid(e)) {
+                        // 無効なデータがドラッグされたらドロップを無効にする
+                        e.dataTransfer.dropEffect = "none"; return;
+                    }
+                    // ドロップのタイプを変更
+                    e.dataTransfer.dropEffect = "copy";
+                    ddarea.classList.add("ddefect");
+                },
+                "dragleave": e => {
+                    if (dropDisabled || !e.currentTarget.isEqualNode(ddarea)) {
+                        return;
+                    }
+                    e.stopPropagation(); // イベント伝播を止める
+                    ddarea.classList.remove("ddefect");
+                },
+                "drop": e => {
+                    e.preventDefault(); // 既定の処理をさせない
+                    e.stopPropagation(); // イベント伝播を止める
+
+                    if (e.dataTransfer.files.length > 1) {
+                        tarea.value = "複数ファイルは対象外です";
+                        return;
+                    }
+                    dropDisabled = true;
+
+                    loadData(e.dataTransfer.files[0]).then(e => {
+                        ddarea.classList.remove("ddefect");
+                        dropDisabled = false;
+                    });
+                }
+            };
+            /**
+              * ファイル読み込み
+              * @param targetFile
+              * @returns {Promise<unknown>}
+              */
+            const loadData = targetFile => {
+                return new Promise((resolve, reject) => {
+                    fname.textContent = `(${targetFile.name})`;
+                    tarea.value = "";
+                    let encode = null;
+                    const reader = new FileReader();
+                    reader.onload = () => {
+                        const u8 = new Uint8Array(reader.result);
+                        const encNames = ["UTF16", "ASCII", "JIS", "UTF8", "EUCJP", "SJIS", "UNICODE"];
+                        const enc = Encoding.detect(u8);
+                        if (encNames.indexOf(enc) < 0) {
+                            tarea.value = "ドロップされたファイルはテキストファイルでない可能性があります。";
+                        } else {
+                            tarea.value = Encoding.codeToString(Encoding.convert(u8, "UNICODE"));
+                        }
+                        resolve(true);
+                    };
+                    reader.onerror = () => {
+                        tarea.value = reader.error.message;
+                        resolve(false);
+                    };
+                    reader.readAsArrayBuffer(targetFile);
+                });
+            };
+            Object.keys(ddEvent).forEach(e => {
+                ddarea.addEventListener(e, ddEvent[e]);
+                document.body.addEventListener(e, ddEvent[e])
+            });
+
+        });
     </script>
     <script src="./js/jquery-2.1.3.min.js"></script>
     <script src="./js/bcralnit.js"></script>
@@ -213,10 +304,10 @@
 
 <body>
     <div id="wrap" class="fixed">
-        <h1>CASL2/COMET2 <span>JS</span></h1>
+        <h1>CASL2/COMET2 <span>for KIT IS 言語処理プログラミング</span></h1>
         <div class="flex">
             <div id="casl2">
-                <h2>CASL2</h2>
+                <h2>CASL2 <span id="fname"></span></h2>
                 <div>
                     <textarea id="casl2src"></textarea>
                 </div>

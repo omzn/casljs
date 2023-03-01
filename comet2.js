@@ -3,88 +3,88 @@ var DEBUG = 0;
 
 var COMET2TBL = {
   // COMET instructions
-  '0x00': {id: 'NOP', type: 'op4'},
-  '0x10': {id: 'LD', type: 'op1'},
-  '0x11': {id: 'ST', type: 'op1'},
-  '0x12': {id: 'LAD', type: 'op1'},
-  '0x14': {id: 'LD', type: 'op5'},
-  '0x20': {id: 'ADDA', type: 'op1'},
-  '0x21': {id: 'SUBA', type: 'op1'},
-  '0x22': {id: 'ADDL', type: 'op1'},
-  '0x23': {id: 'SUBL', type: 'op1'},
-  '0x24': {id: 'ADDA', type: 'op5'},
-  '0x25': {id: 'SUBA', type: 'op5'},
-  '0x26': {id: 'ADDL', type: 'op5'},
-  '0x27': {id: 'SUBL', type: 'op5'},
-  '0x28': {id: 'MULA', type: 'op1'},
-  '0x29': {id: 'DIVA', type: 'op1'},
-  '0x2a': {id: 'MULL', type: 'op1'},
-  '0x2b': {id: 'DIVL', type: 'op1'},
-  '0x2c': {id: 'MULA', type: 'op5'},
-  '0x2d': {id: 'DIVA', type: 'op5'},
-  '0x2e': {id: 'MULL', type: 'op5'},
-  '0x2f': {id: 'DIVL', type: 'op5'},
-  '0x30': {id: 'AND', type: 'op1'},
-  '0x31': {id: 'OR', type: 'op1'},
-  '0x32': {id: 'XOR', type: 'op1'},
-  '0x34': {id: 'AND', type: 'op5'},
-  '0x35': {id: 'OR', type: 'op5'},
-  '0x36': {id: 'XOR', type: 'op5'},
-  '0x40': {id: 'CPA', type: 'op1'},
-  '0x41': {id: 'CPL', type: 'op1'},
-  '0x44': {id: 'CPA', type: 'op5'},
-  '0x45': {id: 'CPL', type: 'op5'},
-  '0x50': {id: 'SLA', type: 'op1'},
-  '0x51': {id: 'SRA', type: 'op1'},
-  '0x52': {id: 'SLL', type: 'op1'},
-  '0x53': {id: 'SRL', type: 'op1'},
-  '0x61': {id: 'JMI', type: 'op2'},
-  '0x62': {id: 'JNZ', type: 'op2'},
-  '0x63': {id: 'JZE', type: 'op2'},
-  '0x64': {id: 'JUMP', type: 'op2'},
-  '0x65': {id: 'JPL', type: 'op2'},
-  '0x66': {id: 'JOV', type: 'op2'},
-  '0x70': {id: 'PUSH', type: 'op2'},
-  '0x71': {id: 'POP', type: 'op3'},
-  '0x80': {id: 'CALL', type: 'op2'},
-  '0x81': {id: 'RET', type: 'op4'},
-  '0xf0': {id: 'SVC', type: 'op2'},
+  '0x00': { id: 'NOP', type: 'op4' },
+  '0x10': { id: 'LD', type: 'op1' },
+  '0x11': { id: 'ST', type: 'op1' },
+  '0x12': { id: 'LAD', type: 'op1' },
+  '0x14': { id: 'LD', type: 'op5' },
+  '0x20': { id: 'ADDA', type: 'op1' },
+  '0x21': { id: 'SUBA', type: 'op1' },
+  '0x22': { id: 'ADDL', type: 'op1' },
+  '0x23': { id: 'SUBL', type: 'op1' },
+  '0x24': { id: 'ADDA', type: 'op5' },
+  '0x25': { id: 'SUBA', type: 'op5' },
+  '0x26': { id: 'ADDL', type: 'op5' },
+  '0x27': { id: 'SUBL', type: 'op5' },
+  '0x28': { id: 'MULA', type: 'op1' },
+  '0x29': { id: 'DIVA', type: 'op1' },
+  '0x2a': { id: 'MULL', type: 'op1' },
+  '0x2b': { id: 'DIVL', type: 'op1' },
+  '0x2c': { id: 'MULA', type: 'op5' },
+  '0x2d': { id: 'DIVA', type: 'op5' },
+  '0x2e': { id: 'MULL', type: 'op5' },
+  '0x2f': { id: 'DIVL', type: 'op5' },
+  '0x30': { id: 'AND', type: 'op1' },
+  '0x31': { id: 'OR', type: 'op1' },
+  '0x32': { id: 'XOR', type: 'op1' },
+  '0x34': { id: 'AND', type: 'op5' },
+  '0x35': { id: 'OR', type: 'op5' },
+  '0x36': { id: 'XOR', type: 'op5' },
+  '0x40': { id: 'CPA', type: 'op1' },
+  '0x41': { id: 'CPL', type: 'op1' },
+  '0x44': { id: 'CPA', type: 'op5' },
+  '0x45': { id: 'CPL', type: 'op5' },
+  '0x50': { id: 'SLA', type: 'op1' },
+  '0x51': { id: 'SRA', type: 'op1' },
+  '0x52': { id: 'SLL', type: 'op1' },
+  '0x53': { id: 'SRL', type: 'op1' },
+  '0x61': { id: 'JMI', type: 'op2' },
+  '0x62': { id: 'JNZ', type: 'op2' },
+  '0x63': { id: 'JZE', type: 'op2' },
+  '0x64': { id: 'JUMP', type: 'op2' },
+  '0x65': { id: 'JPL', type: 'op2' },
+  '0x66': { id: 'JOV', type: 'op2' },
+  '0x70': { id: 'PUSH', type: 'op2' },
+  '0x71': { id: 'POP', type: 'op3' },
+  '0x80': { id: 'CALL', type: 'op2' },
+  '0x81': { id: 'RET', type: 'op4' },
+  '0xf0': { id: 'SVC', type: 'op2' },
 };
 
 var CMDTBL = {
-  'r|run': { subr : cmd_run,    list : 1 },
-  's|step': { subr : cmd_step,   list : 1 },
-  'b|break'   : { subr : cmd_break,  list : 0 },
-  'd|delete'  : { subr : cmd_delete, list : 0 },
-  'i|info'    : { subr : cmd_info,   list : 0 },
-  'p|print'   : { subr : cmd_print,  list : 0 },
-  'du|dump'   : { subr : cmd_dump,   list : 0 },
-  'st|stack'  : { subr : cmd_stack,  list : 0 },
-//  'f|file'    : { subr : cmd_file,   list : 1 },
-  'j|jump'    : { subr : cmd_jump,   list : 1 },
-  'm|memory'  : { subr : cmd_memory, list : 1 },
-  'di|disasm' : { subr : cmd_disasm, list : 0 },
-  'h|help'    : { subr : cmd_help,   list : 0 },
+  'r|run': { subr: cmd_run, list: 1 },
+  's|step': { subr: cmd_step, list: 1 },
+  'b|break': { subr: cmd_break, list: 0 },
+  'd|delete': { subr: cmd_delete, list: 0 },
+  'i|info': { subr: cmd_info, list: 0 },
+  'p|print': { subr: cmd_print, list: 0 },
+  'du|dump': { subr: cmd_dump, list: 0 },
+  'st|stack': { subr: cmd_stack, list: 0 },
+  'f|file': { subr: cmd_file, list: 1 },
+  'j|jump': { subr: cmd_jump, list: 1 },
+  'm|memory': { subr: cmd_memory, list: 1 },
+  'di|disasm': { subr: cmd_disasm, list: 0 },
+  'h|help': { subr: cmd_help, list: 0 },
 };
 
-const SYS_IN   = 0xfff0;
-const SYS_OUT  = 0xfff2;
+const SYS_IN = 0xfff0;
+const SYS_OUT = 0xfff2;
 const EXIT_USR = 0x0000;
 const EXIT_OVF = 0x0001;
 const EXIT_DVZ = 0x0002;
 const EXIT_ROV = 0x0003;
 
-const FR_PLUS  = 0;
-const FR_ZERO  = 1;
+const FR_PLUS = 0;
+const FR_ZERO = 1;
 const FR_MINUS = 2;
-const FR_OVER  = 4;
+const FR_OVER = 4;
 
 // the top of the stack, which is the upper limit of the stack space.
 const STACK_TOP = 0xff00;
 
 // indices for the state list, state
-const PC =  0;
-const FR =  1;
+const PC = 0;
+const FR = 1;
 const GR0 = 2;
 const GR1 = 3;
 const GR2 = 4;
@@ -129,12 +129,12 @@ const readInterface = readline.createInterface({
 var program = require('commander');
 
 program
-.version(VERSION)
-.usage('[options] <comet2 file>')
-.option('-q, --quiet', 'quiet mode')
-.option('-r, --run',   'run mode')
-.option('-Q, --QuietRun', 'hard quiet mode (implies -q and -r)')
-.parse(process.argv);
+  .version(VERSION)
+  .usage('[options] <comet2 file>')
+  .option('-q, --quiet', 'quiet mode')
+  .option('-r, --run', 'run mode')
+  .option('-Q, --QuietRun', 'hard quiet mode (implies -q and -r)')
+  .parse(process.argv);
 
 var options = program.opts();
 if (options.quiet) {
@@ -151,34 +151,34 @@ if (options.QuietRun) {
   next_cmd = "r";
 }
 
-(async ()=>{
-
+(async () => {
   try {
-    const inputFilepath = program.args[0]; 
+    const inputFilepath = program.args[0];
     if (!inputFilepath) {
-      throw('No comet2 binary file specified.');
+      throw ('No comet2 binary file specified.');
     }
     let buf = Buffer.alloc(65535);
     buf = fs.readFileSync(inputFilepath);
-    if (!(buf.readUInt8(0) == 0x43 && buf.readUInt8(1) == 0x41 && buf.readUInt8(2) == 0x53 && buf.readUInt8(3) == 0x4c )) {
-      throw('The file is not a comet2 binary file.');
-    } 
+    if (!(buf.readUInt8(0) == 0x43 && buf.readUInt8(1) == 0x41 && buf.readUInt8(2) == 0x53 && buf.readUInt8(3) == 0x4c)) {
+      throw ('The file is not a comet2 binary file.');
+    }
     comet2startAddress = buf.readUint8(5) | (buf.readUint8(4) << 8);
     state[0] = comet2startAddress;
     var addr = 0;
     for (var i = 16; i < buf.length; i += 2) {
-      comet2mem[addr] = (buf.readUint8(i+1) | (buf.readUint8(i) << 8));
+      comet2mem[addr] = (buf.readUint8(i + 1) | (buf.readUint8(i) << 8));
       addr++;
-    }    
-//    console.log(state);
-//    console.log(comet2mem);
+    }
+    //    console.log(state);
+    //    console.log(comet2mem);
   } catch (e) {
     //エラー処理
     console.log(e);
     process.exit(0);
   }
   if (!opt_q) {
-    cmd_print(comet2mem,state, []);
+    cometprint(`This is COMET II, version ${VERSION}.\n(c) 2001-2023, Osamu Mizuno.\n`);
+    cmd_print(comet2mem, state, []);
   }
   var cmd;
   var finish = 0;
@@ -195,27 +195,27 @@ if (options.QuietRun) {
       } else {
         last_cmd = cmd;
       }
-      var cmds = cmd.replace(/\s+/,' ').split(' ');
+      var cmds = cmd.replace(/\s+/, ' ').split(' ');
       var cmd2 = cmds.shift();
       if (cmd2.match('^(quit|q)$')) {
         cometprint('[Comet2 finished]');
         break;
-      } 
+      }
       for (const key in CMDTBL) {
-        if (cmd2.match('^('+key+')$')) {
+        if (cmd2.match('^(' + key + ')$')) {
           found = 1;
           try {
-            CMDTBL[key].subr(comet2mem,state,cmds);
+            CMDTBL[key].subr(comet2mem, state, cmds);
           } catch (e) {
             if (!opt_q) {
               cometprint(e);
             }
             finish = 1;
-            break;   
+            break;
           }
           if (CMDTBL[key].list) {
             if (!opt_q) {
-              cmd_print(comet2mem,state,cmds);
+              cmd_print(comet2mem, state, cmds);
             }
           }
           break;
@@ -229,15 +229,12 @@ if (options.QuietRun) {
         break;
       }
     } else if (input_mode == INPUT_MODE_IN) {
-      var ppt = "IN> ";
-      if (opt_Q) {
-        ppt = "";
-      }
+      var ppt = opt_Q ? "" : "IN> ";
       cmd = await readInterface.question(ppt);
-      exec_in(comet2mem,state,cmd);
-      input_mode = INPUT_MODE_CMD;     
+      exec_in(comet2mem, state, cmd);
+      input_mode = INPUT_MODE_CMD;
       if (!opt_q) {
-        cmd_print(comet2mem,state,[]);
+        cmd_print(comet2mem, state, []);
       }
     } else {
       cometprint(`Unknown input mode.`);
@@ -249,7 +246,14 @@ if (options.QuietRun) {
 })();
 
 function cometprint(str) {
+  if (str.endsWith('\n')) {
+    str = str.substring(0, str.length - 1);
+  }
   console.log(str);
+}
+
+function cometout(str) {
+  process.stdout.write(str);
 }
 
 function zeroPadding(val, len) {
@@ -267,8 +271,8 @@ function unpack_C(string) {
   return ret;
 }
 
-function hex(val,len) {
-	return zeroPadding(val.toString(16),len);
+function hex(val, len) {
+  return zeroPadding(val.toString(16), len);
 }
 
 function signed(val) {
@@ -343,21 +347,21 @@ function parse(memoryp, statep) {
   var inst_sym = 'DC';
   var opr_sym = `#${hex(mem_get(memoryp, pc), 4)}`;
   var size = 1;
-  var key = '0x' + hex(inst, 2);
+  var key =`0x${hex(inst, 2)}`;
 
   if (COMET2TBL[key]) {
     inst_sym = COMET2TBL[key]['id'];
     var type = COMET2TBL[key]['type'];
     // instructions with GR, adr, and XR
     if (type == 'op1') {
-      opr_sym = `GR${gr},   #${hex(adr,4)}`;
+      opr_sym = `GR${gr},   #${hex(adr, 4)}`;
       if (xr > 0) {
         opr_sym += `, GR${xr}`;
       }
       size = 2;
       // instructions with adr and XR
     } else if (type == 'op2') {  //    # with adr, (XR)
-      opr_sym = `#${hex(adr,4)}`;
+      opr_sym = `#${hex(adr, 4)}`;
       if (xr > 0) {
         opr_sym += `, GR${xr}`;
       }
@@ -413,12 +417,12 @@ function exec_out(memoryp, statep) {
   var len = mem_get(memoryp, lenp);
   var obuf = Buffer.alloc(len);
   for (var i = 1; i <= len; i++) {
-    obuf.writeUInt8(mem_get(memoryp, bufp + (i-1)), i-1);
+    obuf.writeUInt8(mem_get(memoryp, bufp + (i - 1)), i - 1);
   }
   if (!opt_Q) {
-    cometprint(`OUT> ${obuf.toString()}`);
+    cometout(`OUT> ${obuf.toString()}`);
   } else {
-    cometprint(`${obuf.toString()}`);
+    cometout(`${obuf.toString()}`);
   }
 }
 
@@ -796,8 +800,8 @@ function step_exec(memoryp, statep) {
 
   } else if (inst == 'JPL') {
     pc = (((fr & FR_MINUS) != FR_MINUS) && ((fr & FR_ZERO) != FR_ZERO)) ?
-        eadr :
-        (pc + 2);
+      eadr :
+      (pc + 2);
 
   } else if (inst == 'JOV') {
     pc = ((fr & FR_OVER) != 0) ? eadr : (pc + 2);
@@ -821,7 +825,7 @@ function step_exec(memoryp, statep) {
     pc = mem_get(memoryp, sp);
     sp++;
     if (sp > STACK_TOP) {  // RET on main routine
-      throw('[Program finished (RET)]');
+      throw ('[Program finished (RET)]');
     }
 
   } else if (inst == 'SVC') {
@@ -835,20 +839,20 @@ function step_exec(memoryp, statep) {
       exec_out(memoryp, statep);
       pc += 2;
     } else if (eadr == EXIT_USR) {
-      throw(`[Program finished (SVC ${EXIT_USR})]`);
+      throw (`[Program finished (SVC ${EXIT_USR})]`);
     } else if (eadr == EXIT_OVF) {
-      throw(`[Program finished (SVC ${EXIT_OVF})]`);
+      throw (`[Program finished (SVC ${EXIT_OVF})]`);
     } else if (eadr == EXIT_DVZ) {
-      throw(`[Program finished (SVC ${EXIT_DVZ})]`);
+      throw (`[Program finished (SVC ${EXIT_DVZ})]`);
     } else if (eadr == EXIT_ROV) {
-      throw(`[Program finished (SVC ${EXIT_ROV})]`);
+      throw (`[Program finished (SVC ${EXIT_ROV})]`);
     }
 
   } else if (inst == 'NOP') {
     pc++;
 
   } else {
-    throw (`[Error] Illegal instruction ${inst} at #${ hex(pc,4)}`);
+    throw (`[Error] Illegal instruction ${inst} at #${hex(pc, 4)}`);
   }
 
   // update registers
@@ -873,8 +877,8 @@ function cmd_step(memoryp, statep, args) {
   for (var i = 1; i <= count; i++) {
     if (step_exec(memoryp, statep)) {
       // exec_inに依る中断
-      if (count-i > 0) {
-        next_cmd = `s ${count-i}`;
+      if (count - i > 0) {
+        next_cmd = `s ${count - i}`;
       }
       break;
     }
@@ -886,7 +890,7 @@ function cmd_run(memoryp, statep, args) {
     console.log(`cmd_run( {memoryp} / ${statep} / ${args} )`);
   }
   run_stop = 0;
-  
+
   while (!run_stop) {
     if (step_exec(memoryp, statep)) {
       // exec_inに依る中断
@@ -897,7 +901,7 @@ function cmd_run(memoryp, statep, args) {
     for (var i = 0; i < statep[BP].length; i++) {
       var pnt = statep[BP][i];
       if (pnt == statep[PC]) {
-        cometprint(`Breakpoint ${i}, #${hex(pnt,4)}`);
+        cometprint(`Breakpoint ${i}, #${hex(pnt, 4)}`);
         run_stop = 1;
         break;
       }
@@ -914,7 +918,7 @@ function cmd_break(memoryp, statep, arg) {
   if (val) {
     statep[BP].push(val);
   } else {
-    console.log('Invalid argument.');
+    cometprint(`Invalid argument: ${arg}`);
   }
 }
 
@@ -923,8 +927,8 @@ function cmd_delete(memoryp, statep, arg) {
     console.log(`cmd_delete( / ${statep} / ${arg} )`);
   }
 
-  var val = expand_number( arg );
-  if ( val ) {
+  var val = expand_number(arg);
+  if (val) {
     statep[BP].splice(val, 1);
   }
   else {
@@ -937,165 +941,190 @@ function cmd_dump(memoryp, statep, args) {
     console.log(`cmd_dump( / ${statep} / ${args} )`);
   }
 
-	var val = expand_number( args[0] );
-	if (val == null) {
-	  val = statep[PC];
-	}
-  
-	var row, col, base;
-	for (row = 0; row < 16; row++) {
-			var line = '';
-			base = val + ( row << 3 );
-			line = hex(base,4) + ':';
-			for (col = 0; col < 8; col ++) {
-					line += ' ' + hex(mem_get( memoryp, base + col ),4) ;
-			}
-			line += ' ';
-			for (col = 0; col < 8; col ++) {
-				var c = mem_get( memoryp, base + col ) & 0xff;
-				line += ( ( c >= 0x20 && c <= 0x7f ) ? String.fromCharCode(c) : ".");
-			}
-			cometprint(line);
-	}
-	return 1;
+  var val = expand_number(args[0]);
+  if (val == null) {
+    val = statep[PC];
+  }
+
+  var row, col, base;
+  for (row = 0; row < 16; row++) {
+    var line = '';
+    base = val + (row << 3);
+    line = hex(base, 4) + ':';
+    for (col = 0; col < 8; col++) {
+      line += ' ' + hex(mem_get(memoryp, base + col), 4);
+    }
+    line += ' ';
+    for (col = 0; col < 8; col++) {
+      var c = mem_get(memoryp, base + col) & 0xff;
+      line += ((c >= 0x20 && c <= 0x7f) ? String.fromCharCode(c) : ".");
+    }
+    cometprint(line);
+  }
+  return 1;
 }
 
-function cmd_stack( memoryp, statep, args ) {
+function cmd_stack(memoryp, statep, args) {
   if (DEBUG) {
     console.log(`cmd_stack( {memoryp} / ${statep} / ${args} )`);
   }
 
-	var val = statep[SP];
-	cmd_dump( memoryp, statep, val );
-	return 1;
+  var val = statep[SP];
+  cmd_dump(memoryp, statep, val);
+  return 1;
 }
 
 
-function cmd_jump( memoryp, statep, args ) {
+function cmd_jump(memoryp, statep, args) {
   if (DEBUG) {
     console.log(`cmd_jump( {memoryp} / ${statep} / ${args} )`);
   }
 
-	var val = expand_number( args[0] );
-	if ( val != null) {
-			statep[PC] = val;
-	}
-	else {
-			cometprint("Invalid argument.");
-	}
-	return 1;
+  var val = expand_number(args[0]);
+  if (val != null) {
+    statep[PC] = val;
+  }
+  else {
+    cometprint(`Invalid argument: ${args[0]}`);
+  }
+  return 1;
 }
 
 
-function cmd_memory( memoryp, statep, args ) {
+function cmd_memory(memoryp, statep, args) {
   if (DEBUG) {
     console.log(`cmd_memory( {memoryp} / ${statep} / ${args} )`);
   }
 
-	var adr = expand_number( args[0] );
-	var val = expand_number( args[1] );
-	if ( adr != null && val != null ) {
-			mem_put( memoryp, adr, val );
-	} else {
-			cometprint("Invalid argument.");
-	}
-	return 1;
+  var adr = expand_number(args[0]);
+  var val = expand_number(args[1]);
+  if (adr != null && val != null) {
+    mem_put(memoryp, adr, val);
+  } else {
+    cometprint(`Invalid argument: ${args[0]} and/or ${args[1]}`);
+  }
+  return 1;
 }
 
 
-function cmd_disasm ( memoryp, statep, args ) {
+function cmd_disasm(memoryp, statep, args) {
   if (DEBUG) {
     console.log(`cmd_disasm( {memoryp} / ${statep} / ${args} )`);
   }
 
-	var val = null;
-	if (args != []) {
-		val = expand_number( args[0] );
-	}
-	if (val == null) {
-		val = statep[PC];
-	}
+  var val = null;
+  if (args != []) {
+    val = expand_number(args[0]);
+  }
+  if (val == null) {
+    val = statep[PC];
+  }
 
-	var pc = statep[PC];    // save original PC
-	statep[PC] = val;
+  var pc = statep[PC];    // save original PC
+  statep[PC] = val;
 
-	for ( var i = 0 ; i < 16 ; i++ ) {
-			var result  = parse( memoryp, statep );
-			cometprint(`#${hex(statep[PC],4)}\t${result[0]}\t${result[1]}`);
-			statep[PC] += result[2];
-	}
-	statep[PC] = pc;       // restore PC
-	return 1;
+  for (var i = 0; i < 16; i++) {
+    var result = parse(memoryp, statep);
+    cometprint(`#${hex(statep[PC], 4)}\t${result[0]}\t${result[1]}`);
+    statep[PC] += result[2];
+  }
+  statep[PC] = pc;       // restore PC
+  return 1;
 }
 
-function cmd_break ( memoryp, statep, args ) {
+function cmd_break(memoryp, statep, args) {
   if (DEBUG) {
     console.log(`cmd_break( {memoryp} / ${statep} / ${args} )`);
   }
 
-	var val = expand_number( args[0] );
-	if ( val != null) {
-			statep[BP].push(val);
-	}
-	else {
-			cometprint("Invalid argument.");
-	}
-	return 1;
+  var val = expand_number(args[0]);
+  if (val != null) {
+    statep[BP].push(val);
+  }
+  else {
+    cometprint(`Invalid argument: ${args[0]}`);
+  }
+  return 1;
 }
 
-function cmd_info ( memoryp, statep, args ) {
+function cmd_info(memoryp, statep, args) {
   if (DEBUG) {
     console.log(`cmd_info( {memoryp} / ${statep} / ${args} )`);
   }
 
-	for ( var i = 0; i < statep[BP].length; i++ ) {
-			cometprint(`${spacePadding(i,2)}: #${hex(statep[BP][i],4)}`);
-	}
-	return 1;
+  for (var i = 0; i < statep[BP].length; i++) {
+    cometprint(`${spacePadding(i, 2)}: #${hex(statep[BP][i], 4)}`);
+  }
+  return 1;
 }
 
+function cmd_file(memoryp, statep, args) {
+  if (DEBUG) {
+    console.log(`cmd_file( ${args} )`);
+  }
+  const inputFilepath = args[0];
+  if (!inputFilepath) {
+    cometprint('File name is required.');
+    return 1;
+  }
+  let buf = Buffer.alloc(65535);
+  buf = fs.readFileSync(inputFilepath);
+  if (!(buf.readUInt8(0) == 0x43 && buf.readUInt8(1) == 0x41 && buf.readUInt8(2) == 0x53 && buf.readUInt8(3) == 0x4c)) {
+    cometprint('The file is not a comet2 binary file.');
+    return 1;
+  }
+  comet2startAddress = buf.readUint8(5) | (buf.readUint8(4) << 8);
+  state[0] = comet2startAddress;
+  var addr = 0;
+  comet2mem = [];
+  for (var i = 16; i < buf.length; i += 2) {
+    comet2mem[addr] = (buf.readUint8(i + 1) | (buf.readUint8(i) << 8));
+    addr++;
+  }
+  return 1;
+}
 
 function cmd_print(memoryp, statep, args) {
   if (DEBUG) {
     console.log(`cmd_print( {memoryp} / ${statep} / ${args} )`);
   }
 
-  var pc   = statep[PC];
-  var fr   = statep[FR];
-  var sp   = statep[SP];
-  var regs = statep.slice(GR0,GR7+1);
+  var pc = statep[PC];
+  var fr = statep[FR];
+  var sp = statep[SP];
+  var regs = statep.slice(GR0, GR7 + 1);
 
   // obtain instruction and operand at current PC
-  var res = parse( memoryp, statep );
+  var res = parse(memoryp, statep);
   var inst = res[0];
   var opr = res[1];
- 
+
   cometprint("");
-  cometprint(`PR  #${hex(pc,4)} [ ${inst} ${opr} ]`);
-  var fr_str = ((fr >> 2) % 2).toString() + ((fr > 2) % 2).toString()  + (fr % 2).toString();  
-  cometprint(`SP  #${hex(sp,4)}(${ signed(sp) })    FR  ${fr_str}  (${fr})`);
-  cometprint(`GR0 #${hex(regs[0],4)}(${ signed(regs[0]) })  GR1 #${hex(regs[1],4)}(${ signed(regs[1]) })  GR2 #${hex(regs[2],4)}(${ signed(regs[2]) })  GR3 #${hex(regs[3],4)}(${ signed(regs[3]) })`);
-  cometprint(`GR4 #${hex(regs[4],4)}(${ signed(regs[4]) })  GR5 #${hex(regs[5],4)}(${ signed(regs[5]) })  GR6 #${hex(regs[6],4)}(${ signed(regs[6]) })  GR7 #${hex(regs[7],4)}(${ signed(regs[7]) })`);
+  cometprint(`PR  #${hex(pc, 4)} [ ${inst} ${opr} ]`);
+  var fr_str = ((fr >> 2) % 2).toString() + ((fr > 2) % 2).toString() + (fr % 2).toString();
+  cometprint(`SP  #${hex(sp, 4)}(${signed(sp)})    FR  ${fr_str}  (${fr})`);
+  cometprint(`GR0 #${hex(regs[0], 4)}(${signed(regs[0])})  GR1 #${hex(regs[1], 4)}(${signed(regs[1])})  GR2 #${hex(regs[2], 4)}(${signed(regs[2])})  GR3 #${hex(regs[3], 4)}(${signed(regs[3])})`);
+  cometprint(`GR4 #${hex(regs[4], 4)}(${signed(regs[4])})  GR5 #${hex(regs[5], 4)}(${signed(regs[5])})  GR6 #${hex(regs[6], 4)}(${signed(regs[6])})  GR7 #${hex(regs[7], 4)}(${signed(regs[7])})`);
 }
 
-function cmd_help ( memoryp, statep, args ) {
+function cmd_help(memoryp, statep, args) {
   if (DEBUG) {
     console.log('cmd_help');
   }
 
   cometprint("List of commands:");
-  cometprint("r,  run		Start execution of program.");
-  cometprint("s,  step	Step execution.  Argument N means do this N times.");
-  cometprint("b,  break	Set a breakpoint at specified address.");
-  cometprint("d,  delete	Delete some breakpoints.");
-  cometprint("i,  info        Print information on breakpoints.");
-  cometprint("p,  print	Print status of PC/FR/SP/GR0..GR7 registers.");
-  cometprint("du, dump	Dump 128 words of memory image from specified address.");
-  cometprint("st, stack	Dump 128 words of stack image.");
-  cometprint("f,  file	Use FILE as program to be debugged.");
-  cometprint("j,  jump	Continue program at specifed address.");
-  cometprint("m,  memory	Change the memory at ADDRESS to VALUE.");
-  cometprint("di, disasm      Disassemble 32 words from specified address.");
-  cometprint("h,  help	Print list of commands.");
-  cometprint("q,  quit	Exit comet.");
+  cometprint("r,  run             \t\tStart execution of program.");
+  cometprint("s,  step  [N]       \t\tStep execution. Argument N means do this N times.");
+  cometprint("b,  break ADDRESS   \t\tSet a breakpoint at specified ADDRESS.");
+  cometprint("d,  delete N...     \t\tDelete some breakpoints.");
+  cometprint("i,  info            \t\tPrint information on breakpoints.");
+  cometprint("p,  print           \t\tPrint status of PC/FR/SP/GR0..GR7 registers.");
+  cometprint("du, dump [ADDRESS]  \t\tDump 128 words of memory image from specified ADDRESS.");
+  cometprint("st, stack           \t\tDump 128 words of stack image.");
+  //cometprint("f,  file	Use FILE as program to be debugged.");
+  cometprint("j,  jump ADDRESS    \t\tContinue program at specifed ADDRESS.");
+  cometprint("m,  memory ADDRESS VALUE\tChange the memory at ADDRESS to VALUE.");
+  cometprint("di, disasm [ADDRESS]\t\tDisassemble 32 words from specified ADDRESS.");
+  cometprint("h,  help            \t\tPrint list of commands.");
+  cometprint("q,  quit            \t\tExit comet.");
 }
