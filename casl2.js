@@ -336,7 +336,7 @@ function pass1(source, symtblp, memoryp, bufp) {
   for (var i = 0; i < lines.length; i++) {
     __line++;
     if (DEBUG) {
-      console.log(String(__line) + ':' + lines[i]);
+      console.log(`${__line}:${lines[i]}`);
     }
     lines[i] = lines[i].replace(/\r?\n/g, '');
 
@@ -375,8 +375,8 @@ function pass1(source, symtblp, memoryp, bufp) {
       if (DEBUG) {
         console.log(`label/inst/opr = ${label}/${inst}/${opr}`);
       }
-  } else {
-      error('Syntax error:' + lines[i]);
+    } else {
+      error(`Syntax error: ${lines[i]}`);
     }
     // keep every line in @buf for later use
     var uniq_label;
@@ -441,7 +441,7 @@ function pass1(source, symtblp, memoryp, bufp) {
         for (var k = 0; k < opr_array.length; k++) {
           opr_array[k] = opr_array[k].trim();
           if (DDEBUG) {
-            console.log(opr_array[k] + ':');
+            console.log(`${opr_array[k]}:`);
           }
         }
       }

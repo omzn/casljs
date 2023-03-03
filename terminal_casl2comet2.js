@@ -247,10 +247,10 @@
         }())
 
         /***/
-})
+      })
 
     /******/
-});
+  });
 /************************************************************************/
 /******/ 	// The module cache
 /******/ 	var __webpack_module_cache__ = {};
@@ -262,14 +262,14 @@
 /******/ 		if (cachedModule !== undefined) {
 /******/ 			return cachedModule.exports;
       /******/
-}
+    }
 /******/ 		// Create a new module (and put it into the cache)
 /******/ 		var module = __webpack_module_cache__[moduleId] = {
 /******/ 			// no module.id needed
 /******/ 			// no module.loaded needed
 /******/ 			exports: {}
       /******/
-};
+    };
 /******/
 /******/ 		// Execute the module function
 /******/ 		__webpack_modules__[moduleId](module, module.exports, __webpack_require__);
@@ -277,7 +277,7 @@
 /******/ 		// Return the exports of the module
 /******/ 		return module.exports;
     /******/
-}
+  }
 /******/
 /************************************************************************/
 /******/ 	/* webpack/runtime/compat get default export */
@@ -290,9 +290,9 @@
 /******/ 			__webpack_require__.d(getter, { a: getter });
 /******/ 			return getter;
       /******/
-};
+    };
     /******/
-})();
+  })();
 /******/
 /******/ 	/* webpack/runtime/define property getters */
 /******/ 	(() => {
@@ -302,19 +302,19 @@
 /******/ 				if (__webpack_require__.o(definition, key) && !__webpack_require__.o(exports, key)) {
 /******/ 					Object.defineProperty(exports, key, { enumerable: true, get: definition[key] });
           /******/
-}
+        }
         /******/
-}
+      }
       /******/
-};
+    };
     /******/
-})();
+  })();
 /******/
 /******/ 	/* webpack/runtime/hasOwnProperty shorthand */
 /******/ 	(() => {
 /******/ 		__webpack_require__.o = (obj, prop) => (Object.prototype.hasOwnProperty.call(obj, prop))
     /******/
-})();
+  })();
   /******/
   /************************************************************************/
   var __webpack_exports__ = {};
@@ -674,7 +674,7 @@
       for (var i = 0; i < lines.length; i++) {
         __line++;
         if (DEBUG) {
-          console.log(String(__line) + ':' + lines[i]);
+          console.log(`${__line}:${lines[i]}`);
         }
         lines[i] = lines[i].replace(/\r?\n/g, '');
 
@@ -704,17 +704,17 @@
           if (!opr) opr = '';
 
           if (DEBUG) {
-            console.log('label/inst/opr =' + label + '/' + inst + '/' + opr);
+            console.log(`label/inst/opr = ${label}/${inst}/${opr}`);
           }
         } else if (result = lines[i].match(/^(\S+)\s*$/)) {
           label = result[1];
           inst = '';
           opr = '';
           if (DEBUG) {
-            console.log('label/inst/opr =' + label + '/' + inst + '/' + opr);
+            console.log(`label/inst/opr = ${label}/${inst}/${opr}`);
           }
         } else {
-          error('Syntax error:' + lines[i]);
+          error(`Syntax error: ${lines[i]}`);
         }
         // keep every line in @buf for later use
         var uniq_label;
@@ -740,7 +740,7 @@
         // generate object code according the type of instruction
         if (inst) {
           if (!CASL2TBL[inst]) {
-            error('Illegal instruction "' + inst + '"');
+            error(`Illegal instruction "${inst}"`);
           }
 
           var type = CASL2TBL[inst]['type'];
@@ -779,7 +779,7 @@
             for (var k = 0; k < opr_array.length; k++) {
               opr_array[k] = opr_array[k].trim();
               if (DDEBUG) {
-                console.log(opr_array[k] + ':');
+                console.log(`${opr_array[k]}:`);
               }
             }
           }
@@ -802,7 +802,7 @@
           // instructions with GR, adr, and optional XR
           if (type == 'op1') {
             if (!(opr_array.length >= 2 && opr_array.length <= 3)) {
-              error('Invalid operand "' + opr + '"');
+              error(`Invalid operand "${opr}"`);
             }
             if (!opr_array[2]) {
               opr_array[2] = 0
@@ -833,7 +833,7 @@
                 literal_stack.push(opr_array[1]);
               }
               if (DEBUG) {
-                console.log('Literal:' + opr_array[1]);
+                console.log(`Literal:${opr_array[1]}`);
               }
             } else if (
               opr_array[1].match(/^[a-zA-Z\$%_\.][0-9a-zA-Z\$%_\.]*/) &&
@@ -847,7 +847,7 @@
             // instructions with adr, and optional XR
           } else if (type == 'op2') {
             if (!(1 <= opr_array.length && opr_array.length <= 2)) {
-              error('Invalid operand "' + opr + '"');
+              error(`Invalid operand "${opr}"`);
             }
             if (opr_array[1] && opr_array[1].match(/^(GR)?0$/i)) {
               error('Can\'t use GR0 as an index register');
@@ -872,14 +872,14 @@
             // instructions only with optional GR
           } else if (type == 'op3') {
             if (opr_array.length != 1) {
-              error('Invalid operand "' + opr + '"');
+              error(`Invalid operand "${opr}"`);
             }
             gen_code3(memoryp, address, CASL2TBL[inst]['code'], opr_array[0], 0);
             address++;
             // instructions without operand
           } else if (type == 'op4') {
             if (opr_array.length) {
-              error('Invalid operand "' + opr + '"');
+              error(`Invalid operand "${opr}"`);
             }
             gen_code1(memoryp, address, (CASL2TBL[inst]['code'] << 8));
             address++;
@@ -887,7 +887,7 @@
             // instructions with (GR, adr, and optional XR), or (GR, GR)
           } else if (type == 'op5') {
             if (!(opr_array.length >= 2 && opr_array.length <= 3)) {
-              error('Invalid operand "' + opr + '"');
+              error(`Invalid operand "${opr}"`);
             }
             if (!opr_array[2]) {
               opr_array[2] = 0;
@@ -920,7 +920,7 @@
                 literal_stack.push(opr_array[1]);
               }
               if (DEBUG) {
-                console.log('Literal:' + opr_array[1]);
+                console.log(`Literal:${opr_array[1]}`);
               }
             } else if (
               opr_array[1].match(/^[a-zA-Z\$%_\.][0-9a-zA-Z\$%_\.]*/) &&
@@ -951,25 +951,24 @@
               actual_label = (opr_array.length) ? opr_array[0] : 0;
               virtual_label = label;
               if (DEBUG) {
-                console.log(
-                  'Actual: ' + actual_label + ', Virtual:' + virtual_label);
+                console.log(`Actual: ${actual_label}, Virtual:${virtual_label}`);
               }
             }
             var_scope = label;
             if (DEBUG) {
-              console.log('SCOPE: ' + var_scope);
+              console.log(`SCOPE: ${var_scope}`);
             }
             add_label(symtblp, label, address);
             in_block = 1;
             // END instruction
           } else if (type == 'end') {
             if (label) {
-              error('Can\'t use label "' + label + '" at END');
+              error(`Can't use label "${label}" at END`);
             }
             if (opr_array.length) {
-              error('Invalid operand "' + opr + '"');
+              error(`Invalid operand "${opr}"`);
             }
-
+    
             // expand_literal;
             literal_stack.forEach(lit => {
               add_literal(symtblp, lit, address);
@@ -988,7 +987,7 @@
                 gen_code1(memoryp, address, lit);
                 address++;
               } else {
-                error('Invalid literal: =' + lit);
+                error(`Invalid literal =${lit}`);
               }
             });
 
@@ -998,7 +997,7 @@
             // DS instruction
           } else if (type == 'ds') {
             if (opr_array.length != 1) {
-              error('Invalid operand "' + opr + '"');
+              error(`Invalid operand "${opr}"`);
             }
             check_decimal(opr_array[0]);
             for (var j = 1; j <= opr_array[0]; j++) {
@@ -1034,12 +1033,12 @@
                 }
               }
             } else {
-              error('Invalid operand "' + opr + '"');
+              error(`Invalid operand "${opr}"`);
             }
             // IN/OUT macro
           } else if ((type == 'in') || (type == 'out')) {
             if (opr_array.length != 2) {
-              error('Invalid operand "' + opr + '"');
+              error(`Invalid operand "${opr}"`);
             }
 
             // two operands must be labels, not numbers
@@ -1066,7 +1065,7 @@
             // RPUSH macro
           } else if (type == 'rpush') {
             if (opr_array.length) {
-              error('Invalid operand "' + opr + '"');
+              error(`Invalid operand "${opr}"`);
             }
             for (var j = 0; j < 7; j++) {
               gen_code2(
@@ -1077,14 +1076,14 @@
             // RPOP macro
           } else if (type == 'rpop') {
             if (opr_array.length) {
-              error('Invalid operand "' + opr + '"');
+              error(`Invalid operand "${opr}"`);
             }
             for (var j = 0; j < 7; j++) {
               gen_code3(memoryp, address + j, CASL2TBL['POP']['code'], 7 - j, 0);
             }
             address += 7;
           } else {
-            error('Instruction type "' + type + '" is not implemented');
+            error(`Instruction type "${type}" is not implemented`);
           }
         }
       }
