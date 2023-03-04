@@ -2,7 +2,11 @@ name: Test of Run Command with CASL2 Sample Files
 
 on:
   push:
+    branches:
+      - main
   pull_request:
+    branches:
+      - main
 
 jobs:
 

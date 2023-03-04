@@ -142,7 +142,7 @@ function assemble() {
     var casl2code = get_casl2_src();
     pass1(casl2code, symtbl, memory, buf);
     pass2(comet2bin, symtbl, memory, buf);
-    caslprint(`[[b;white;green]Successfully assembled.]`);
+    caslprint(str_white_green('Successfully assembled.'));
     comet2mem = comet2bin.slice(0,comet2bin.length);
     comet2init(`Loading comet2 binary ... done`);
     return 1;
@@ -164,7 +164,7 @@ function get_casl2_src() {
 }
 
 function error_casl2(msg) {
-  throw (`[[;red;yellow]Line ${__line}: ${msg}]`);
+  throw (str_red_yellow(`Line ${__line}: ${msg}`));
 }
 
 function check_label(label) {
@@ -954,12 +954,47 @@ var run_stop = 0;
 
 var opt_q = false;
 
+function str_color(code, str) {
+  return `[[${code}]${str}]`; 
+}
+function str_green(str) {
+  return str_color(';lawngreen;',str); 
+}
+
+function str_i_green(str) {
+  return str_color('i;greenyellow;',str); 
+}
+
+function str_white_green(str) {
+  return str_color(';white;green',str); 
+}
+
+function str_red_yellow(str) {
+  return str_color(';red;yellow',str); 
+}
+
+function str_red(str) {
+  return str_color(';red;',str); 
+}
+
+function str_i_red(str) {
+  return str_color('i;red;',str); 
+}
+
+function str_yellow(str) {
+  return str_color(';gold;',str); 
+}
+
+function str_b_cyan(str) {
+  return str_color('b;cyan;',str); 
+}
+
 function error_comet2(msg) {
-  throw (`[[;red;yellow]${msg}]`);
+  throw (str_red_yellow(msg));
 }
 
 function info_comet2(msg) {
-  throw (`[[;white;green]${msg}]`);
+  throw (str_white_green(msg));
 }
 
 function cometprint(msg) {
@@ -967,7 +1002,7 @@ function cometprint(msg) {
 }
 
 function cometout(msg) {
-  term_comet2.echo((!opt_q ? `[[i;red;]OUT]> ` : "") + msg, {newline: (msg.slice(-1) != '\n')});
+  term_comet2.echo((!opt_q ? `${str_i_red('OUT')}> ` : "") + msg, {newline: (msg.slice(-1) != '\n')});
 }
 
 function signed(val) {
@@ -1510,7 +1545,7 @@ function step_exec(memoryp, statep) {
 
   } else if (inst == 'SVC') {
     if (eadr == SYS_IN) {
-      term_comet2.read('[[i;greenyellow;]IN]> ')
+      term_comet2.read(`${str_i_green('IN')}> `)
         .then(input_text => {
           exec_in(memoryp, statep, input_text);
           term_comet2.exec(next_cmd,true);
@@ -1692,11 +1727,11 @@ function cmd_print(memoryp, statep, args) {
   var opr = res[1];
 
   cometprint("");
-  cometprint(`[[b;cyan;]PR]  [[;orangered;]#${hex(pc, 4)}] [ [[;greenyellow;]${inst}\t\t${opr}] ]`);
+  cometprint(`${str_b_cyan('PR')}  ${str_red('#'+hex(pc, 4))} [ ${str_green(`${inst}\t\t${opr}`)} ]`);
   var fr_str = ((fr >> 2) % 2).toString() + ((fr > 2) % 2).toString() + (fr % 2).toString();
-  cometprint(`[[b;cyan;]SP]  [[;orangered;]#${hex(sp, 4)}]([[;pink;]${spacePadding(signed(sp), 6)}])  [[b;cyan;]FR]    [[;gold;]${fr_str}]([[;pink;]${spacePadding(fr, 6)}])`);
-  cometprint(`[[b;cyan;]GR0] [[;orangered;]#${hex(regs[0], 4)}]([[;pink;]${spacePadding(signed(regs[0]), 6)}])  [[b;cyan;]GR1] [[;orangered;]#${hex(regs[1], 4)}]([[;pink;]${spacePadding(signed(regs[1]), 6)}])  [[b;cyan;]GR2] [[;orangered;]#${hex(regs[2], 4)}]([[;pink;]${spacePadding(signed(regs[2]), 6)}])  [[b;cyan;]GR3] [[;orangered;]#${hex(regs[3], 4)}]([[;pink;]${spacePadding(signed(regs[3]), 6)}])`);
-  cometprint(`[[b;cyan;]GR4] [[;orangered;]#${hex(regs[4], 4)}]([[;pink;]${spacePadding(signed(regs[4]), 6)}])  [[b;cyan;]GR5] [[;orangered;]#${hex(regs[5], 4)}]([[;pink;]${spacePadding(signed(regs[5]), 6)}])  [[b;cyan;]GR6] [[;orangered;]#${hex(regs[6], 4)}]([[;pink;]${spacePadding(signed(regs[6]), 6)}])  [[b;cyan;]GR7] [[;orangered;]#${hex(regs[7], 4)}]([[;pink;]${spacePadding(signed(regs[7]), 6)}])`);
+  cometprint(`${str_b_cyan('SP')}  ${str_red('#'+hex(sp, 4))}(${spacePadding(signed(sp), 6)})  ${str_b_cyan('FR')}    ${str_yellow(fr_str)}(${spacePadding(fr, 6)})`);
+  cometprint(`${str_b_cyan('GR0')} ${str_red('#'+hex(regs[0], 4))}(${spacePadding(signed(regs[0]), 6)})  ${str_b_cyan('GR1')} ${str_red('#'+hex(regs[1], 4))}(${spacePadding(signed(regs[1]), 6)})  ${str_b_cyan('GR2')} ${str_red('#'+hex(regs[2], 4))}(${spacePadding(signed(regs[2]), 6)})  ${str_b_cyan('GR3')} ${str_red('#'+hex(regs[3], 4))}(${spacePadding(signed(regs[3]), 6)})`);
+  cometprint(`${str_b_cyan('GR4')} ${str_red('#'+hex(regs[4], 4))}(${spacePadding(signed(regs[4]), 6)})  ${str_b_cyan('GR5')} ${str_red('#'+hex(regs[5], 4))}(${spacePadding(signed(regs[5]), 6)})  ${str_b_cyan('GR6')} ${str_red('#'+hex(regs[6], 4))}(${spacePadding(signed(regs[6]), 6)})  ${str_b_cyan('GR7')} ${str_red('#'+hex(regs[7], 4))}(${spacePadding(signed(regs[7]), 6)})`);
 }
 
 function cmd_help(memoryp, statep, args) {
@@ -1717,7 +1752,7 @@ function cmd_help(memoryp, statep, args) {
 }
 
 function comet2init(msg) {
-  comet2mem = comet2ops.slice(0, comet2ops.length);
+  comet2mem = comet2bin.slice(0, comet2bin.length);
   // PC, FR, GR0, GR1, GR2, GR3, GR4, GR5, GR6, GR7, SP, break points
   state = [comet2startAddress, FR_PLUS, 0, 0, 0, 0, 0, 0, 0, 0, STACK_TOP, []];
   if (!opt_q) {
@@ -1830,9 +1865,9 @@ var term_comet2 = $('#terminal_comet2').terminal({
   }
 }, {
   name: "comet2",
-  prompt: "[[;yellow;]comet2]> ",
+  prompt: `${str_yellow('comet2')}> `,
   checkArity: false,
-  greetings: `[[;lawngreen;]${greetings_comet2.innerHTML}]\nThis is CASL II, version ${VERSION}.\n(c) 2001-2023, Osamu Mizuno.\n`,
+  greetings: `${str_green(greetings_comet2.innerHTML)}\nThis is CASL II, version ${VERSION}.\n(c) 2001-2023, Osamu Mizuno.\n`,
   height: 640,
   width: 640
 });
@@ -1842,7 +1877,7 @@ var term_casl2 = $('#terminal_casl2').terminal({
 }, {
   name: "casl2",
   prompt: "",
-  greetings: `[[;lawngreen;]${greetings_casl2.innerHTML}]\nThis is CASL II, version ${VERSION}.\n(c) 2001-2023, Osamu Mizuno.\n`,
+  greetings: `${str_green(greetings_casl2.innerHTML)}\nThis is CASL II, version ${VERSION}.\n(c) 2001-2023, Osamu Mizuno.\n`,
   height: 240,
   width: 600
 });

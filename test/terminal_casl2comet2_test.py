@@ -58,10 +58,10 @@ def common_task(driver, casl2_file, out_file, timeout):
         # e.send_keys(buf)
         e = driver.find_element(By.ID, "assemble")
         e.click()
-        e = driver.find_element(By.ID, "terminal-2")
+        e = driver.find_element(By.ID, "terminal_casl2")
         if not "DEFINED SYMBOLS" in e.text:
             raise Casl2AssembleError
-        e = driver.find_element(By.ID, "terminal-1")
+        e = driver.find_element(By.ID, "terminal_comet2")
         ActionChains(driver)\
             .move_to_element(e)\
             .click()\
@@ -78,10 +78,10 @@ def common_task(driver, casl2_file, out_file, timeout):
                     .send_keys(in_str)\
                     .send_keys(Keys.RETURN)\
                     .perform()
-        WebDriverWait(driver, timeout).until(expected_conditions.text_to_be_present_in_element((By.ID, "terminal-1"), "[Program finished]"))
+        WebDriverWait(driver, timeout).until(expected_conditions.text_to_be_present_in_element((By.ID, "terminal_comet2"), "Program finished"))
         terminal_text = e.text
         with open(out_file, mode='w') as fp:
-            out_match = re.search(r"^run\n(.*)\[Program finished\]", terminal_text, flags=re.MULTILINE | re.DOTALL)
+            out_match = re.search(r"^run\n(.*)Program finished", terminal_text, flags=re.MULTILINE | re.DOTALL)
             if out_match:
                 fp.write(out_match.group(1))
     except TimeoutException:
@@ -132,7 +132,7 @@ def Chrome():
 @pytest.mark.parametrize(("driver_name,casl2_file"), test_data)
 def test_casl2comet2_run(driver_name, casl2_file, request):
     driver = request.getfixturevalue(driver_name)
-    path_to_html = Path(__file__).parent.parent.joinpath("casl2comet2js.html")
+    path_to_html = Path(__file__).parent.parent.joinpath("index.html")
     driver.get("file://" + str(path_to_html))
     driver.set_window_size(1920, 1080)
     if not Path(TEST_RESULT_DIR).exists():

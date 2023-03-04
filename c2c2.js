@@ -124,7 +124,8 @@ var comet2startAddress = 0;
 var comet2startLabel;
 var comet2bin = [];
 
-var opt_a = 0;
+var opt_a = false;
+var opt_nc = false;
 
 const fs = require('fs');
 var program = require('commander');
@@ -963,12 +964,48 @@ var opt_Q = false;
 
 const readline = require('readline/promises');
 
+function str_color(code, str) {
+  return (opt_nc ? str : `${code}${str}\x1b[0m`); 
+}
+
+function str_green(str) {
+  return str_color('\x1b[32m',str); 
+}
+
+function str_i_green(str) {
+  return str_color('\x1b[3;32m',str); 
+}
+
+function str_white_green(str) {
+  return str_color('\x1b[37;48;5;22m',str); 
+}
+
+function str_red_yellow(str) {
+  return str_color('\x1b[31;43m',str); 
+}
+
+function str_red(str) {
+  return str_color('\x1b[31m',str); 
+}
+
+function str_i_red(str) {
+  return str_color('\x1b[3;31m',str); 
+}
+
+function str_yellow(str) {
+  return str_color('\x1b[38;5;214m',str); 
+}
+
+function str_b_cyan(str) {
+  return str_color('\x1b[1;36m',str); 
+}
+
 function error_comet2(msg) {
-  throw (`[ERROR]${msg}`);
+  throw (str_red_yellow(msg));
 }
 
 function info_comet2(msg) {
-  throw (`[INFO]${msg}`);
+  throw (str_white_green(msg));
 }
 
 function cometprint(msg) {
@@ -976,7 +1013,7 @@ function cometprint(msg) {
 }
 
 function cometout(msg) {
-  process.stdout.write((!opt_Q ? "OUT> " : "") + msg + (msg.slice(-1) != '\n' ? '\n' : ''));
+  process.stdout.write((!opt_Q ? `${str_i_red('OUT')}> ` : "") + msg + (msg.slice(-1) != '\n' ? '\n' : ''));
 }
 
 function signed(val) {
@@ -1720,11 +1757,11 @@ function cmd_print(memoryp, statep, args) {
   var opr = res[1];
 
   cometprint("");
-  cometprint(`PR  #${hex(pc, 4)} [ ${inst} ${opr} ]`);
+  cometprint(`${str_b_cyan('PR')}  ${str_red('#'+hex(pc, 4))} [ ${str_green(`${inst}\t\t${opr}`)} ]`);
   var fr_str = ((fr >> 2) % 2).toString() + ((fr > 2) % 2).toString() + (fr % 2).toString();
-  cometprint(`SP  #${hex(sp, 4)}(${signed(sp)})    FR  ${fr_str}  (${fr})`);
-  cometprint(`GR0 #${hex(regs[0], 4)}(${signed(regs[0])})  GR1 #${hex(regs[1], 4)}(${signed(regs[1])})  GR2 #${hex(regs[2], 4)}(${signed(regs[2])})  GR3 #${hex(regs[3], 4)}(${signed(regs[3])})`);
-  cometprint(`GR4 #${hex(regs[4], 4)}(${signed(regs[4])})  GR5 #${hex(regs[5], 4)}(${signed(regs[5])})  GR6 #${hex(regs[6], 4)}(${signed(regs[6])})  GR7 #${hex(regs[7], 4)}(${signed(regs[7])})`);
+  cometprint(`${str_b_cyan('SP')}  ${str_red('#'+hex(sp, 4))}(${spacePadding(signed(sp), 6)})  ${str_b_cyan('FR')}    ${str_yellow(fr_str)}(${spacePadding(fr, 6)})`);
+  cometprint(`${str_b_cyan('GR0')} ${str_red('#'+hex(regs[0], 4))}(${spacePadding(signed(regs[0]), 6)})  ${str_b_cyan('GR1')} ${str_red('#'+hex(regs[1], 4))}(${spacePadding(signed(regs[1]), 6)})  ${str_b_cyan('GR2')} ${str_red('#'+hex(regs[2], 4))}(${spacePadding(signed(regs[2]), 6)})  ${str_b_cyan('GR3')} ${str_red('#'+hex(regs[3], 4))}(${spacePadding(signed(regs[3]), 6)})`);
+  cometprint(`${str_b_cyan('GR4')} ${str_red('#'+hex(regs[4], 4))}(${spacePadding(signed(regs[4]), 6)})  ${str_b_cyan('GR5')} ${str_red('#'+hex(regs[5], 4))}(${spacePadding(signed(regs[5]), 6)})  ${str_b_cyan('GR6')} ${str_red('#'+hex(regs[6], 4))}(${spacePadding(signed(regs[6]), 6)})  ${str_b_cyan('GR7')} ${str_red('#'+hex(regs[7], 4))}(${spacePadding(signed(regs[7]), 6)})`);
 }
 
 function cmd_help(memoryp, statep, args) {
@@ -1747,11 +1784,10 @@ function cmd_help(memoryp, statep, args) {
 }
 
 function comet2init(msg) {
-  comet2mem = comet2ops.slice(0, comet2ops.length);
+  comet2mem = comet2bin.slice(0, comet2bin.length);
   // PC, FR, GR0, GR1, GR2, GR3, GR4, GR5, GR6, GR7, SP, break points
   state = [comet2startAddress, FR_PLUS, 0, 0, 0, 0, 0, 0, 0, 0, STACK_TOP, []];
   if (!opt_q) {
-    term_comet2.clear();
     try {
       if (msg.type) {
       } else {
@@ -1764,7 +1800,6 @@ function comet2init(msg) {
         if (!opt_q) cometprint(`${msg}`);
       }
     }
-    if (!opt_q) cmd_print(comet2mem, state, []);
   }
 }
 
@@ -1779,13 +1814,17 @@ program
   .usage('[options] <casl2file>')
   .option('-a, --all', '[casl2] show detailed info')
   .option('-r, --run', '[comet2] run immediately')
+  .option('-n, --nocolor', '[casl2/comet2] disable color messages')
   .option('-q, --quiet', '[casl2/comet2] be quiet')
   .option('-Q, --QuietRun', '[comet2] be QUIET! (implies -q and -r)')
   .parse(process.argv);
 
 var options = program.opts();
 if (options.all) {
-  opt_a = 1;
+  opt_a = true;
+}
+if (options.nocolor) {
+  opt_nc = true;
 }
 if (options.quiet) {
   opt_q = true;
@@ -1802,11 +1841,11 @@ if (options.QuietRun) {
 (async () => {
   try {
     if (!opt_q) {
-      cometprint(`   _________   _____ __       ________
+      cometprint(str_green(`   _________   _____ __       ________
   / ____/   | / ___// /      /  _/  _/
- / /   / /| | \__ \/ /       / / / /  
+ / /   / /| | \\__ \\/ /       / / / /  
 / /___/ ___ |___/ / /___   _/ /_/ /   
-\____/_/  |_/____/_____/  /___/___/   `);
+\\____/_/  |_/____/_____/  /___/___/   `));
       cometprint(`This is CASL II, version ${VERSION}.\n(c) 2001-2023, Osamu Mizuno.\n`);
     }
   /*
@@ -1840,11 +1879,11 @@ if (options.QuietRun) {
     process.exit(0);
   }
   if (!opt_q) {
-    cometprint(`   __________  __  _______________   ________
+    cometprint(str_green(`   __________  __  _______________   ________
   / ____/ __ \\/  |/  / ____/_  __/  /  _/  _/
  / /   / / / / /|_/ / __/   / /     / / / /  
 / /___/ /_/ / /  / / /___  / /    _/ /_/ /   
-\\____/\\____/_/  /_/_____/ /_/    /___/___/  `);
+\\____/\\____/_/  /_/_____/ /_/    /___/___/  `));
     cometprint(`This is COMET II, version ${VERSION}.\n(c) 2001-2023, Osamu Mizuno.\n`);
     cmd_print(comet2mem, state, []);
   }
@@ -1855,14 +1894,14 @@ if (options.QuietRun) {
     input: process.stdin,
     output: process.stdout,
   });
-  
   while (1) {
+    var found = 0;
     if (input_mode == INPUT_MODE_CMD) {
       if (next_cmd != "") {
         cmd = next_cmd;
         next_cmd = "";
       } else {
-        cmd = await readInterface.question("comet2> ");
+        cmd = await readInterface.question(`${str_yellow('comet2')}> `);
       }
       if (cmd == '') {
         cmd = last_cmd;
@@ -1903,7 +1942,7 @@ if (options.QuietRun) {
         break;
       }
     } else if (input_mode == INPUT_MODE_IN) {
-      var ppt = opt_Q ? "" : "IN> ";
+      var ppt = opt_Q ? "" : `${str_i_green('IN')}> `;
       cmd = await readInterface.question(ppt);
       exec_in(comet2mem, state, cmd);
       input_mode = INPUT_MODE_CMD;
