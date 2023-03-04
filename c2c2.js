@@ -165,7 +165,7 @@ function caslprint(msg) {
 }
 
 function error_casl2(msg) {
-  throw (`[CASL2 ERROR] Line ${__line}: ${msg}`);
+  throw (str_red_yellow(`Line ${__line}: ${msg}`));
 }
 
 function check_label(label) {
@@ -1792,12 +1792,12 @@ function comet2init(msg) {
       if (msg.type) {
       } else {
         if (msg != "") {
-          if (!opt_q) cometprint(`${msg}`);
+          cometprint(`${msg}`);
         }
       }
     } catch (e) {
       if (msg != "") {
-        if (!opt_q) cometprint(`${msg}`);
+        cometprint(`${msg}`);
       }
     }
   }

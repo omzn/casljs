@@ -27,11 +27,17 @@ Usage: c2c2 [options] <casl2file>
 Options:
   -V, --version   output the version number
   -a, --all       [casl2] show detailed info
-  -r, --run       [comet2] run immediately  
-  -q, --quiet     [comet2] be quiet 
+  -r, --run       [comet2] run immediately
+  -n, --nocolor   [casl2/comet2] disable color messages
+  -q, --quiet     [casl2/comet2] be quiet
   -Q, --QuietRun  [comet2] be QUIET! (implies -q and -r)
   -h, --help      display help for command
 ```  
+* ブラウザ版と基本的な動作は同じなので，動作確認にはこちらを使った方が早い．
+```
+$ node c2c2 -Q caslfile.cas
+```
+とすると，入出力のプロンプトも出なくなるので，テストがしやすい．
 
 ## 独自拡張(CASL2)
 

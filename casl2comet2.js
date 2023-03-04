@@ -957,6 +957,7 @@ var opt_q = false;
 function str_color(code, str) {
   return `[[${code}]${str}]`; 
 }
+
 function str_green(str) {
   return str_color(';lawngreen;',str); 
 }
@@ -1864,23 +1865,24 @@ var term_comet2 = $('#terminal_comet2').terminal({
     if (!opt_q) cmd_print(comet2mem, state, []);
   }
 }, {
-  name: "comet2",
+  name: "comet2_term",
   prompt: `${str_yellow('comet2')}> `,
   checkArity: false,
-  greetings: `${str_green(greetings_comet2.innerHTML)}\nThis is CASL II, version ${VERSION}.\n(c) 2001-2023, Osamu Mizuno.\n`,
-  height: 640,
+  greetings: `${str_green(greetings_comet2.innerHTML)}\nThis is COMET II, version ${VERSION}.\n(c) 2001-2023, Osamu Mizuno.\n`,
+  height: (window.innerHeight - 180) >= 650 ? (window.innerHeight - 180) : 650,
   width: 640
 });
 
 var term_casl2 = $('#terminal_casl2').terminal({
-
 }, {
-  name: "casl2",
+  name: "casl2_term",
   prompt: "",
   greetings: `${str_green(greetings_casl2.innerHTML)}\nThis is CASL II, version ${VERSION}.\n(c) 2001-2023, Osamu Mizuno.\n`,
-  height: 240,
+  height: (window.innerHeight - 180)*3/8 >= 240 ? (window.innerHeight - 180)*3/8 : 240,
   width: 600
 });
+
+$('#casl2src').height((window.innerHeight - 180)*5/8 >= 400 ? (window.innerHeight - 180)*5/8 : 400);
 
 document.getElementById("terminal-refresh").addEventListener("click", function () {comet2init(`Reloading program ... done.`);});
 document.getElementById("assemble").addEventListener("click", assemble);
@@ -1895,6 +1897,13 @@ document.getElementById("quiet").addEventListener("click", function () {
   }
   localStorage.setItem('quiet', opt_q);
 });
-
+$(window).resize(function () {
+  const comet2height = window.innerHeight - 180;
+  const srcheight = (window.innerHeight - 180) * 5/8;
+  const logheight = (window.innerHeight - 180) * 3/8;
+  term_comet2.height(comet2height >= 650 ? comet2height:650);
+  term_casl2.height(logheight >= 240 ? logheight:240);
+  $('#bcralnit_casl2src0').height(srcheight >= 400 ? srcheight:400);
+});
 cmd_print(comet2mem, state, []);
 
