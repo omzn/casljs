@@ -5,7 +5,7 @@
 / /___/ ___ |___/ / /___   _/ /_/ /   _/_/    / /___/ /_/ / /  / / /___  / /    _/ /_/ /   
 \____/_/  |_/____/_____/  /___/___/  /_/      \____/\____/_/  /_/_____/ /_/    /___/___/   
 */
-var VERSION = '0.9.9 KIT version (Feb 28, 2023)';
+var VERSION = '0.9.9 KIT (Feb 28, 2023)';
 var DEBUG = 0;
 var DDEBUG = 0;
 
@@ -13,12 +13,12 @@ var DDEBUG = 0;
 
 // addresses of IN/OUT system calls --- these MACROs are expanded
 // to call this address after pushing its arguments on stack.
-var SYS_IN = 0xfff0;
-var SYS_OUT = 0xfff2;
-var EXIT_USR = 0x0000;
-var EXIT_OVF = 0x0001;
-var EXIT_DVZ = 0x0002;
-var EXIT_ROV = 0x0003;
+const SYS_IN = 0xfff0;
+const SYS_OUT = 0xfff2;
+const EXIT_USR = 0x0000;
+const EXIT_OVF = 0x0001;
+const EXIT_DVZ = 0x0002;
+const EXIT_ROV = 0x0003;
 
 function unpack_C(string) {
   var ret = [];
@@ -124,7 +124,7 @@ var comet2startLabel;
 
 var opt_a = 1;
 
-var comet2ops = [];
+var comet2bin = [];
 
 function assemble() {
   try {
@@ -141,9 +141,9 @@ function assemble() {
     comet2startAddress = 0;
     var casl2code = get_casl2_src();
     pass1(casl2code, symtbl, memory, buf);
-    pass2(comet2ops, symtbl, memory, buf);
+    pass2(comet2bin, symtbl, memory, buf);
     caslprint(`[[b;white;green]Successfully assembled.]`);
-    comet2mem = comet2ops;
+    comet2mem = comet2bin.slice(0,comet2bin.length);
     comet2init(`Loading comet2 binary ... done`);
   } catch (e) {
     //エラー処理
@@ -1033,9 +1033,6 @@ function mem_put(memoryp, pc, val) {
 }
 
 function parse(memoryp, statep) {
-  if (DEBUG) {
-    console.log('parse(memoryp, statep)');
-  }
   var pc = statep[PC];
   var inst = mem_get(memoryp, pc) >> 8;
   var gr = (mem_get(memoryp, pc) >> 4) & 0xf;
@@ -1045,7 +1042,7 @@ function parse(memoryp, statep) {
   var inst_sym = 'DC';
   var opr_sym = `#${hex(mem_get(memoryp, pc), 4)}`;
   var size = 1;
-  var key = '0x' + hex(inst, 2);
+  var key = `0x${hex(inst, 2)}`;
 
   if (COMET2TBL[key]) {
     inst_sym = COMET2TBL[key]['id'];
@@ -1085,9 +1082,6 @@ function parse(memoryp, statep) {
 // Handler of the IN system call --- extract two arguments from the
 // stack, read a line from STDIN, store it in specified place.
 function exec_in(memoryp, statep, text) {
-  if (DEBUG) {
-    console.log(`exec_in( ${statep} / ${text})`);
-  }
   text.trim();
   if (text.length > 256) {
     text = text.substr(0, 256);  //      # must be shorter than 256 characters
@@ -1106,9 +1100,6 @@ function exec_in(memoryp, statep, text) {
 // Handler of the OUT system call --- extract two arguments from the
 // stack, write a string to STDOUT.
 function exec_out(memoryp, statep) {
-  if (DEBUG) {
-    console.log(`exec_out(${statep})`);
-  }
   var regs = statep.slice(GR0, GR7 + 1);
   var lenp = regs[2];
   var bufp = regs[1];
@@ -1525,7 +1516,6 @@ function step_exec(memoryp, statep) {
 
   } else if (inst == 'SVC') {
     if (eadr == SYS_IN) {
-      /* not working correctly in continuous execution */
       term_comet2.read('[[i;greenyellow;]IN]> ')
         .then(input_text => {
           exec_in(memoryp, statep, input_text);
@@ -1549,7 +1539,7 @@ function step_exec(memoryp, statep) {
     pc++;
 
   } else {
-    error_comet2(`Illegal instruction ${inst} at #${hex(pc, 4)}]`);
+    error_comet2(`Illegal instruction ${inst} at #${hex(pc, 4)}`);
   }
 
   // update registers
@@ -1569,7 +1559,7 @@ function cmd_step(memoryp, statep, args) {
   }
   try {
     for (var i = 1; i <= count; i++) {
-      if(step_exec(memoryp, statep)) {
+      if (step_exec(memoryp, statep)) {
         // exec_inに依る中断
         if (count - i > 0) {
           next_cmd = `step ${count - i}`;
@@ -1619,7 +1609,7 @@ function cmd_break(memoryp, statep, args) {
 
 function cmd_delete(memoryp, statep, args) {
   var val = expand_number(args[0]);
-  if (val) {
+  if (val != null) {
     statep[BP].splice(val, 1);
   }
   else {
@@ -1736,7 +1726,7 @@ function cmd_help(memoryp, statep, args) {
 }
 
 function comet2init(msg) {
-  comet2mem = comet2ops;//.slice(0, comet2ops.length);
+  comet2mem = comet2ops.slice(0, comet2ops.length);
   // PC, FR, GR0, GR1, GR2, GR3, GR4, GR5, GR6, GR7, SP, break points
   state = [comet2startAddress, FR_PLUS, 0, 0, 0, 0, 0, 0, 0, 0, STACK_TOP, []];
   if (!opt_q) {
@@ -1870,7 +1860,6 @@ document.getElementById("terminal-refresh").addEventListener("click", function (
 document.getElementById("assemble").addEventListener("click", assemble);
 document.getElementById("stop").addEventListener("click", function () {
   run_stop = 1;
-  throw (`Force stop.`);
 });
 document.getElementById("quiet").addEventListener("click", function () {
   if (document.getElementById("quiet").checked) {
