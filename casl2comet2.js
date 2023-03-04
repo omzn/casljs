@@ -133,7 +133,7 @@ function assemble() {
     virtual_label = '';
     first_start = 1;
     var_scope = '';
-    comet2ops = [];
+    comet2bin = [];
     outdump = [];
     buf = [];
     memory = {};
@@ -1729,8 +1729,9 @@ function cmd_print(memoryp, statep, args) {
 
   cometprint("");
   cometprint(`${str_b_cyan('PR')}  ${str_red('#'+hex(pc, 4))} [ ${str_green(`${inst}\t\t${opr}`)} ]`);
-  var fr_str = ((fr >> 2) % 2).toString() + ((fr > 2) % 2).toString() + (fr % 2).toString();
-  cometprint(`${str_b_cyan('SP')}  ${str_red('#'+hex(sp, 4))}(${spacePadding(signed(sp), 6)})  ${str_b_cyan('FR')}    ${str_yellow(fr_str)}(${spacePadding(fr, 6)})`);
+  var fr_bin = ((fr >> 2) % 2).toString() + ((fr > 2) % 2).toString() + (fr % 2).toString();
+  var fr_str = (((fr >> 2) % 2) ? 'O' : '-') + (((fr > 2) % 2) ? 'S' : '-') + ((fr % 2) ? 'Z' : '-');
+  cometprint(`${str_b_cyan('SP')}  ${str_red('#'+hex(sp, 4))}(${spacePadding(signed(sp), 6)})  ${str_b_cyan('FR')}    ${str_yellow(fr_bin)}(${spacePadding(fr, 6)})[ ${str_green(fr_str)} ]`);
   cometprint(`${str_b_cyan('GR0')} ${str_red('#'+hex(regs[0], 4))}(${spacePadding(signed(regs[0]), 6)})  ${str_b_cyan('GR1')} ${str_red('#'+hex(regs[1], 4))}(${spacePadding(signed(regs[1]), 6)})  ${str_b_cyan('GR2')} ${str_red('#'+hex(regs[2], 4))}(${spacePadding(signed(regs[2]), 6)})  ${str_b_cyan('GR3')} ${str_red('#'+hex(regs[3], 4))}(${spacePadding(signed(regs[3]), 6)})`);
   cometprint(`${str_b_cyan('GR4')} ${str_red('#'+hex(regs[4], 4))}(${spacePadding(signed(regs[4]), 6)})  ${str_b_cyan('GR5')} ${str_red('#'+hex(regs[5], 4))}(${spacePadding(signed(regs[5]), 6)})  ${str_b_cyan('GR6')} ${str_red('#'+hex(regs[6], 4))}(${spacePadding(signed(regs[6]), 6)})  ${str_b_cyan('GR7')} ${str_red('#'+hex(regs[7], 4))}(${spacePadding(signed(regs[7]), 6)})`);
 }
