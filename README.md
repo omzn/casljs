@@ -18,15 +18,15 @@ CASL2, COMET2 の JavaScript 実装です．
 
 ## コマンドライン版
 
+### c2c2.js
+
 * 状況: 99%
-  * casl2+comet2を一気に実行する`c2c2.js`さ作成．
 ```
 Usage: c2c2 [options] <casl2file>
 
 Options:
   -V, --version   output the version number
   -a, --all       [casl2] show detailed info
-  -o, --object    [casl2] generate object binary code
   -r, --run       [comet2] run immediately  
   -q, --quiet     [comet2] be quiet 
   -Q, --QuietRun  [comet2] be QUIET! (implies -q and -r)
@@ -38,14 +38,13 @@ Options:
 * ラベルにはスコープがあります．スコープはプログラム内(START 命令から END 命令で囲まれた部分)のみです．
 * CALL 命令にもスコープが効きますが，CALL だけは別プログラムの開始ラベル(START 命令のラベル)まで参照できます．
 * 簡単のため，MULA (算術乗算), MULL (論理乗算), DIVA (算術除算), DIVL (論理除算)を実装しています．利用方法は ADDA, ADDL 等とほぼ同じです．
-  * DIVA, DIVL については，0 除算を行おうとすると ZF と OF が同時に立って，計算は行われずに先に進みます．
-* DC 命令で文字列を確保すると，最後に0(ヌル文字)が1文字追加されます．
+* DC 命令で文字列を確保すると，最後に0(ヌル文字)が1文字追加されます．(文字列の終わりを容易に判定するため)
 * ラベルは「英大文字，英小文字，$, _, %, . 」のいずれかで始まり，「英大文字，英小文字，数字，$, _, %, . 」を含む長さ制限の無い文字列で表します．
 * ラベルのみの行を許容します．
 
 ## 独自拡張(COMET2)
 
-* comet2 に clear コマンドを追加．ターミナルをクリアする．
+* DIVA, DIVL については，0 除算を行おうとすると ZF と OF が同時に立って，計算は行われずに先に進みます．
 
 ## 利用ライブラリ
 

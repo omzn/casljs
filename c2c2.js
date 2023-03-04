@@ -125,10 +125,9 @@ var comet2startLabel;
 var comet2bin = [];
 
 var opt_a = 0;
-var opt_o = 0;
+
 const fs = require('fs');
 var program = require('commander');
-let c2bin = Buffer.alloc(65535);
 
 function assemble() {
   try {
@@ -136,15 +135,22 @@ function assemble() {
     if (!inputFilepath) {
       throw ('[CASL2 ERROR] No casl2 source file is specified.');
     }
-    const basename = inputFilepath.split('/').pop().split('.').shift();
-    const outputFilepath = basename + ".com";
+    actual_label = '';
+    virtual_label = '';
+    first_start = 1;
+    var_scope = '';
+    comet2ops = [];
+    outdump = [];
+    buf = [];
+    memory = {};
+    symtbl = {};
+    comet2startAddress = 0;
     const casl2code = fs.readFileSync(inputFilepath, 'utf-8');
-    //    console.log(casl2code);
     pass1(casl2code, symtbl, memory, buf);
     pass2(comet2bin, symtbl, memory, buf);
-    if (opt_o) {
-      fs.writeFileSync(outputFilepath, c2bin);
-    }
+    caslprint(`Successfully assembled.`);
+    comet2mem = comet2bin.slice(0,comet2bin.length);
+    comet2init(`Loading comet2 binary ... done`);
     return 1;
   } catch (e) {
     //エラー処理
@@ -154,7 +160,7 @@ function assemble() {
 }
 
 function caslprint(msg) {
-  console.log(msg);
+  if (!opt_q) console.log(msg);
 }
 
 function error_casl2(msg) {
@@ -162,10 +168,7 @@ function error_casl2(msg) {
 }
 
 function check_label(label) {
-  if (DEBUG) {
-    console.log(`check_label( ${label})`);
-  }
-  if (!label.match(/^[a-zA-Z\$%_\.][0-9a-zA-Z\$%_\.]*$/)) {
+    if (!label.match(/^[a-zA-Z\$%_\.][0-9a-zA-Z\$%_\.]*$/)) {
     error_casl2(`Invalid label "${label}"`);
   }
 }
@@ -777,16 +780,9 @@ function pass2(file, symtblp, memoryp, bufp) {
   memkeys.sort(function (a, b) {
     return Number(a) - Number(b);
   });
+
   comet2startAddress = expand_label(symtblp, comet2startLabel);
 
-  c2bin.writeUInt8(0x43, 0); c2bin.writeUInt8(0x41, 1);
-  c2bin.writeUInt8(0x53, 2); c2bin.writeUInt8(0x4c, 3);
-  c2bin.writeUInt8(comet2startAddress >>> 8 & 0xff, 4);
-  c2bin.writeUInt8(comet2startAddress & 0xff, 5);
-  for (var i = 0; i < 10; i++) {
-    c2bin.writeUInt8(0, 6 + i);
-  }
-  var c2addr = 16;
   for (var i = 0; i < memkeys.length; i++) {
     address = Number(memkeys[i]);
     // skip if start address
@@ -795,10 +791,6 @@ function pass2(file, symtblp, memoryp, bufp) {
     var val = expand_label(symtblp, memoryp[address]['val']);
     file.push(val);
     // print OUT pack( 'n', $val );
-    var vh = (val >>> 8) & 0xff;
-    var vl = val & 0xff;
-    c2bin.writeUInt8(vh, c2addr++);
-    c2bin.writeUInt8(vl, c2addr++);
     if (opt_a) {
       var result;
       var aLine = bufp[__line - 1].split(/\t/);
@@ -818,7 +810,7 @@ function pass2(file, symtblp, memoryp, bufp) {
       }
     }
   }
-  c2bin = c2bin.subarray(0, c2addr);
+  
   if (opt_a) {
     outdump.push("\nDEFINED SYMBOLS");
     var where = [];
@@ -959,13 +951,12 @@ const INPUT_MODE_IN = 1;
 var comet2mem = [];
 // PC, FR, GR0, GR1, GR2, GR3, GR4, GR5, GR6, GR7, SP, break points
 var state = [0x0000, FR_PLUS, 0, 0, 0, 0, 0, 0, 0, 0, STACK_TOP, []];
-var comet2startAddress = 0;
 
 var input_mode = INPUT_MODE_CMD;
 
-var run_stop = 0;
 var last_cmd;
 var next_cmd = "";
+var run_stop = 0;
 
 var opt_q = false;
 var opt_Q = false;
@@ -1097,9 +1088,6 @@ function parse(memoryp, statep) {
 // Handler of the IN system call --- extract two arguments from the
 // stack, read a line from STDIN, store it in specified place.
 function exec_in(memoryp, statep, text) {
-  if (DEBUG) {
-    console.log(`exec_in( ${statep} / ${text})`);
-  }
   text.trim();
   if (text.length > 256) {
     text = text.substr(0, 256);  //      # must be shorter than 256 characters
@@ -1123,11 +1111,11 @@ function exec_out(memoryp, statep) {
   var bufp = regs[1];
   var len = mem_get(memoryp, lenp);
 
-  var obuf = Buffer.alloc(len);
+  var outstr = '';
   for (var i = 1; i <= len; i++) {
-    obuf.writeUInt8(mem_get(memoryp, bufp + (i - 1)), i - 1);
+    outstr += String.fromCharCode(mem_get(memoryp, bufp + (i - 1)) & 0xff);
   }
-  cometout(`${obuf.toString()}`);
+  cometout(outstr);
 }
 
 // Execute one instruction from the PC --- evaluate the intruction,
@@ -1755,7 +1743,29 @@ function cmd_help(memoryp, statep, args) {
   cometprint("di, disasm [ADDRESS]\t\tDisassemble 32 words from specified ADDRESS.");
   cometprint("re, reload          \t\tReload object code and restart comet2 emulator."); 
   cometprint("h,  help            \t\tPrint list of commands.");
-  cometprint("q,  quit            \t\tExit comet.");
+  cometprint("q,  quit            \t\tExit comet2.");
+}
+
+function comet2init(msg) {
+  comet2mem = comet2ops.slice(0, comet2ops.length);
+  // PC, FR, GR0, GR1, GR2, GR3, GR4, GR5, GR6, GR7, SP, break points
+  state = [comet2startAddress, FR_PLUS, 0, 0, 0, 0, 0, 0, 0, 0, STACK_TOP, []];
+  if (!opt_q) {
+    term_comet2.clear();
+    try {
+      if (msg.type) {
+      } else {
+        if (msg != "") {
+          if (!opt_q) cometprint(`${msg}`);
+        }
+      }
+    } catch (e) {
+      if (msg != "") {
+        if (!opt_q) cometprint(`${msg}`);
+      }
+    }
+    if (!opt_q) cmd_print(comet2mem, state, []);
+  }
 }
 
 /* MAIN 
@@ -1768,18 +1778,14 @@ program
   .version(VERSION)
   .usage('[options] <casl2file>')
   .option('-a, --all', '[casl2] show detailed info')
-  .option('-o, --object', '[casl2] generate object binary code')
-  .option('-q, --quiet', '[comet2] quiet mode')
-  .option('-r, --run', '[comet2] run mode')
-  .option('-Q, --QuietRun', '[comet2] hard quiet mode (implies -q and -r)')
+  .option('-r, --run', '[comet2] run immediately')
+  .option('-q, --quiet', '[casl2/comet2] be quiet')
+  .option('-Q, --QuietRun', '[comet2] be QUIET! (implies -q and -r)')
   .parse(process.argv);
 
 var options = program.opts();
 if (options.all) {
   opt_a = 1;
-}
-if (options.object) {
-  opt_o = 1;
 }
 if (options.quiet) {
   opt_q = true;
@@ -1817,11 +1823,7 @@ if (options.QuietRun) {
     comet2startAddress = buf.readUint8(5) | (buf.readUint8(4) << 8);
 */
     if (assemble()) {
-      state[0] = comet2startAddress;
-      comet2mem = comet2bin.slice(0,comet2bin.length);
-      if (!opt_q) {
-        cometprint(`\nSuccessfully assembled.\nLoading binary in COMET2... done.\n`);
-      }
+      state[PC] = comet2startAddress;
     } else {
       throw ('');
     }

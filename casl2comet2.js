@@ -52,7 +52,6 @@ function spacePadding(val, len) {
   return val.slice((-1) * len);
 }
 
-//// casl2
 /*
    _________   _____ __       ________
   / ____/   | / ___// /      /  _/  _/
@@ -123,10 +122,9 @@ var buf = [];
 var outdump = [];
 var comet2startAddress = 0;
 var comet2startLabel;
+var comet2bin = [];
 
 var opt_a = 1;
-
-var comet2bin = [];
 
 function assemble() {
   try {
@@ -147,9 +145,11 @@ function assemble() {
     caslprint(`[[b;white;green]Successfully assembled.]`);
     comet2mem = comet2bin.slice(0,comet2bin.length);
     comet2init(`Loading comet2 binary ... done`);
+    return 1;
   } catch (e) {
     //エラー処理
     caslprint(e);
+    return 0;
   }
 }
 
@@ -168,9 +168,6 @@ function error_casl2(msg) {
 }
 
 function check_label(label) {
-  if (DEBUG) {
-    console.log(`check_label( ${label})`);
-  }
   if (!label.match(/^[a-zA-Z\$%_\.][0-9a-zA-Z\$%_\.]*$/)) {
     error_casl2(`Invalid label "${label}"`);
   }
@@ -792,7 +789,6 @@ function pass2(file, symtblp, memoryp, bufp) {
     if (address < 0) continue;
     __line = memoryp[address]['line'];
     var val = expand_label(symtblp, memoryp[address]['val']);
-    //    console.log(__line);
     file.push(val);
     // print OUT pack( 'n', $val );
     if (opt_a) {
@@ -913,11 +909,10 @@ var CMDTBL = {
   //  'b|break': { subr: cmd_break, list: 0 },
   //  'd|delete': { subr: cmd_delete, list: 0 },
   //  'i|info': { subr: cmd_info, list: 0 },
-  //  'c|clear': { subr: cmd_clear, list: 0 },
   //  'p|print': { subr: cmd_print, list: 0 },
   //  'du|dump': { subr: cmd_dump, list: 0 },
   //  'st|stack': { subr: cmd_stack, list: 0 },
-  //  'f|file'    : { subr : cmd_file,   list : 1 },
+  //  'f|file': { subr: cmd_file, list: 1 },
   //  'j|jump': { subr: cmd_jump, list: 1 },
   //  'm|memory': { subr: cmd_memory, list: 1 },
   //  'di|disasm': { subr: cmd_disasm, list: 0 },
@@ -1117,9 +1112,6 @@ function exec_out(memoryp, statep) {
 // Execute one instruction from the PC --- evaluate the intruction,
 // update registers, and advance the PC by the instruction's size.
 function step_exec(memoryp, statep) {
-  if (DEBUG) {
-    console.log(`step_exec( {memoryp} / ${statep} )`);
-  }
   // obtain the mnemonic and the operand for the current address
   var res = parse(memoryp, statep);
   var inst = res[0];
@@ -1602,11 +1594,9 @@ function cmd_break(memoryp, statep, args) {
   var val = expand_number(args[0]);
   if (val != null) {
     statep[BP].push(val);
-  }
-  else {
+  } else {
     cometprint(`Invalid argument: ${args}`);
   }
-  return 1;
 }
 
 function cmd_delete(memoryp, statep, args) {
@@ -1710,7 +1700,6 @@ function cmd_print(memoryp, statep, args) {
 }
 
 function cmd_help(memoryp, statep, args) {
-  cometprint("");
   cometprint("List of commands:");
   cometprint("r,  run             \t\tStart execution of program.");
   cometprint("s,  step  [N]       \t\tStep execution. Argument N means do this N times.");
@@ -1723,7 +1712,7 @@ function cmd_help(memoryp, statep, args) {
   cometprint("j,  jump ADDRESS    \t\tContinue program at specifed ADDRESS.");
   cometprint("m,  memory ADDRESS VALUE\tChange the memory at ADDRESS to VALUE.");
   cometprint("di, disasm [ADDRESS]\t\tDisassemble 32 words from specified ADDRESS.");
-  cometprint("re, reload          \t\tReload program from casl2 and restart comet2 emulator."); 
+  cometprint("re, reload          \t\tReload object code and restart comet2 emulator."); 
   cometprint("h,  help            \t\tPrint list of commands.");
 }
 
