@@ -1,51 +1,15 @@
+/*
+   _________   _____ __       ________
+  / ____/   | / ___// /      /  _/  _/
+ / /   / /| | \__ \/ /       / / / /  
+/ /___/ ___ |___/ / /___   _/ /_/ /   
+\____/_/  |_/____/_____/  /___/___/   
+                                      */
 var VERSION = '0.9.9 KIT (Feb 28, 2023)';
 var DEBUG = 0;
 var DDEBUG = 0;
 
-var CASL2TBL = {
-  'NOP': {code: 0x00, type: 'op4'},
-  'LD': {code: 0x10, type: 'op5'},
-  'ST': {code: 0x11, type: 'op1'},
-  'LAD': {code: 0x12, type: 'op1'},
-  'ADDA': {code: 0x20, type: 'op5'},
-  'SUBA': {code: 0x21, type: 'op5'},
-  'ADDL': {code: 0x22, type: 'op5'},
-  'SUBL': {code: 0x23, type: 'op5'},
-  'MULA': {code: 0x28, type: 'op5'},
-  'DIVA': {code: 0x29, type: 'op5'},
-  'MULL': {code: 0x2A, type: 'op5'},
-  'DIVL': {code: 0x2B, type: 'op5'},
-  'AND': {code: 0x30, type: 'op5'},
-  'OR': {code: 0x31, type: 'op5'},
-  'XOR': {code: 0x32, type: 'op5'},
-  'CPA': {code: 0x40, type: 'op5'},
-  'CPL': {code: 0x41, type: 'op5'},
-  'SLA': {code: 0x50, type: 'op1'},
-  'SRA': {code: 0x51, type: 'op1'},
-  'SLL': {code: 0x52, type: 'op1'},
-  'SRL': {code: 0x53, type: 'op1'},
-  'JMI': {code: 0x61, type: 'op2'},
-  'JNZ': {code: 0x62, type: 'op2'},
-  'JZE': {code: 0x63, type: 'op2'},
-  'JUMP': {code: 0x64, type: 'op2'},
-  'JPL': {code: 0x65, type: 'op2'},
-  'JOV': {code: 0x66, type: 'op2'},
-  'PUSH': {code: 0x70, type: 'op2'},
-  'POP': {code: 0x71, type: 'op3'},
-  'CALL': {code: 0x80, type: 'op2'},
-  'RET': {code: 0x81, type: 'op4'},
-  'SVC': {code: 0xf0, type: 'op2'},
-  // psude instruction
-  'START': {type: 'start'},
-  'END': {type: 'end'},
-  'DS': {type: 'ds'},
-  'DC': {type: 'dc'},
-  // CASL II macros
-  'IN': {type: 'in'},
-  'OUT': {type: 'out'},
-  'RPUSH': {type: 'rpush'},
-  'RPOP': {type: 'rpop'},
-};
+// common functions
 
 // addresses of IN/OUT system calls --- these MACROs are expanded
 // to call this address after pushing its arguments on stack.
@@ -55,63 +19,6 @@ var EXIT_USR = 0x0000;
 var EXIT_OVF = 0x0001;
 var EXIT_DVZ = 0x0002;
 var EXIT_ROV = 0x0003;
-
-// global variables of currently processing file and line number.
-// These variables are used in &error.
-var __file = '';
-var __line;
-
-// global variables for START address checking
-var actual_label = '';
-var virtual_label = '';
-var first_start = 1;
-var var_scope = '';
-
-var memory = {};
-var symtbl = {};
-var buf = [];
-var outdump = [];
-var comet2startAddress = 0;
-var comet2startLabel;
-
-var opt_a = 0;
-
-const fs = require('fs');
-var program = require('commander');
-
-let c2bin = Buffer.alloc(65535);
-
-const main = () => {
-  program
-  .version(VERSION)
-  .usage('[options] <casl2 file>')
-  .option('-a, --all', 'show detailed info')
-  .parse(process.argv);
-  var options = program.opts();
-  if (options.all) {
-    opt_a = 1;
-  }
-  try {
-    const inputFilepath = program.args[0]; // process.argv[2];
-    if (!inputFilepath) {
-      throw('No casl2 source file specified.');
-    }
-    const basename = inputFilepath.split('/').pop().split('.').shift();
-    const outputFilepath = basename + ".com";
-    const casl2code = fs.readFileSync(inputFilepath, 'utf-8');
-    //    console.log(casl2code);
-    pass1(casl2code, symtbl, memory, buf);
-    pass2(symtbl, memory, buf);
-    fs.writeFileSync(outputFilepath, c2bin);
-    // console.log(`Write to ${outputFilepath}`);
-  } catch (e) {
-    //エラー処理
-    console.log(e);
-  }
-  //  console.log(memory);
-  //  console.log(symtbl);
-  //  console.log(comet2ops);
-};
 
 function unpack_C(string) {
   var ret = [];
@@ -143,8 +50,118 @@ function spacePadding(val, len) {
   return val.slice((-1) * len);
 }
 
-function error(msg) {
-  throw ('Line ' + String(__line) + ':' + msg);
+//// casl2
+/*
+   _________   _____ __       ________
+  / ____/   | / ___// /      /  _/  _/
+ / /   / /| | \__ \/ /       / / / /  
+/ /___/ ___ |___/ / /___   _/ /_/ /   
+\____/_/  |_/____/_____/  /___/___/   
+                                      */
+
+var CASL2TBL = {
+  'NOP': { code: 0x00, type: 'op4' },
+  'LD': { code: 0x10, type: 'op5' },
+  'ST': { code: 0x11, type: 'op1' },
+  'LAD': { code: 0x12, type: 'op1' },
+  'ADDA': { code: 0x20, type: 'op5' },
+  'SUBA': { code: 0x21, type: 'op5' },
+  'ADDL': { code: 0x22, type: 'op5' },
+  'SUBL': { code: 0x23, type: 'op5' },
+  'MULA': { code: 0x28, type: 'op5' },
+  'DIVA': { code: 0x29, type: 'op5' },
+  'MULL': { code: 0x2A, type: 'op5' },
+  'DIVL': { code: 0x2B, type: 'op5' },
+  'AND': { code: 0x30, type: 'op5' },
+  'OR': { code: 0x31, type: 'op5' },
+  'XOR': { code: 0x32, type: 'op5' },
+  'CPA': { code: 0x40, type: 'op5' },
+  'CPL': { code: 0x41, type: 'op5' },
+  'SLA': { code: 0x50, type: 'op1' },
+  'SRA': { code: 0x51, type: 'op1' },
+  'SLL': { code: 0x52, type: 'op1' },
+  'SRL': { code: 0x53, type: 'op1' },
+  'JMI': { code: 0x61, type: 'op2' },
+  'JNZ': { code: 0x62, type: 'op2' },
+  'JZE': { code: 0x63, type: 'op2' },
+  'JUMP': { code: 0x64, type: 'op2' },
+  'JPL': { code: 0x65, type: 'op2' },
+  'JOV': { code: 0x66, type: 'op2' },
+  'PUSH': { code: 0x70, type: 'op2' },
+  'POP': { code: 0x71, type: 'op3' },
+  'CALL': { code: 0x80, type: 'op2' },
+  'RET': { code: 0x81, type: 'op4' },
+  'SVC': { code: 0xf0, type: 'op2' },
+  // psude instruction
+  'START': { type: 'start' },
+  'END': { type: 'end' },
+  'DS': { type: 'ds' },
+  'DC': { type: 'dc' },
+  // CASL II macros
+  'IN': { type: 'in' },
+  'OUT': { type: 'out' },
+  'RPUSH': { type: 'rpush' },
+  'RPOP': { type: 'rpop' },
+};
+
+// global variables of currently processing file and line number.
+// These variables are used in &error.
+var __file = '';
+var __line;
+
+// global variables for START address checking
+var actual_label = '';
+var virtual_label = '';
+var first_start = 1;
+var var_scope = '';
+
+var memory = {};
+var symtbl = {};
+var buf = [];
+var outdump = [];
+var comet2startAddress = 0;
+var comet2startLabel;
+
+var opt_a = 0;
+
+const fs = require('fs');
+var program = require('commander');
+let c2bin = Buffer.alloc(65535);
+
+function assemble() {
+  program
+    .version(VERSION)
+    .usage('[options] <casl2 file>')
+    .option('-a, --all', 'show detailed info')
+    .parse(process.argv);
+  var options = program.opts();
+  if (options.all) {
+    opt_a = 1;
+  }
+  try {
+    const inputFilepath = program.args[0]; // process.argv[2];
+    if (!inputFilepath) {
+      throw ('No casl2 source file specified.');
+    }
+    const basename = inputFilepath.split('/').pop().split('.').shift();
+    const outputFilepath = basename + ".com";
+    const casl2code = fs.readFileSync(inputFilepath, 'utf-8');
+    //    console.log(casl2code);
+    pass1(casl2code, symtbl, memory, buf);
+    pass2(symtbl, memory, buf);
+    fs.writeFileSync(outputFilepath, c2bin);
+  } catch (e) {
+    //エラー処理
+    caslprint(e);
+  }
+}
+
+function caslprint(msg) {
+  console.log(msg);
+}
+
+function error_casl2(msg) {
+  throw (`Line ${__line}: ${msg}`);
 }
 
 function check_label(label) {
@@ -152,7 +169,7 @@ function check_label(label) {
     console.log(`check_label( ${label})`);
   }
   if (!label.match(/^[a-zA-Z\$%_\.][0-9a-zA-Z\$%_\.]*$/)) {
-    error(`Invalid label "${label}"`);
+    error_casl2(`Invalid label "${label}"`);
   }
 }
 
@@ -177,10 +194,10 @@ function expand_label(hashref, val) {
         if (hashref[k]) {
           nval = hashref[k]['val'];
         } else {
-          error(`Undefined label "${lbl}"`);
+          error_casl2(`Undefined label "${lbl}"`);
         }
       } else {
-        error(`Undefined label "${lbl}"`);
+        error_casl2(`Undefined label "${lbl}"`);
       }
     } else if (!val.match(/^[+-]?\d+$/)) {
       var sym = val;
@@ -191,7 +208,7 @@ function expand_label(hashref, val) {
           sym = `${result[2]} in routine ${result[1]}`;
         }
       }
-      error(`Undefined symbol "${sym}"`);
+      error_casl2(`Undefined symbol "${sym}"`);
     } else {
       nval = val;
     }
@@ -209,9 +226,9 @@ function add_label(hashref, label, val) {
   // On addition of a label, add var_scope.
   var uniq_label = `${var_scope}:${label}`;
   if (hashref[uniq_label]) {
-    error(`Label "${label}" has already defined`);
+    error_casl2(`Label "${label}" has already defined`);
   }
-  hashref[uniq_label] = {'val': val, 'file': __file, 'line': __line};
+  hashref[uniq_label] = { 'val': val, 'file': __file, 'line': __line };
 
   if (DEBUG) {
     console.log(`add_label(${uniq_label}:${val})`);
@@ -224,9 +241,9 @@ function update_label(hashref, label, val) {
   check_label(label);
   var uniq_label = `${var_scope}:${label}`;
   if (!hashref[uniq_label]) {
-    error(`Label "${label}" is not defined`);
+    error_casl2(`Label "${label}" is not defined`);
   }
-  hashref[uniq_label] = {'val': val, 'file': __file, 'line': __line};
+  hashref[uniq_label] = { 'val': val, 'file': __file, 'line': __line };
 
   if (DEBUG) {
     console.log(`update_label(${uniq_label}:${val})`);
@@ -237,7 +254,7 @@ function update_label(hashref, label, val) {
 // VAL.
 function add_literal(hashref, literal, val) {
   // check_literal($literal);
-  hashref[literal] = {'val': val, 'file': __file, 'line': __line};
+  hashref[literal] = { 'val': val, 'file': __file, 'line': __line };
   if (DEBUG) {
     console.log(`add_literal(${val})`);
   }
@@ -250,7 +267,7 @@ function check_decimal(number) {
     console.log(`check_decimal(${number})`);
   }
   if (isNaN(Number(number))) {
-    error(`"${number}" must be decimal`);
+    error_casl2(`"${number}" must be decimal`);
   }
 }
 
@@ -263,7 +280,7 @@ function check_register(register) {
   }
   var result = sregister.match(/^(GR)?([0-7])$/i);
   if (!result) {
-    error(`Invalid register "${sregister}"`);
+    error_casl2(`Invalid register "${sregister}"`);
   } else {
     return parseInt(result[2]);
   }
@@ -289,7 +306,7 @@ function gen_code1(hashref, address, val) {
       return;
     }
   }
-  hashref[String(address)] = {'val': val, 'file': __file, 'line': __line};
+  hashref[String(address)] = { 'val': val, 'file': __file, 'line': __line };
 }
 
 // Generate two-byte codes from CODE, GR, ADR, and XR at ADDRESS in
@@ -298,7 +315,7 @@ function gen_code2(hashref, address, code, gr, adr, xr) {
   var ngr = check_register(gr);
   var nxr = check_register(xr);
   var val = (code << 8) + (ngr << 4) + nxr;
-  hashref[String(address)] = {'val': val, 'file': __file, 'line': __line};
+  hashref[String(address)] = { 'val': val, 'file': __file, 'line': __line };
   address++;
 
   if (isString(adr)) {
@@ -312,7 +329,7 @@ function gen_code2(hashref, address, code, gr, adr, xr) {
       return;
     }
   }
-  hashref[String(address)] = {'val': adr, 'file': __file, 'line': __line};
+  hashref[String(address)] = { 'val': adr, 'file': __file, 'line': __line };
 }
 
 function gen_code3(hashref, address, code, gr1, gr2) {
@@ -320,7 +337,7 @@ function gen_code3(hashref, address, code, gr1, gr2) {
   var ngr2 = check_register(gr2);
 
   var val = (code << 8) + (ngr1 << 4) + ngr2;
-  hashref[String(address)] = {'val': val, 'file': __file, 'line': __line};
+  hashref[String(address)] = { 'val': val, 'file': __file, 'line': __line };
 }
 
 function pass1(source, symtblp, memoryp, bufp) {
@@ -376,7 +393,7 @@ function pass1(source, symtblp, memoryp, bufp) {
         console.log(`label/inst/opr = ${label}/${inst}/${opr}`);
       }
     } else {
-      error(`Syntax error: ${lines[i]}`);
+      error_casl2(`Syntax error: ${lines[i]}`);
     }
     // keep every line in @buf for later use
     var uniq_label;
@@ -402,7 +419,7 @@ function pass1(source, symtblp, memoryp, bufp) {
     // generate object code according the type of instruction
     if (inst) {
       if (!CASL2TBL[inst]) {
-        error(`Illegal instruction "${inst}"`);
+        error_casl2(`Illegal instruction "${inst}"`);
       }
 
       var type = CASL2TBL[inst]['type'];
@@ -426,7 +443,7 @@ function pass1(source, symtblp, memoryp, bufp) {
             // string mode
             mode = 'str';
           } else if (
-              mode == 'str' && opr.substring(opid, opid + 1) == '\'') {
+            mode == 'str' && opr.substring(opid, opid + 1) == '\'') {
             if (opr.substring(opid, opid + 2) == '\'\'') {
               opid += 2;
               continue;
@@ -453,18 +470,18 @@ function pass1(source, symtblp, memoryp, bufp) {
 
       // START must be the first instruction
       if (!in_block && (type != 'start')) {
-        error('NO "START" instruction found');
+        error_casl2('NO "START" instruction found');
       }
 
       // GR0 cannot be used as an index register.
       if (opr_array[2] && opr_array[2].match(/^(GR)?0$/i)) {
-        error('Can\'t use GR0 as an index register');
+        error_casl2('Can\'t use GR0 as an index register');
       }
 
       // instructions with GR, adr, and optional XR
       if (type == 'op1') {
         if (!(opr_array.length >= 2 && opr_array.length <= 3)) {
-          error(`Invalid operand "${opr}"`);
+          error_casl2(`Invalid operand "${opr}"`);
         }
         if (!opr_array[2]) {
           opr_array[2] = 0
@@ -498,21 +515,21 @@ function pass1(source, symtblp, memoryp, bufp) {
             console.log(`Literal:${opr_array[1]}`);
           }
         } else if (
-            opr_array[1].match(/^[a-zA-Z\$%_\.][0-9a-zA-Z\$%_\.]*/) &&
-            !opr_array[1].match(/^GR[0-7]$/i)) {
+          opr_array[1].match(/^[a-zA-Z\$%_\.][0-9a-zA-Z\$%_\.]*/) &&
+          !opr_array[1].match(/^GR[0-7]$/i)) {
           opr_array[1] = `${var_scope}:${opr_array[1]}`;
         }
         gen_code2(
-            memoryp, address, CASL2TBL[inst]['code'], opr_array[0], opr_array[1],
-            opr_array[2]);
+          memoryp, address, CASL2TBL[inst]['code'], opr_array[0], opr_array[1],
+          opr_array[2]);
         address += 2;
         // instructions with adr, and optional XR
       } else if (type == 'op2') {
         if (!(1 <= opr_array.length && opr_array.length <= 2)) {
-          error(`Invalid operand "${opr}"`);
+          error_casl2(`Invalid operand "${opr}"`);
         }
         if (opr_array[1] && opr_array[1].match(/^(GR)?0$/i)) {
-          error('Can\'t use GR0 as an index register');
+          error_casl2('Can\'t use GR0 as an index register');
         }
 
         if (!opr_array[1]) {
@@ -520,7 +537,7 @@ function pass1(source, symtblp, memoryp, bufp) {
         }
 
         if (!opr_array[0].match(/^GR[0-7]$/i) &&
-            opr_array[0].match(/^[a-zA-Z\$%_\.][0-9a-zA-Z\$%_\.]*/)) {
+          opr_array[0].match(/^[a-zA-Z\$%_\.][0-9a-zA-Z\$%_\.]*/)) {
           if (inst.match(/CALL/i)) {
             opr_array[0] = `CALL_${var_scope}:${opr_array[0]}`;
           } else {
@@ -528,20 +545,20 @@ function pass1(source, symtblp, memoryp, bufp) {
           }
         }
         gen_code2(
-            memoryp, address, CASL2TBL[inst]['code'], 0, opr_array[0],
-            opr_array[1]);
+          memoryp, address, CASL2TBL[inst]['code'], 0, opr_array[0],
+          opr_array[1]);
         address += 2;
         // instructions only with optional GR
       } else if (type == 'op3') {
         if (opr_array.length != 1) {
-          error(`Invalid operand "${opr}"`);
+          error_casl2(`Invalid operand "${opr}"`);
         }
         gen_code3(memoryp, address, CASL2TBL[inst]['code'], opr_array[0], 0);
         address++;
         // instructions without operand
       } else if (type == 'op4') {
         if (opr_array.length) {
-          error(`Invalid operand "${opr}"`);
+          error_casl2(`Invalid operand "${opr}"`);
         }
         gen_code1(memoryp, address, (CASL2TBL[inst]['code'] << 8));
         address++;
@@ -549,7 +566,7 @@ function pass1(source, symtblp, memoryp, bufp) {
         // instructions with (GR, adr, and optional XR), or (GR, GR)
       } else if (type == 'op5') {
         if (!(opr_array.length >= 2 && opr_array.length <= 3)) {
-          error(`Invalid operand "${opr}"`);
+          error_casl2(`Invalid operand "${opr}"`);
         }
         if (!opr_array[2]) {
           opr_array[2] = 0;
@@ -585,8 +602,8 @@ function pass1(source, symtblp, memoryp, bufp) {
             console.log(`Literal:${opr_array[1]}`);
           }
         } else if (
-            opr_array[1].match(/^[a-zA-Z\$%_\.][0-9a-zA-Z\$%_\.]*/) &&
-            !opr_array[1].match(/^GR[0-7]$/i)) {
+          opr_array[1].match(/^[a-zA-Z\$%_\.][0-9a-zA-Z\$%_\.]*/) &&
+          !opr_array[1].match(/^GR[0-7]$/i)) {
           opr_array[1] = `${var_scope}:${opr_array[1]}`;
         }
         // instructions with GR, GR.
@@ -596,14 +613,14 @@ function pass1(source, symtblp, memoryp, bufp) {
           address++;
         } else {
           gen_code2(
-              memoryp, address, CASL2TBL[inst]['code'], opr_array[0],
-              opr_array[1], opr_array[2]);
+            memoryp, address, CASL2TBL[inst]['code'], opr_array[0],
+            opr_array[1], opr_array[2]);
           address += 2;
         }
         // START instruction
       } else if (type == 'start') {
         if (!label) {
-          error('No label found at START');
+          error_casl2('No label found at START');
         }
 
         if (first_start == 1) {
@@ -625,10 +642,10 @@ function pass1(source, symtblp, memoryp, bufp) {
         // END instruction
       } else if (type == 'end') {
         if (label) {
-          error(`Can't use label "${label}" at END`);
+          error_casl2(`Can't use label "${label}" at END`);
         }
         if (opr_array.length) {
-          error(`Invalid operand "${opr}"`);
+          error_casl2(`Invalid operand "${opr}"`);
         }
 
         // expand_literal;
@@ -645,11 +662,11 @@ function pass1(source, symtblp, memoryp, bufp) {
               address++;
             }
           } else if (lit.match(
-                         /^[+-]?\d+$|^\#[\da-fA-F]+$/)) {  // decial or hex
+            /^[+-]?\d+$|^\#[\da-fA-F]+$/)) {  // decial or hex
             gen_code1(memoryp, address, lit);
             address++;
           } else {
-            error(`Invalid literal =${lit}`);
+            error_casl2(`Invalid literal =${lit}`);
           }
         });
 
@@ -659,7 +676,7 @@ function pass1(source, symtblp, memoryp, bufp) {
         // DS instruction
       } else if (type == 'ds') {
         if (opr_array.length != 1) {
-          error(`Invalid operand "${opr}"`);
+          error_casl2(`Invalid operand "${opr}"`);
         }
         check_decimal(opr_array[0]);
         for (var j = 1; j <= opr_array[0]; j++) {
@@ -695,12 +712,12 @@ function pass1(source, symtblp, memoryp, bufp) {
             }
           }
         } else {
-          error(`Invalid operand "${opr}"`);
+          error_casl2(`Invalid operand "${opr}"`);
         }
         // IN/OUT macro
       } else if ((type == 'in') || (type == 'out')) {
         if (opr_array.length != 2) {
-          error(`Invalid operand "${opr}"`);
+          error_casl2(`Invalid operand "${opr}"`);
         }
 
         // two operands must be labels, not numbers
@@ -716,9 +733,9 @@ function pass1(source, symtblp, memoryp, bufp) {
         gen_code2(memoryp, address, CASL2TBL['PUSH']['code'], 0, 0, 1);
         gen_code2(memoryp, address + 2, CASL2TBL['PUSH']['code'], 0, 0, 2);
         gen_code2(
-            memoryp, address + 4, CASL2TBL['LAD']['code'], 1, opr_array[0], 0);
+          memoryp, address + 4, CASL2TBL['LAD']['code'], 1, opr_array[0], 0);
         gen_code2(
-            memoryp, address + 6, CASL2TBL['LAD']['code'], 2, opr_array[1], 0);
+          memoryp, address + 6, CASL2TBL['LAD']['code'], 2, opr_array[1], 0);
         gen_code2(memoryp, address + 8, CASL2TBL['SVC']['code'], 0, entry, 0);
         gen_code3(memoryp, address + 10, CASL2TBL['POP']['code'], 2, 0);
         gen_code3(memoryp, address + 11, CASL2TBL['POP']['code'], 1, 0);
@@ -727,50 +744,50 @@ function pass1(source, symtblp, memoryp, bufp) {
         // RPUSH macro
       } else if (type == 'rpush') {
         if (opr_array.length) {
-          error(`Invalid operand "${opr}"`);
+          error_casl2(`Invalid operand "${opr}"`);
         }
         for (var j = 0; j < 7; j++) {
           gen_code2(
-              memoryp, address + j * 2, CASL2TBL['PUSH']['code'], 0, 0, j + 1);
+            memoryp, address + j * 2, CASL2TBL['PUSH']['code'], 0, 0, j + 1);
         }
         address += 14;
 
         // RPOP macro
       } else if (type == 'rpop') {
         if (opr_array.length) {
-          error(`Invalid operand "${opr}"`);
+          error_casl2(`Invalid operand "${opr}"`);
         }
         for (var j = 0; j < 7; j++) {
           gen_code3(memoryp, address + j, CASL2TBL['POP']['code'], 7 - j, 0);
         }
         address += 7;
       } else {
-        error(`Instruction type "${type}" is not implemented`);
+        error_casl2(`Instruction type "${type}" is not implemented`);
       }
     }
   }
-  if (in_block) error('NO "END" instruction found');
+  if (in_block) error_casl2('NO "END" instruction found');
 }
 
 function pass2(symtblp, memoryp, bufp) {
   if (opt_a) {
-    console.log('CASL LISTING\n');
+    caslprint('CASL LISTING\n');
   }
   var address;
   var last_line = -1;
   var memkeys = Object.keys(memoryp);
 
-  memkeys.sort(function(a, b) {
+  memkeys.sort(function (a, b) {
     return Number(a) - Number(b);
   });
   comet2startAddress = expand_label(symtblp, comet2startLabel);
 
-  c2bin.writeUInt8(0x43,0);  c2bin.writeUInt8(0x41,1);
-  c2bin.writeUInt8(0x53,2);  c2bin.writeUInt8(0x4c,3);
-  c2bin.writeUInt8(comet2startAddress >>> 8 & 0xff,4);
-  c2bin.writeUInt8(comet2startAddress & 0xff,5);
-  for (var i = 0; i < 10; i++ ) {
-    c2bin.writeUInt8(0, 6+i);
+  c2bin.writeUInt8(0x43, 0); c2bin.writeUInt8(0x41, 1);
+  c2bin.writeUInt8(0x53, 2); c2bin.writeUInt8(0x4c, 3);
+  c2bin.writeUInt8(comet2startAddress >>> 8 & 0xff, 4);
+  c2bin.writeUInt8(comet2startAddress & 0xff, 5);
+  for (var i = 0; i < 10; i++) {
+    c2bin.writeUInt8(0, 6 + i);
   }
   var c2addr = 16;
   for (var i = 0; i < memkeys.length; i++) {
@@ -787,32 +804,55 @@ function pass2(symtblp, memoryp, bufp) {
     if (opt_a) {
       var result;
       var aLine = bufp[__line - 1].split(/\t/);
-      if (result = aLine[0].match(/\.([A-Za-z\d]+)$/)) {
+      if (result = aLine[0].match(/:([a-zA-Z\$%_\.][0-9a-zA-Z\$%_\.]*)$/)) {
         aLine[0] = result[1];
       }
       var bufline = aLine.join('\t');
       if (__line != last_line) {
-        var str = '';
-        str = spacePadding(__line, 4) + ' ' +
-            hex(address, 4) + ' ' + hex(val, 4);
-        str += '\t' + bufline ; //+ '\n';
+        var str = `${spacePadding(__line, 4)} ${hex(address, 4)} ${hex(val, 4)}\t${bufline}`;
         outdump.push(str);
 
         last_line = __line;
       } else {
-        var str = '';
-        str = spacePadding(__line, 4) + '      ' + hex(val, 4);
+        var str = `${spacePadding(__line, 4)}      ${hex(val, 4)}`;
         //str += '\n';
         outdump.push(str);
       }
     }
   }
-  c2bin = c2bin.subarray(0,c2addr);
+  c2bin = c2bin.subarray(0, c2addr);
+  if (opt_a) {
+    outdump.push("\nDEFINED SYMBOLS");
+    var where = [];
+    for (const key in symtblp) {
+      //outdump.push(key);
+      //outdump.push(symtblp[key]['line']);
+      where[symtblp[key]['line']] = key;
+      //outdump.push(where[symtblp[key]['line']]);
+    }
+    where.sort(function (a, b) {
+      return Number(a) - Number(b);
+    });
+    for (const key2 in where) {
+      //outdump.push(where[key2]);
+      var label = where[key2];
+      if (!label.match(/^=/)) {
+        const marray = label.match(/^([a-zA-Z\$%_\.][0-9a-zA-Z\$%_\.]*):([a-zA-Z\$%_\.][0-9a-zA-Z\$%_\.]*)$/);
+        var label_view;
+        if (marray[1] == marray[2]) {
+          label_view = marray[2];
+        } else {
+          label_view = `${marray[2]} (${marray[1]})`;
+        }
+        outdump.push(`${symtblp[label]['line']}:\t${hex(expand_label(symtblp, label), 4)}\t${label_view}`);
+      }
+    }
+  }
   if (opt_a) {
     for (var i = 0; i < outdump.length; i++) {
-      console.log(outdump[i]);
+      caslprint(outdump[i]);
     }
   }
 }
 
-main();
+assemble();
