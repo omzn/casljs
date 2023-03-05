@@ -132,7 +132,7 @@ var program = require('commander');
 
 function assemble() {
   try {
-    const inputFilepath = program.args[0]; // process.argv[2];
+    const inputFilepath = program.args.shift();
     if (!inputFilepath) {
       throw ('[CASL2 ERROR] No casl2 source file is specified.');
     }
@@ -954,6 +954,7 @@ var comet2mem = [];
 var state = [0x0000, FR_PLUS, 0, 0, 0, 0, 0, 0, 0, 0, STACK_TOP, []];
 
 var input_mode = INPUT_MODE_CMD;
+var input_buffer;
 
 var last_cmd;
 var next_cmd = "";
@@ -1812,7 +1813,7 @@ function comet2init(msg) {
 
 program
   .version(VERSION)
-  .usage('[options] <casl2file>')
+  .usage('[options] <casl2file> [input1 ...]')
   .option('-a, --all', '[casl2] show detailed info')
   .option('-r, --run', '[comet2] run immediately')
   .option('-n, --nocolor', '[casl2/comet2] disable color messages')
@@ -1895,6 +1896,7 @@ if (options.QuietRun) {
     input: process.stdin,
     output: process.stdout,
   });
+  input_buffer = program.args.slice(0,program.args.length);
   while (1) {
     var found = 0;
     if (input_mode == INPUT_MODE_CMD) {
@@ -1946,7 +1948,12 @@ if (options.QuietRun) {
       }
     } else if (input_mode == INPUT_MODE_IN) {
       var ppt = opt_Q ? "" : `${str_i_green('IN')}> `;
-      cmd = await readInterface.question(ppt);
+      if (input_buffer.length == 0) {
+        cmd = await readInterface.question(ppt);
+      } else {
+        cmd = input_buffer.shift();
+        cometprint(`${ppt}${cmd}`);
+      }
       exec_in(comet2mem, state, cmd);
       input_mode = INPUT_MODE_CMD;
       if (!opt_q) {

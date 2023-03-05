@@ -22,7 +22,7 @@ CASL2, COMET2 の JavaScript 実装です．
 
 * 状況: 99%
 ```
-Usage: c2c2 [options] <casl2file>
+Usage: c2c2 [options] <casl2file> [input ...]
 
 Options:
   -V, --version   output the version number
@@ -34,10 +34,12 @@ Options:
   -h, --help      display help for command
 ```  
 * ブラウザ版と基本的な動作は同じなので，動作確認にはこちらを使った方が早い．
+
 ```
-$ node c2c2 -Q caslfile.cas
+$ node c2c2 -n -r -q caslfile.cas
 ```
-とすると，入出力のプロンプトも出なくなるので，テストがしやすい．
+とすると，入出力のプロンプト以外の出力は抑制され(-q)，文字色は取り除かれ(-n)，プログラムをアセンブル後，すぐに実行が始まる(-r)．
+また，動作確認などのため，あらかじめ`IN> `に渡すべき入力をファイル名以降の`[input ...]`に記述できる．
 
 ## 独自拡張(CASL2)
 
