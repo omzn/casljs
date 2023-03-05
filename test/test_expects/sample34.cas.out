@@ -1,9 +1,9 @@
 OUT> input the number of data and data character (readln)
-3
-a
+IN> 3
+IN> a
 OUT> 
 OUT> aaa
 OUT> input the number of data and data character (read)
-9b
+IN> 9b
 OUT> 
 OUT> bbbbbbbbb

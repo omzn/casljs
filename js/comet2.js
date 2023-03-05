@@ -1,5 +1,63 @@
+/*
+   __________  __  _______________   ________
+  / ____/ __ \/  |/  / ____/_  __/  /  _/  _/
+ / /   / / / / /|_/ / __/   / /     / / / /  
+/ /___/ /_/ / /  / / /___  / /    _/ /_/ /   
+\____/\____/_/  /_/_____/ /_/    /___/___/   
+*/
+
 var VERSION = '0.9.9 KIT (Feb 28, 2023)';
 var DEBUG = 0;
+var DDEBUG = 0;
+
+// common functions
+
+// addresses of IN/OUT system calls --- these MACROs are expanded
+// to call this address after pushing its arguments on stack.
+const SYS_IN = 0xfff0;
+const SYS_OUT = 0xfff2;
+const EXIT_USR = 0x0000;
+const EXIT_OVF = 0x0001;
+const EXIT_DVZ = 0x0002;
+const EXIT_ROV = 0x0003;
+
+function unpack_C(string) {
+  var ret = [];
+  for (var i = 0; i < string.length; i++) {
+    ret.push(string.charCodeAt(i));
+  }
+  return ret;
+}
+
+function isString(obj) {
+  return typeof (obj) == 'string' || obj instanceof String;
+}
+
+function hex(val, len) {
+  return zeroPadding(val.toString(16), len);
+}
+
+function zeroPadding(val, len) {
+  for (var i = 0; i < len; i++) {
+    val = '0' + val;
+  }
+  return val.slice((-1) * len);
+}
+
+function spacePadding(val, len) {
+  for (var i = 0; i < len; i++) {
+    val = ' ' + val;
+  }
+  return val.slice((-1) * len);
+}
+
+/*
+   __________  __  _______________   ________
+  / ____/ __ \/  |/  / ____/_  __/  /  _/  _/
+ / /   / / / / /|_/ / __/   / /     / / / /  
+/ /___/ /_/ / /  / / /___  / /    _/ /_/ /   
+\____/\____/_/  /_/_____/ /_/    /___/___/   
+*/
 
 var COMET2TBL = {
   // COMET instructions
@@ -67,13 +125,6 @@ var CMDTBL = {
   'h|help': { subr: cmd_help, list: 0 },
 };
 
-const SYS_IN = 0xfff0;
-const SYS_OUT = 0xfff2;
-const EXIT_USR = 0x0000;
-const EXIT_OVF = 0x0001;
-const EXIT_DVZ = 0x0002;
-const EXIT_ROV = 0x0003;
-
 const FR_PLUS = 0;
 const FR_ZERO = 1;
 const FR_MINUS = 2;
@@ -116,7 +167,6 @@ var next_cmd = "";
 
 var opt_q = false;
 var opt_Q = false;
-var opt_r = false;
 
 const readline = require('readline/promises');
 const fs = require('fs');
@@ -128,151 +178,20 @@ const readInterface = readline.createInterface({
 
 var program = require('commander');
 
-program
-  .version(VERSION)
-  .usage('[options] <comet2 file>')
-  .option('-q, --quiet', 'quiet mode')
-  .option('-r, --run', 'run mode')
-  .option('-Q, --QuietRun', 'hard quiet mode (implies -q and -r)')
-  .parse(process.argv);
-
-var options = program.opts();
-if (options.quiet) {
-  opt_q = true;
-}
-if (options.run) {
-  opt_r = true;
-  next_cmd = "r";
-}
-if (options.QuietRun) {
-  opt_q = true;
-  opt_Q = true;
-  opt_r = true;
-  next_cmd = "r";
+function error_comet2(msg) {
+  throw (`[ERROR]${msg}`);
 }
 
-(async () => {
-  try {
-    const inputFilepath = program.args[0];
-    if (!inputFilepath) {
-      throw ('No comet2 binary file specified.');
-    }
-    let buf = Buffer.alloc(65535);
-    buf = fs.readFileSync(inputFilepath);
-    if (!(buf.readUInt8(0) == 0x43 && buf.readUInt8(1) == 0x41 && buf.readUInt8(2) == 0x53 && buf.readUInt8(3) == 0x4c)) {
-      throw ('The file is not a comet2 binary file.');
-    }
-    comet2startAddress = buf.readUint8(5) | (buf.readUint8(4) << 8);
-    state[0] = comet2startAddress;
-    var addr = 0;
-    for (var i = 16; i < buf.length; i += 2) {
-      comet2mem[addr] = (buf.readUint8(i + 1) | (buf.readUint8(i) << 8));
-      addr++;
-    }
-    //    console.log(state);
-    //    console.log(comet2mem);
-  } catch (e) {
-    //エラー処理
-    console.log(e);
-    process.exit(0);
-  }
-  if (!opt_q) {
-    cometprint(`This is COMET II, version ${VERSION}.\n(c) 2001-2023, Osamu Mizuno.\n`);
-    cmd_print(comet2mem, state, []);
-  }
-  var cmd;
-  var finish = 0;
-  while (1) {
-    if (input_mode == INPUT_MODE_CMD) {
-      if (next_cmd != "") {
-        cmd = next_cmd;
-        next_cmd = "";
-      } else {
-        cmd = await readInterface.question("comet2> ");
-      }
-      if (cmd == '') {
-        cmd = last_cmd;
-      } else {
-        last_cmd = cmd;
-      }
-      var cmds = cmd.replace(/\s+/, ' ').split(' ');
-      var cmd2 = cmds.shift();
-      if (cmd2.match('^(quit|q)$')) {
-        cometprint('[Comet2 finished]');
-        break;
-      }
-      for (const key in CMDTBL) {
-        if (cmd2.match('^(' + key + ')$')) {
-          found = 1;
-          try {
-            CMDTBL[key].subr(comet2mem, state, cmds);
-          } catch (e) {
-            if (!opt_q) {
-              cometprint(e);
-            }
-            finish = 1;
-            break;
-          }
-          if (CMDTBL[key].list) {
-            if (!opt_q) {
-              cmd_print(comet2mem, state, cmds);
-            }
-          }
-          break;
-        }
-      }
-      if (!found) {
-        cometprint(`Undefined command "${cmd2}". Try "help".`);
-        continue;
-      }
-      if (finish) {
-        break;
-      }
-    } else if (input_mode == INPUT_MODE_IN) {
-      var ppt = opt_Q ? "" : "IN> ";
-      cmd = await readInterface.question(ppt);
-      exec_in(comet2mem, state, cmd);
-      input_mode = INPUT_MODE_CMD;
-      if (!opt_q) {
-        cmd_print(comet2mem, state, []);
-      }
-    } else {
-      cometprint(`Unknown input mode.`);
-      break;
-    }
-  }
-  //console.log( string );
-  readInterface.close();
-})();
-
-function cometprint(str) {
-  if (str.endsWith('\n')) {
-    str = str.substring(0, str.length - 1);
-  }
-  console.log(str);
+function info_comet2(msg) {
+  throw (`[INFO]${msg}`);
 }
 
-function cometout(str) {
-  process.stdout.write(str);
+function cometprint(msg) {
+  console.log(msg);
 }
 
-function zeroPadding(val, len) {
-  for (var i = 0; i < len; i++) {
-    val = '0' + val;
-  }
-  return val.slice((-1) * len);
-}
-
-function unpack_C(string) {
-  var ret = [];
-  for (var i = 0; i < string.length; i++) {
-    ret.push(string.charCodeAt(i));
-  }
-  return ret;
-}
-
-function hex(val, len) {
-  return zeroPadding(val.toString(16), len);
+function cometout(msg) {
+  process.stdout.write((!opt_Q ? "OUT> " : "") + msg + (msg.slice(-1) != '\n' ? '\n' : ''));
 }
 
 function signed(val) {
@@ -303,7 +222,7 @@ function expand_number(val) {
   if (check_number(sval)) {
     var res;
     if (res = sval.match(/^\#(.*)/)) {
-      val = parseInt(result[1], 16);
+      val = parseInt(res[1], 16);
     }
     val &= 0xffff;  // truncate to 16 bits
     return val;
@@ -415,15 +334,12 @@ function exec_out(memoryp, statep) {
   var lenp = regs[2];
   var bufp = regs[1];
   var len = mem_get(memoryp, lenp);
+
   var obuf = Buffer.alloc(len);
   for (var i = 1; i <= len; i++) {
     obuf.writeUInt8(mem_get(memoryp, bufp + (i - 1)), i - 1);
   }
-  if (!opt_Q) {
-    cometout(`OUT> ${obuf.toString()}`);
-  } else {
-    cometout(`${obuf.toString()}`);
-  }
+  cometout(`${obuf.toString()}`);
 }
 
 // Execute one instruction from the PC --- evaluate the intruction,
@@ -825,7 +741,7 @@ function step_exec(memoryp, statep) {
     pc = mem_get(memoryp, sp);
     sp++;
     if (sp > STACK_TOP) {  // RET on main routine
-      throw ('[Program finished (RET)]');
+      info_comet2('Program finished (RET)');
     }
 
   } else if (inst == 'SVC') {
@@ -839,20 +755,20 @@ function step_exec(memoryp, statep) {
       exec_out(memoryp, statep);
       pc += 2;
     } else if (eadr == EXIT_USR) {
-      throw (`[Program finished (SVC ${EXIT_USR})]`);
+      info_comet2(`Program finished (SVC ${EXIT_USR})`);
     } else if (eadr == EXIT_OVF) {
-      throw (`[Program finished (SVC ${EXIT_OVF})]`);
+      info_comet2(`Program finished (SVC ${EXIT_OVF})`);
     } else if (eadr == EXIT_DVZ) {
-      throw (`[Program finished (SVC ${EXIT_DVZ})]`);
+      info_comet2(`Program finished (SVC ${EXIT_DVZ})`);
     } else if (eadr == EXIT_ROV) {
-      throw (`[Program finished (SVC ${EXIT_ROV})]`);
+      info_comet2(`Program finished (SVC ${EXIT_ROV})`);
     }
 
   } else if (inst == 'NOP') {
     pc++;
 
   } else {
-    throw (`[Error] Illegal instruction ${inst} at #${hex(pc, 4)}`);
+    error_comet2(`Illegal instruction ${inst} at #${hex(pc, 4)}`);
   }
 
   // update registers
@@ -866,68 +782,60 @@ function step_exec(memoryp, statep) {
 }
 
 function cmd_step(memoryp, statep, args) {
-  if (DEBUG) {
-    console.log(`cmd_step( {memoryp} / ${statep} / ${args} )`);
-  }
-
-  var count = expand_number(args);
+  var count = expand_number(args[0]);
   if (!count) {
     count = 1;
   }
-  for (var i = 1; i <= count; i++) {
-    if (step_exec(memoryp, statep)) {
-      // exec_inに依る中断
-      if (count - i > 0) {
-        next_cmd = `s ${count - i}`;
-      }
-      break;
-    }
-  }
-}
-
-function cmd_run(memoryp, statep, args) {
-  if (DEBUG) {
-    console.log(`cmd_run( {memoryp} / ${statep} / ${args} )`);
-  }
-  run_stop = 0;
-
-  while (!run_stop) {
-    if (step_exec(memoryp, statep)) {
-      // exec_inに依る中断
-      // 次に実行するコマンドとして "r" を保存
-      next_cmd = `r`;
-      break;
-    }
-    for (var i = 0; i < statep[BP].length; i++) {
-      var pnt = statep[BP][i];
-      if (pnt == statep[PC]) {
-        cometprint(`Breakpoint ${i}, #${hex(pnt, 4)}`);
-        run_stop = 1;
+//  try {
+    for (var i = 1; i <= count; i++) {
+      if (step_exec(memoryp, statep)) {
+        // exec_inに依る中断
+        if (count - i > 0) {
+          next_cmd = `step ${count - i}`;
+        }
         break;
       }
     }
-  }
+//  } catch (e) {
+//    cometprint(e);
+//  }
 }
 
-function cmd_break(memoryp, statep, arg) {
-  if (DEBUG) {
-    console.log(`cmd_break( / ${statep} / ${arg} )`);
-  }
+function cmd_run(memoryp, statep, args) {
+  run_stop = 0;
+//  try {
+    while (!run_stop) {
+      if (step_exec(memoryp, statep)) {
+        // exec_inに依る中断
+        // 次に実行するコマンドとして "run" を保存
+        next_cmd = `run`;
+        break;
+      }
+      for (var i = 0; i < statep[BP].length; i++) {
+        var pnt = statep[BP][i];
+        if (pnt == statep[PC]) {
+          run_stop = 1;
+          info_comet2(`Breakpoint ${i}, #${hex(pnt, 4)}`);
+          break;
+        }
+      }
+    }
+//  } catch(e) {
+//    cometprint(e);
+//  }
+}
 
-  var val = expand_number(arg);
+function cmd_break(memoryp, statep, args) {
+  var val = expand_number(args[0]);
   if (val) {
     statep[BP].push(val);
   } else {
-    cometprint(`Invalid argument: ${arg}`);
+    cometprint(`Invalid argument: ${args}`);
   }
 }
 
-function cmd_delete(memoryp, statep, arg) {
-  if (DEBUG) {
-    console.log(`cmd_delete( / ${statep} / ${arg} )`);
-  }
-
-  var val = expand_number(arg);
+function cmd_delete(memoryp, statep, args) {
+  var val = expand_number(args[0]);
   if (val) {
     statep[BP].splice(val, 1);
   }
@@ -937,10 +845,6 @@ function cmd_delete(memoryp, statep, arg) {
 }
 
 function cmd_dump(memoryp, statep, args) {
-  if (DEBUG) {
-    console.log(`cmd_dump( / ${statep} / ${args} )`);
-  }
-
   var val = expand_number(args[0]);
   if (val == null) {
     val = statep[PC];
@@ -961,65 +865,39 @@ function cmd_dump(memoryp, statep, args) {
     }
     cometprint(line);
   }
-  return 1;
 }
 
 function cmd_stack(memoryp, statep, args) {
-  if (DEBUG) {
-    console.log(`cmd_stack( {memoryp} / ${statep} / ${args} )`);
-  }
-
   var val = statep[SP];
   cmd_dump(memoryp, statep, val);
-  return 1;
 }
 
-
 function cmd_jump(memoryp, statep, args) {
-  if (DEBUG) {
-    console.log(`cmd_jump( {memoryp} / ${statep} / ${args} )`);
-  }
-
   var val = expand_number(args[0]);
   if (val != null) {
     statep[PC] = val;
   }
   else {
-    cometprint(`Invalid argument: ${args[0]}`);
+    cometprint(`Invalid argument: ADDRESS:${args[0]}`);
   }
-  return 1;
 }
 
 
 function cmd_memory(memoryp, statep, args) {
-  if (DEBUG) {
-    console.log(`cmd_memory( {memoryp} / ${statep} / ${args} )`);
-  }
-
   var adr = expand_number(args[0]);
   var val = expand_number(args[1]);
   if (adr != null && val != null) {
     mem_put(memoryp, adr, val);
   } else {
-    cometprint(`Invalid argument: ${args[0]} and/or ${args[1]}`);
+    cometprint(`Invalid argument: ADDRESS:${args[0]} and/or VALUE:${args[1]}`);
   }
-  return 1;
 }
 
-
 function cmd_disasm(memoryp, statep, args) {
-  if (DEBUG) {
-    console.log(`cmd_disasm( {memoryp} / ${statep} / ${args} )`);
-  }
-
-  var val = null;
-  if (args != []) {
-    val = expand_number(args[0]);
-  }
+  var val = expand_number(args[0]);
   if (val == null) {
     val = statep[PC];
   }
-
   var pc = statep[PC];    // save original PC
   statep[PC] = val;
 
@@ -1029,39 +907,15 @@ function cmd_disasm(memoryp, statep, args) {
     statep[PC] += result[2];
   }
   statep[PC] = pc;       // restore PC
-  return 1;
-}
-
-function cmd_break(memoryp, statep, args) {
-  if (DEBUG) {
-    console.log(`cmd_break( {memoryp} / ${statep} / ${args} )`);
-  }
-
-  var val = expand_number(args[0]);
-  if (val != null) {
-    statep[BP].push(val);
-  }
-  else {
-    cometprint(`Invalid argument: ${args[0]}`);
-  }
-  return 1;
 }
 
 function cmd_info(memoryp, statep, args) {
-  if (DEBUG) {
-    console.log(`cmd_info( {memoryp} / ${statep} / ${args} )`);
-  }
-
   for (var i = 0; i < statep[BP].length; i++) {
     cometprint(`${spacePadding(i, 2)}: #${hex(statep[BP][i], 4)}`);
   }
-  return 1;
 }
 
 function cmd_file(memoryp, statep, args) {
-  if (DEBUG) {
-    console.log(`cmd_file( ${args} )`);
-  }
   const inputFilepath = args[0];
   if (!inputFilepath) {
     cometprint('File name is required.');
@@ -1085,10 +939,6 @@ function cmd_file(memoryp, statep, args) {
 }
 
 function cmd_print(memoryp, statep, args) {
-  if (DEBUG) {
-    console.log(`cmd_print( {memoryp} / ${statep} / ${args} )`);
-  }
-
   var pc = statep[PC];
   var fr = statep[FR];
   var sp = statep[SP];
@@ -1108,10 +958,6 @@ function cmd_print(memoryp, statep, args) {
 }
 
 function cmd_help(memoryp, statep, args) {
-  if (DEBUG) {
-    console.log('cmd_help');
-  }
-
   cometprint("List of commands:");
   cometprint("r,  run             \t\tStart execution of program.");
   cometprint("s,  step  [N]       \t\tStep execution. Argument N means do this N times.");
@@ -1121,10 +967,130 @@ function cmd_help(memoryp, statep, args) {
   cometprint("p,  print           \t\tPrint status of PC/FR/SP/GR0..GR7 registers.");
   cometprint("du, dump [ADDRESS]  \t\tDump 128 words of memory image from specified ADDRESS.");
   cometprint("st, stack           \t\tDump 128 words of stack image.");
-  //cometprint("f,  file	Use FILE as program to be debugged.");
+  cometprint("f,  file	Use FILE as program to be debugged.");
   cometprint("j,  jump ADDRESS    \t\tContinue program at specifed ADDRESS.");
   cometprint("m,  memory ADDRESS VALUE\tChange the memory at ADDRESS to VALUE.");
   cometprint("di, disasm [ADDRESS]\t\tDisassemble 32 words from specified ADDRESS.");
   cometprint("h,  help            \t\tPrint list of commands.");
   cometprint("q,  quit            \t\tExit comet.");
 }
+
+program
+  .version(VERSION)
+  .usage('[options] <comet2 file>')
+  .option('-q, --quiet', 'quiet mode')
+  .option('-r, --run', 'run mode')
+  .option('-Q, --QuietRun', 'hard quiet mode (implies -q and -r)')
+  .parse(process.argv);
+
+var options = program.opts();
+if (options.quiet) {
+  opt_q = true;
+}
+if (options.run) {
+  next_cmd = "run";
+}
+if (options.QuietRun) {
+  opt_q = true;
+  opt_Q = true;
+  next_cmd = "run";
+}
+
+(async () => {
+  try {
+    const inputFilepath = program.args[0];
+    if (!inputFilepath) {
+      throw ('No comet2 binary file specified.');
+    }
+    let buf = Buffer.alloc(65535);
+    buf = fs.readFileSync(inputFilepath);
+    if (!(buf.readUInt8(0) == 0x43 && buf.readUInt8(1) == 0x41 && buf.readUInt8(2) == 0x53 && buf.readUInt8(3) == 0x4c)) {
+      throw ('The file is not a comet2 binary file.');
+    }
+    comet2startAddress = buf.readUint8(5) | (buf.readUint8(4) << 8);
+    state[0] = comet2startAddress;
+    var addr = 0;
+    for (var i = 16; i < buf.length; i += 2) {
+      comet2mem[addr] = (buf.readUint8(i + 1) | (buf.readUint8(i) << 8));
+      addr++;
+    }
+    //    console.log(state);
+    //    console.log(comet2mem);
+  } catch (e) {
+    //エラー処理
+    console.log(e);
+    process.exit(0);
+  }
+  if (!opt_q) {
+    cometprint(`   __________  __  _______________   ________
+  / ____/ __ \\/  |/  / ____/_  __/  /  _/  _/
+ / /   / / / / /|_/ / __/   / /     / / / /  
+/ /___/ /_/ / /  / / /___  / /    _/ /_/ /   
+\\____/\\____/_/  /_/_____/ /_/    /___/___/  `);
+    cometprint(`This is COMET II, version ${VERSION}.\n(c) 2001-2023, Osamu Mizuno.\n`);
+    cmd_print(comet2mem, state, []);
+  }
+  var cmd;
+  var finish = 0;
+  while (1) {
+    if (input_mode == INPUT_MODE_CMD) {
+      if (next_cmd != "") {
+        cmd = next_cmd;
+        next_cmd = "";
+      } else {
+        cmd = await readInterface.question("comet2> ");
+      }
+      if (cmd == '') {
+        cmd = last_cmd;
+      } else {
+        last_cmd = cmd;
+      }
+      var cmds = cmd.replace(/\s+/, ' ').split(' ');
+      var cmd2 = cmds.shift();
+      if (cmd2.match('^(quit|q)$')) {
+        cometprint('[Comet2 finished]');
+        break;
+      }
+      for (const key in CMDTBL) {
+        if (cmd2.match('^(' + key + ')$')) {
+          found = 1;
+          try {
+            CMDTBL[key].subr(comet2mem, state, cmds);
+          } catch (e) {
+            if (!opt_q) {
+              cometprint(e);
+            }
+            finish = 1;
+            break;
+          }
+          if (CMDTBL[key].list) {
+            if (!opt_q) {
+              cmd_print(comet2mem, state, cmds);
+            }
+          }
+          break;
+        }
+      }
+      if (!found) {
+        cometprint(`Undefined command "${cmd2}". Try "help".`);
+        continue;
+      }
+      if (finish) {
+        break;
+      }
+    } else if (input_mode == INPUT_MODE_IN) {
+      var ppt = opt_Q ? "" : "IN> ";
+      cmd = await readInterface.question(ppt);
+      exec_in(comet2mem, state, cmd);
+      input_mode = INPUT_MODE_CMD;
+      if (!opt_q) {
+        cmd_print(comet2mem, state, []);
+      }
+    } else {
+      cometprint(`Unknown input mode.`);
+      break;
+    }
+  }
+  //console.log( string );
+  readInterface.close();
+})();
