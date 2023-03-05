@@ -905,7 +905,7 @@ var COMET2TBL = {
 };
 
 var CMDTBL = {
-  'r|run': { subr: cmd_run, list: 1 },
+  'r|run': { subr: cmd_run, list: 0 },
   's|step': { subr: cmd_step, list: 1 },
   'b|break': { subr: cmd_break, list: 0 },
   'd|delete': { subr: cmd_delete, list: 0 },
@@ -1929,7 +1929,9 @@ if (options.QuietRun) {
           }
           if (CMDTBL[key].list) {
             if (!opt_q) {
-              cmd_print(comet2mem, state, cmds);
+              if (input_mode == INPUT_MODE_CMD) {
+                cmd_print(comet2mem, state, cmds);
+              }
             }
           }
           break;
@@ -1948,7 +1950,8 @@ if (options.QuietRun) {
       exec_in(comet2mem, state, cmd);
       input_mode = INPUT_MODE_CMD;
       if (!opt_q) {
-        cmd_print(comet2mem, state, []);
+        if (last_cmd == "s" || last_cmd == "step") 
+          cmd_print(comet2mem, state, []);
       }
     } else {
       cometprint(`Unknown input mode.`);
