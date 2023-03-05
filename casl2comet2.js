@@ -1851,11 +1851,9 @@ var term_comet2 = $('#terminal_comet2').terminal({
   },
   run: function () {
     cmd_run(comet2mem, state, []);
-    if (!opt_q) cmd_print(comet2mem, state, []);
   },
   r: function () {
     cmd_run(comet2mem, state, []);
-    if (!opt_q) cmd_print(comet2mem, state, []);
   },
   step: function (arg) {
     cmd_step(comet2mem, state, [arg]);

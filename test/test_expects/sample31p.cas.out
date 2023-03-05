@@ -1,7 +1,7 @@
 OUT> proc of p
 OUT> proc of q
-1
+IN> 1
 OUT> true
 OUT> proc of q
-3
+IN> 3
 OUT> true

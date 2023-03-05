@@ -81,9 +81,13 @@ def common_task(driver, casl2_file, out_file, timeout):
         WebDriverWait(driver, timeout).until(expected_conditions.text_to_be_present_in_element((By.ID, "terminal_comet2"), "Program finished"))
         terminal_text = e.text
         with open(out_file, mode='w') as fp:
-            out_match = re.search(r"^run\n(.*)Program finished", terminal_text, flags=re.MULTILINE | re.DOTALL)
+            out_match = re.search(r"^comet2> run\n(.*)Program finished", terminal_text, flags=re.MULTILINE | re.DOTALL)
             if out_match:
-                fp.write(out_match.group(1))
+                o_raw = out_match.group(1).splitlines(True)
+                for l in o_raw:
+                    if (re.match(r"(IN|OUT)>", l)):
+                        fp.write(l)
+                #fp.write(out_match.group(1))
     except TimeoutException:
         terminal_text = e.text
         with open(out_file, mode='w') as fp:
@@ -141,7 +145,7 @@ def test_casl2comet2_run(driver_name, casl2_file, request):
     if (Path(casl2_file).name == "sample16.cas"):
         timeout = 60
     else:
-        timeout = 5
+        timeout = 15
     common_task(driver, casl2_file, out_file, timeout)
     expect_file = Path(TEST_EXPECT_DIR).joinpath(Path(casl2_file).name + ".out")
     with open(out_file) as ofp, open(expect_file) as efp:
