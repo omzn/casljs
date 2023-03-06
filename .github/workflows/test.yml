@@ -35,7 +35,8 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 'latest'
-      - run: npm install commander
+      - name: Install dependencies
+        run: npm ci
 
       # ubuntu, macosのときはFirefoxの最新版をインストールする
       - name: Set up Firefox on Ubuntu or MacOS

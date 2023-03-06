@@ -14,7 +14,6 @@ from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.firefox.service import Service as FirefoxService
 from selenium.webdriver.chrome.service import Service as ChromeService
-from selenium.webdriver.firefox.firefox_profile import FirefoxProfile
 from selenium.common.exceptions import TimeoutException
 from webdriver_manager.chrome import ChromeDriverManager
 from webdriver_manager.firefox import GeckoDriverManager
@@ -29,9 +28,7 @@ class Casl2AssembleError(Exception):
 def init_firefox_driver():
     options = FirefoxOptions()
     options.add_argument("-headless")
-    firefox_profile = FirefoxProfile()
-    firefox_profile.set_preference("accessibility.typeaheadfind.manual", False)
-    options.profile = firefox_profile
+    options.set_preference("accessibility.typeaheadfind.manual", False)
     driver = webdriver.Firefox(service=FirefoxService(GeckoDriverManager(path=DRIVER_DESTINATION_PATH).install()), options=options)
     return driver
 

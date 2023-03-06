@@ -3,7 +3,6 @@ perl/comet2
 .DS_Store
 node_modules
 *.com
-*.json
 
 # test用
 __pycache__
