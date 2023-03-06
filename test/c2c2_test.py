@@ -37,7 +37,8 @@ def common_task(casl2_file, out_file):
     except Casl2AssembleError:
         with open(out_file, mode='w') as fp:
             fp.write("============ASSEMBLE ERROR==============\n")
-            fp.write(e.text)
+            for line in assembler_text:
+                fp.write(line)
         raise Casl2AssembleError
     except Exception as err:
         with open(out_file, mode='w') as fp:
