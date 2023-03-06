@@ -14,6 +14,7 @@ from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.firefox.service import Service as FirefoxService
 from selenium.webdriver.chrome.service import Service as ChromeService
+from selenium.webdriver.firefox.firefox_profile import FirefoxProfile
 from selenium.common.exceptions import TimeoutException
 from webdriver_manager.chrome import ChromeDriverManager
 from webdriver_manager.firefox import GeckoDriverManager
@@ -27,7 +28,10 @@ class Casl2AssembleError(Exception):
 
 def init_firefox_driver():
     options = FirefoxOptions()
-    options.add_argument("--headless")
+#    options.add_argument("-headless")
+    firefox_profile = FirefoxProfile()
+    firefox_profile.set_preference("accessibility.typeaheadfind.manual", False)
+    options.profile = firefox_profile
     driver = webdriver.Firefox(service=FirefoxService(GeckoDriverManager(path=DRIVER_DESTINATION_PATH).install()), options=options)
     return driver
 
@@ -138,14 +142,14 @@ def test_casl2comet2_run(driver_name, casl2_file, request):
     driver = request.getfixturevalue(driver_name)
     path_to_html = Path(__file__).parent.parent.joinpath("index.html")
     driver.get("file://" + str(path_to_html))
-    driver.set_window_size(1920, 1080)
+    driver.set_window_size(1920, 800)
     if not Path(TEST_RESULT_DIR).exists():
         os.mkdir(TEST_RESULT_DIR)
     out_file = Path(TEST_RESULT_DIR).joinpath(Path(casl2_file).name + ".out")
     if (Path(casl2_file).name == "sample16.cas"):
-        timeout = 60
+        timeout = 90
     else:
-        timeout = 15
+        timeout = 10
     common_task(driver, casl2_file, out_file, timeout)
     expect_file = Path(TEST_EXPECT_DIR).joinpath(Path(casl2_file).name + ".out")
     with open(out_file) as ofp, open(expect_file) as efp:
