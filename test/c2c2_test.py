@@ -22,7 +22,8 @@ def command(cmd):
 
 def common_task(casl2_file, out_file):
     try:
-        assembler_text = command("node ../c2c2.js -n -c -a {}".format(casl2_file))
+        c2c2 = Path(__file__).parent.parent.joinpath("c2c2.js")
+        assembler_text = command("node {} -n -c -a {}".format(c2c2,casl2_file))
         if not "DEFINED SYMBOLS" in assembler_text:
             raise Casl2AssembleError
         with open("input.json") as fp:
@@ -30,7 +31,7 @@ def common_task(casl2_file, out_file):
         inputparams = ''
         if Path(casl2_file).name in input.keys():
             inputparams = ' '.join([i for i in input[Path(casl2_file).name]])
-        terminal_text = command("node ../c2c2.js -n -q -r {} {}".format(casl2_file,inputparams))
+        terminal_text = command("node {} -n -q -r {} {}".format(c2c2,casl2_file,inputparams))
         with open(out_file, mode='w') as fp:
             for line in terminal_text:
                 fp.write(line + '\n')
