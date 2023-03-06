@@ -125,6 +125,7 @@ var comet2startLabel;
 var comet2bin = [];
 
 var opt_a = false;
+var opt_c = false;
 var opt_nc = false;
 
 const fs = require('fs');
@@ -150,6 +151,7 @@ function assemble() {
     pass1(casl2code, symtbl, memory, buf);
     pass2(comet2bin, symtbl, memory, buf);
     caslprint(`Successfully assembled.`);
+    if (opt_c) return 0;
     comet2mem = comet2bin.slice(0,comet2bin.length);
     comet2init(`Loading comet2 binary ... done`);
     return 1;
@@ -1815,6 +1817,7 @@ program
   .version(VERSION)
   .usage('[options] <casl2file> [input1 ...]')
   .option('-a, --all', '[casl2] show detailed info')
+  .option('-c, --casl', '[casl2] apply casl2 only')
   .option('-r, --run', '[comet2] run immediately')
   .option('-n, --nocolor', '[casl2/comet2] disable color messages')
   .option('-q, --quiet', '[casl2/comet2] be quiet')
@@ -1824,6 +1827,9 @@ program
 var options = program.opts();
 if (options.all) {
   opt_a = true;
+}
+if (options.casl) {
+  opt_c = true;
 }
 if (options.nocolor) {
   opt_nc = true;

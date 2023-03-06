@@ -30,6 +30,13 @@ jobs:
         with:
           python-version: 3.9
 
+      # node.js latest をインストールする
+      - name: Use Node.js latest
+        uses: actions/setup-node@v3
+        with:
+          node-version: 'latest'
+      - run: npm install commander
+
       # ubuntu, macosのときはFirefoxの最新版をインストールする
       - name: Set up Firefox on Ubuntu or MacOS
         uses: browser-actions/setup-firefox@latest
