@@ -28,7 +28,7 @@ class Casl2AssembleError(Exception):
 
 def init_firefox_driver():
     options = FirefoxOptions()
-#    options.add_argument("-headless")
+    options.add_argument("-headless")
     firefox_profile = FirefoxProfile()
     firefox_profile.set_preference("accessibility.typeaheadfind.manual", False)
     options.profile = firefox_profile
