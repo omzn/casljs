@@ -903,7 +903,7 @@ var COMET2TBL = {
   '0xf0': { id: 'SVC', type: 'op2' },
 };
 
-var CMDTBL = {
+//var CMDTBL = {
   //  'r|run': { subr: cmd_run, list: 1 },
   //  's|step': { subr: cmd_step, list: 1 },
   //  'b|break': { subr: cmd_break, list: 0 },
@@ -916,8 +916,8 @@ var CMDTBL = {
   //  'j|jump': { subr: cmd_jump, list: 1 },
   //  'm|memory': { subr: cmd_memory, list: 1 },
   //  'di|disasm': { subr: cmd_disasm, list: 0 },
-  'h|help': { subr: cmd_help, list: 0 },
-};
+  //  'h|help': { subr: cmd_help, list: 0 },
+//};
 
 const FR_PLUS = 0;
 const FR_ZERO = 1;
@@ -1314,9 +1314,7 @@ function step_exec(memoryp, statep) {
       var m = mem_get(memoryp, eadr);
       if (m == 0) {
         fr = FR_OVER | FR_ZERO;
-        if (!opt_q) {
-          cometprint("Waring: Division by zero in DIVA.");
-        }
+       error_comet2("Abort: Division by zero in DIVA.");
       } else {
         regs[gr] /= m;
         var ofr1 = regs[gr] > MAX_SIGNED ? FR_OVER : 0;
@@ -1324,16 +1322,14 @@ function step_exec(memoryp, statep) {
         regs[gr] &= 0xffff;
         regs[gr] &= 0xffff;
         fr = get_flag(regs[gr]) | ofr1 | ofr2;
+        pc += 2;
       }
-      pc += 2;
     } else {
       regs[gr] = signed(regs[gr]);
       regs[xr] = signed(regs[xr]);
       if (regs[xr] == 0) {
         fr = FR_OVER | FR_ZERO;
-        if (!opt_q) {
-          cometprint("Waring: Division by zero in DIVA.");
-        }
+        error_comet2("Abort: Division by zero in DIVA.");
       } else {
         regs[gr] /= regs[xr];
         var ofr1 = regs[gr] > MAX_SIGNED ? FR_OVER : 0;
@@ -1341,31 +1337,27 @@ function step_exec(memoryp, statep) {
         regs[gr] &= 0xffff;
         regs[xr] &= 0xffff;
         fr = get_flag(regs[gr]) | ofr1 | ofr2;
+        pc += 1;
       }
-      pc += 1;
     }
   } else if (inst == 'DIVL') {
     if (!opr.match(/GR[0-7], GR[0-7]/i)) {
       var m = mem_get(memoryp, eadr);
       if (m == 0) {
         fr = FR_OVER | FR_ZERO;
-        if (!opt_q) {
-          cometprint("Waring: Division by zero in DIVL.");
-        }
+        error_comet2("Abort: Division by zero in DIVL.");
       } else {
         regs[gr] /= m;
         var ofr1 = regs[gr] > 0xffff ? FR_OVER : 0;
         var ofr2 = regs[gr] < 0 ? FR_OVER : 0;
         regs[gr] &= 0xffff;
         fr = get_flag(regs[gr]) | ofr1 | ofr2;
+        pc += 2;
       }
-      pc += 2;
     } else {
       if (regs[xr] == 0) {
         fr = FR_OVER | FR_ZERO;
-        if (!opt_q) {
-          cometprint("Waring: Division by zero in DIVL.");
-        }
+        error_comet2("Abort: Division by zero in DIVL.");
       } else {
         regs[gr] /= regs[xr];
         var ofr1 = regs[gr] > 0xffff ? FR_OVER : 0;
@@ -1373,8 +1365,8 @@ function step_exec(memoryp, statep) {
         regs[gr] &= 0xffff;
         regs[xr] &= 0xffff;
         fr = get_flag(regs[gr]) | ofr1 | ofr2;
+        pc += 1;
       }
-      pc += 1;
     }
   } else if (inst == 'AND') {
     if (!opr.match(/GR[0-7], GR[0-7]/i)) {

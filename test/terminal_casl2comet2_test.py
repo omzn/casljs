@@ -133,7 +133,7 @@ def Chrome():
     yield driver
     driver.quit()
 
-
+@pytest.mark.timeout(10)
 @pytest.mark.parametrize(("driver_name,casl2_file"), test_data)
 def test_casl2comet2_run(driver_name, casl2_file, request):
     driver = request.getfixturevalue(driver_name)

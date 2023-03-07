@@ -22,17 +22,19 @@ CASL2, COMET2 の JavaScript 実装です．
 
 * 状況: 99%
 ```
-Usage: c2c2 [options] <casl2file> [input ...]
+Usage: c2c2 [options] <casl2file> [input1 ...]
 
 Options:
   -V, --version   output the version number
   -a, --all       [casl2] show detailed info
+  -c, --casl      [casl2] apply casl2 only
   -r, --run       [comet2] run immediately
   -n, --nocolor   [casl2/comet2] disable color messages
   -q, --quiet     [casl2/comet2] be quiet
   -Q, --QuietRun  [comet2] be QUIET! (implies -q and -r)
   -h, --help      display help for command
 ```  
+
 * ブラウザ版と基本的な動作は同じなので，動作確認にはこちらを使った方が早い．
 
 ```
@@ -52,7 +54,7 @@ $ node c2c2 -n -r -q caslfile.cas
 
 ## 独自拡張(COMET2)
 
-* DIVA, DIVL については，0 除算を行おうとすると ZF と OF が同時に立って，計算は行われずに先に進みます．
+* DIVA, DIVL については，0 除算を行おうとすると ZF と OF が同時に立って，メッセージを表示した後，プログラムは停止します．
 
 ## 利用ライブラリ
 
