@@ -1598,6 +1598,8 @@ function cmd_step(memoryp, statep, args) {
 }
 
 function cmd_run(memoryp, statep, args) {
+  // 次に実行するコマンドとして "run" を保存
+  next_cmd = `run`;
   if (step_exec(memoryp, statep)) {
     // exec_inに依る中断
   } else {
@@ -1610,8 +1612,6 @@ function cmd_run(memoryp, statep, args) {
       }
     }
   }
-  // 次に実行するコマンドとして "run" を保存
-  next_cmd = `run`;
 }
 
 function cmd_break(memoryp, statep, args) {
