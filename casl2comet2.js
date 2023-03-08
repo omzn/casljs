@@ -1585,6 +1585,8 @@ function cmd_step(memoryp, statep, args) {
         // exec_inに依る中断
         if (count - i > 0) {
           next_cmd = `step ${count - i}`;
+        } else {
+          next_cmd = '';
         }
         break;
       }

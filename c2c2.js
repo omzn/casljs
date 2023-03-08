@@ -1594,6 +1594,8 @@ function cmd_step(memoryp, statep, args) {
         // exec_inに依る中断
         if (count - i > 0) {
           next_cmd = `step ${count - i}`;
+        } else {
+          next_cmd = '';
         }
         break;
       }
@@ -1889,6 +1891,10 @@ if (options.QuietRun) {
   }
   var cmd;
   var finish = 0;
+
+  process.on("SIGINT", () => {
+    process.exit(0);
+  });
 
   const readInterface = readline.createInterface({
     input: process.stdin,
