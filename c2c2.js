@@ -1588,45 +1588,30 @@ function cmd_step(memoryp, statep, args) {
   if (!count) {
     count = 1;
   }
-//  try {
-    for (var i = 1; i <= count; i++) {
-      if (step_exec(memoryp, statep)) {
-        // exec_inに依る中断
-        if (count - i > 0) {
-          next_cmd = `step ${count - i}`;
-        } else {
-          next_cmd = '';
-        }
-        break;
-      }
-    }
-//  } catch (e) {
-//    cometprint(e);
-//  }
+  step_exec(memoryp, statep);
+  count--;
+  if (count > 0) {
+    next_cmd = `step ${count}`;
+  } else {
+    next_cmd = '';
+  }
 }
 
 function cmd_run(memoryp, statep, args) {
-  run_stop = 0;
-//  try {
-    while (!run_stop) {
-      if (step_exec(memoryp, statep)) {
-        // exec_inに依る中断
-        // 次に実行するコマンドとして "run" を保存
-        next_cmd = `run`;
+  if (step_exec(memoryp, statep)) {
+    // exec_inに依る中断
+  } else {
+    for (var i = 0; i < statep[BP].length; i++) {
+      var pnt = statep[BP][i];
+      if (pnt == statep[PC]) {
+        next_cmd = '';
+        info_comet2(`Breakpoint ${i}, #${hex(pnt, 4)}`);
         break;
       }
-      for (var i = 0; i < statep[BP].length; i++) {
-        var pnt = statep[BP][i];
-        if (pnt == statep[PC]) {
-          run_stop = 1;
-          info_comet2(`Breakpoint ${i}, #${hex(pnt, 4)}`);
-          break;
-        }
-      }
     }
-//  } catch(e) {
-//    cometprint(e);
-//  }
+  }
+  // 次に実行するコマンドとして "run" を保存
+  next_cmd = `run`;
 }
 
 function cmd_break(memoryp, statep, args) {
@@ -1801,6 +1786,14 @@ function comet2init(msg) {
   }
 }
 
+const sleep = (time) => {
+  return new Promise((resolve, reject) => {
+      setImmediate(() => {
+          resolve()
+      }, time)
+  })
+}
+
 /* MAIN 
  *
  *
@@ -1892,10 +1885,6 @@ if (options.QuietRun) {
   var cmd;
   var finish = 0;
 
-  process.on("SIGINT", () => {
-    process.exit(0);
-  });
-
   const readInterface = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
@@ -1968,6 +1957,7 @@ if (options.QuietRun) {
       cometprint(`Unknown input mode.`);
       break;
     }
+    await sleep(0);
   }
   //console.log( string );
   readInterface.close();
