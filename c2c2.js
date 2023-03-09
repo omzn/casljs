@@ -1588,13 +1588,13 @@ function cmd_step(memoryp, statep, args) {
   if (!count) {
     count = 1;
   }
-  step_exec(memoryp, statep);
   count--;
   if (count > 0) {
     next_cmd = `step ${count}`;
   } else {
     next_cmd = '';
   }
+  step_exec(memoryp, statep);
 }
 
 function cmd_run(memoryp, statep, args) {
@@ -1602,16 +1602,27 @@ function cmd_run(memoryp, statep, args) {
   next_cmd = `run`;
   if (step_exec(memoryp, statep)) {
     // exec_inに依る中断
+    return;
   } else {
     for (var i = 0; i < statep[BP].length; i++) {
       var pnt = statep[BP][i];
       if (pnt == statep[PC]) {
         next_cmd = '';
         info_comet2(`Breakpoint ${i}, #${hex(pnt, 4)}`);
-        break;
+        return;
       }
     }
   }
+  /*
+  if (next_cmd != "") {
+    new Promise((resolve, reject) => {
+      setImmediate(() => {
+          resolve();
+          cmd_run(memoryp,statep,args);
+      })
+    })
+  }
+  */
 }
 
 function cmd_break(memoryp, statep, args) {
