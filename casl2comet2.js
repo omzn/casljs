@@ -661,6 +661,8 @@ function pass1(source, symtblp, memoryp, bufp) {
               gen_code1(memoryp, address, vals[j]);
               address++;
             }
+            gen_code1(memoryp, address, 0);
+            address++;
           } else if (lit.match(
             /^[+-]?\d+$|^\#[\da-fA-F]+$/)) {  // decial or hex
             gen_code1(memoryp, address, lit);
