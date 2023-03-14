@@ -351,7 +351,7 @@ function pass1(source, symtblp, memoryp, bufp) {
   var address = 0;
   var literal_stack = [];
 
-  var lines = source.split('\n');
+  var lines = source.split(/\r\n|\n/);
   __line = 0;
   for (var i = 0; i < lines.length; i++) {
     __line++;
@@ -667,7 +667,8 @@ function pass1(source, symtblp, memoryp, bufp) {
             gen_code1(memoryp, address, 0);
             address++;
         } else if (lit.match(
-            /^[+-]?\d+$|^\#[\da-fA-F]+$/)) {  // decial or hex
+            /^[+-]?\d+$|^\#[\da-fA-F]+$/)) {  
+            // decial or hex
             gen_code1(memoryp, address, lit);
             address++;
           } else {
