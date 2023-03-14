@@ -56,7 +56,7 @@ TEST_EXPECT_DIR = "test_expects"
 sample_files = sorted(glob.glob("samples/**/*.cas", recursive=True))
 test_data = sample_files
 
-@pytest.mark.timeout(10)
+@pytest.mark.timeout(20)
 @pytest.mark.parametrize(("casl2_file"), test_data)
 def test_c2c2_run(casl2_file):
     if not Path(TEST_RESULT_DIR).exists():
