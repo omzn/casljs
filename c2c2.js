@@ -351,7 +351,7 @@ function pass1(source, symtblp, memoryp, bufp) {
   var address = 0;
   var literal_stack = [];
 
-  var lines = source.split('\n');
+  var lines = source.split(/\r\n|\n/);
   __line = 0;
   for (var i = 0; i < lines.length; i++) {
     __line++;
