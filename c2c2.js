@@ -1610,7 +1610,7 @@ function cmd_run(memoryp, statep, args) {
       var pnt = statep[BP][i];
       if (pnt == statep[PC]) {
         next_cmd = '';
-        info_comet2(`Breakpoint ${i}, #${hex(pnt, 4)}`);
+        cometprint(str_white_green(`Breakpoint ${i}, #${hex(pnt, 4)}`));
         return;
       }
     }
