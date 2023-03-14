@@ -664,8 +664,11 @@ function pass1(source, symtblp, memoryp, bufp) {
               gen_code1(memoryp, address, vals[j]);
               address++;
             }
-          } else if (lit.match(
-            /^[+-]?\d+$|^\#[\da-fA-F]+$/)) {  // decial or hex
+            gen_code1(memoryp, address, 0);
+            address++;
+        } else if (lit.match(
+            /^[+-]?\d+$|^\#[\da-fA-F]+$/)) {  
+            // decial or hex
             gen_code1(memoryp, address, lit);
             address++;
           } else {
@@ -1588,43 +1591,41 @@ function cmd_step(memoryp, statep, args) {
   if (!count) {
     count = 1;
   }
-//  try {
-    for (var i = 1; i <= count; i++) {
-      if (step_exec(memoryp, statep)) {
-        // exec_inに依る中断
-        if (count - i > 0) {
-          next_cmd = `step ${count - i}`;
-        }
-        break;
-      }
-    }
-//  } catch (e) {
-//    cometprint(e);
-//  }
+  count--;
+  if (count > 0) {
+    next_cmd = `step ${count}`;
+  } else {
+    next_cmd = '';
+  }
+  step_exec(memoryp, statep);
 }
 
 function cmd_run(memoryp, statep, args) {
-  run_stop = 0;
-//  try {
-    while (!run_stop) {
-      if (step_exec(memoryp, statep)) {
-        // exec_inに依る中断
-        // 次に実行するコマンドとして "run" を保存
-        next_cmd = `run`;
-        break;
-      }
-      for (var i = 0; i < statep[BP].length; i++) {
-        var pnt = statep[BP][i];
-        if (pnt == statep[PC]) {
-          run_stop = 1;
-          info_comet2(`Breakpoint ${i}, #${hex(pnt, 4)}`);
-          break;
-        }
+  // 次に実行するコマンドとして "run" を保存
+  next_cmd = `run`;
+  if (step_exec(memoryp, statep)) {
+    // exec_inに依る中断
+    return;
+  } else {
+    for (var i = 0; i < statep[BP].length; i++) {
+      var pnt = statep[BP][i];
+      if (pnt == statep[PC]) {
+        next_cmd = '';
+        cometprint(str_white_green(`Breakpoint ${i}, #${hex(pnt, 4)}`));
+        return;
       }
     }
-//  } catch(e) {
-//    cometprint(e);
-//  }
+  }
+  /*
+  if (next_cmd != "") {
+    new Promise((resolve, reject) => {
+      setImmediate(() => {
+          resolve();
+          cmd_run(memoryp,statep,args);
+      })
+    })
+  }
+  */
 }
 
 function cmd_break(memoryp, statep, args) {
@@ -1799,6 +1800,14 @@ function comet2init(msg) {
   }
 }
 
+const sleep = (time) => {
+  return new Promise((resolve, reject) => {
+      setImmediate(() => {
+          resolve()
+      }, time)
+  })
+}
+
 /* MAIN 
  *
  *
@@ -1962,6 +1971,7 @@ if (options.QuietRun) {
       cometprint(`Unknown input mode.`);
       break;
     }
+    await sleep(0);
   }
   //console.log( string );
   readInterface.close();

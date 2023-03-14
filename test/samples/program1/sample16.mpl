@@ -14,7 +14,7 @@ begin
     if furui[i] then begin
       writeln(i, ' is a prime number');
       j := i;
-      if i < 16384 then
+      if i < 1024 then
         while j < 2000 do begin
           furui[j] := false;
           j := j + i

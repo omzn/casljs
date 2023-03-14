@@ -118,7 +118,7 @@ L0009
 ; j := i;
 	LD	gr1,	$i
 	PUSH	0,gr1
-	LAD	gr1,	16384
+	LAD	gr1,	1024
 	POP	gr2
 	CPA	gr2,gr1
 	JMI	L0015
@@ -129,7 +129,7 @@ L0015
 L0016
 	CPA	gr1,gr0
 	JZE	L0013
-; if i < 16384 then
+; if i < 1024 then
 L0017
 	LD	gr1,	$j
 	PUSH	0,gr1

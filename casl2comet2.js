@@ -661,8 +661,11 @@ function pass1(source, symtblp, memoryp, bufp) {
               gen_code1(memoryp, address, vals[j]);
               address++;
             }
+            gen_code1(memoryp, address, 0);
+            address++;
           } else if (lit.match(
-            /^[+-]?\d+$|^\#[\da-fA-F]+$/)) {  // decial or hex
+            /^[+-]?\d+$|^\#[\da-fA-F]+$/)) {  
+            // decial or hex
             gen_code1(memoryp, address, lit);
             address++;
           } else {
@@ -1585,6 +1588,8 @@ function cmd_step(memoryp, statep, args) {
         // exec_inに依る中断
         if (count - i > 0) {
           next_cmd = `step ${count - i}`;
+        } else {
+          next_cmd = '';
         }
         break;
       }
