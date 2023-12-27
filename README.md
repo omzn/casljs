@@ -11,7 +11,7 @@ CASL2, COMET2 の JavaScript 実装です．
 
 ### casl2comet2.js
 
-* 状況: 99%
+* 状況: stable
   * jqueryterminal.js を利用して，Web ページ上の簡易ターミナルで動かすようにした． 
     CLIインタラクティブインターフェイスがそのまま利用できる．
   * CASL2のテキストエリアにファイルをドラッグアンドドロップできるようになった．
@@ -20,7 +20,7 @@ CASL2, COMET2 の JavaScript 実装です．
 
 ### c2c2.js
 
-* 状況: 99%
+* 状況: stable
 ```
 Usage: c2c2 [options] <casl2file> [input1 ...]
 

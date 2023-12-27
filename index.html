@@ -319,7 +319,7 @@
 
 <body>
   <div id="wrap" class="fixed">
-    <h1>CASL2/COMET2 <span>for KIT IS 言語処理プログラミング</span></h1>
+    <h1>CASL2/COMET2 <span>for KIT IS 言語処理プログラミング <span id="version"></span></span></h1>
     <div class="flex">
       <div id="casl2">
         <h2>CASL2 <span id="fname">(ファイルをドラッグアンドドロップできます)</span></h2>
@@ -373,5 +373,7 @@
   });
 </script>
 <script src="./casl2comet2.js"></script>
-
+<script>
+  $("#version").html(version());
+</script>
 </html>

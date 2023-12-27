@@ -7,7 +7,7 @@
     c2c2.js                                            
     for use of command line 
 */
-var VERSION = '0.9.9 KIT (Feb 28, 2023)';
+var VERSION = '1.0.0 KIT (Dec 27, 2023)';
 var DEBUG = 0;
 var DDEBUG = 0;
 

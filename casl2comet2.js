@@ -7,7 +7,7 @@
     casl2comet2.js                                            
     for use with jQueryTerminal
 */
-var VERSION = '0.9.9 KIT (Feb 28, 2023)';
+var VERSION = '1.0.0 KIT (Dec 27, 2023)';
 var DEBUG = 0;
 var DDEBUG = 0;
 
@@ -21,6 +21,10 @@ const EXIT_USR = 0x0000;
 const EXIT_OVF = 0x0001;
 const EXIT_DVZ = 0x0002;
 const EXIT_ROV = 0x0003;
+
+function version() {
+  return VERSION;
+}
 
 function unpack_C(string) {
   var ret = [];
