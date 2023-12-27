@@ -788,7 +788,7 @@ function pass2(file, symtblp, memoryp, bufp) {
   });
 
   comet2startAddress = expand_label(symtblp, comet2startLabel);
-
+  
   for (var i = 0; i < memkeys.length; i++) {
     address = Number(memkeys[i]);
     // skip if start address
