@@ -7,7 +7,7 @@
     casl2comet2.js                                            
     for use with jQueryTerminal
 */
-var VERSION = '1.0.0 KIT (Dec 27, 2023)';
+var VERSION = '1.0.1 KIT (Jan 17, 2024)';
 var DEBUG = 0;
 var DDEBUG = 0;
 
