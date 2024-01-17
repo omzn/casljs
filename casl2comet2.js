@@ -1780,7 +1780,7 @@ var term_comet2 = $('#terminal_comet2').terminal({
   break: function (addr) {
     cmd_break(comet2mem, state, [addr]);
   },
-  br: function (addr) {
+  b: function (addr) {
     cmd_break(comet2mem, state, [addr]);
   },
   reload: function () {
