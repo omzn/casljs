@@ -128,6 +128,8 @@ var comet2startAddress = 0;
 var comet2startLabel;
 var comet2bin = [];
 
+var address_max;
+
 var opt_a = 1;
 
 function assemble() {
@@ -774,6 +776,7 @@ function pass1(source, symtblp, memoryp, bufp) {
     }
   }
   if (in_block) error_casl2('NO "END" instruction found');
+  address_max = address;
 }
 
 function pass2(file, symtblp, memoryp, bufp) {
@@ -1523,16 +1526,25 @@ function step_exec(memoryp, statep) {
 
   } else if (inst == 'PUSH') {
     sp--;
+    if (sp <= address_max) {
+      error_comet2(`Stack overflow at #${hex(pc,4)}: SP = #${hex(sp,4)}`);
+    }
     mem_put(memoryp, sp, eadr);
     pc += 2;
 
   } else if (inst == 'POP') {
     regs[gr] = mem_get(memoryp, sp);
     sp++;
+    if (sp > STACK_TOP) {  // Too much POP
+      error_comet2(`Stack underflow at #${hex(pc,4)}: SP = #${hex(sp,4)}`);
+    }
     pc += 1;
 
   } else if (inst == 'CALL') {
     sp--;
+    if (sp <= address_max) {
+      error_comet2(`Stack overflow at #${hex(pc,4)}: SP = #${hex(sp,4)}`);
+    }
     mem_put(memoryp, sp, pc + 2);
     pc = eadr;
 
