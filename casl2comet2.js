@@ -7,7 +7,7 @@
     casl2comet2.js                                            
     for use with jQueryTerminal
 */
-var VERSION = '1.0.1 KIT (Jan 17, 2024)';
+var VERSION = '1.0.2 KIT (Jan 31, 2024)';
 var DEBUG = 0;
 var DDEBUG = 0;
 
@@ -1880,7 +1880,7 @@ var term_comet2 = $('#terminal_comet2').terminal({
   name: "comet2_term",
   prompt: `${str_yellow('comet2')}> `,
   checkArity: false,
-  greetings: `${str_green(greetings_comet2.innerHTML)}\nThis is COMET II, version ${VERSION}.\n(c) 2001-2023, Osamu Mizuno.\n`,
+  greetings: `${str_green(greetings_comet2.innerHTML)}\nThis is COMET II, version ${VERSION}.\n(c) 2001-2024, Osamu Mizuno.\n`,
   height: (window.innerHeight - 180) >= 650 ? (window.innerHeight - 180) : 650,
   width: 640
 });
@@ -1889,7 +1889,7 @@ var term_casl2 = $('#terminal_casl2').terminal({
 }, {
   name: "casl2_term",
   prompt: "",
-  greetings: `${str_green(greetings_casl2.innerHTML)}\nThis is CASL II, version ${VERSION}.\n(c) 2001-2023, Osamu Mizuno.\n`,
+  greetings: `${str_green(greetings_casl2.innerHTML)}\nThis is CASL II, version ${VERSION}.\n(c) 2001-2024, Osamu Mizuno.\n`,
   height: (window.innerHeight - 180)*3/8 >= 240 ? (window.innerHeight - 180)*3/8 : 240,
   width: 600
 });
