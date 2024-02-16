@@ -1,10 +1,8 @@
-import glob
 import itertools
 import json
-import os
 import re
 from pathlib import Path
-from typing import Any, Generator
+from typing import Any, Generator, Literal
 
 import pytest
 from pytest import FixtureRequest
@@ -19,6 +17,8 @@ from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.support.ui import WebDriverWait
 from webdriver_manager.chrome import ChromeDriverManager
 from webdriver_manager.firefox import GeckoDriverManager
+
+Browser = Literal["Firefox", "Chrome"]
 
 
 class Casl2AssembleError(Exception):
@@ -54,7 +54,7 @@ def init_chrome_driver() -> WebDriver:
 
 
 def common_task(
-    driver: WebDriver, casl2_file: str, out_file: Path, timeout: int
+    driver: WebDriver, casl2_file: Path, out_file: Path, timeout: int
 ) -> None:
     driver.refresh()
     with open(casl2_file, encoding="utf-8") as fp:
@@ -126,12 +126,17 @@ def common_task(
 # pytest code
 # ===================================
 
-TEST_RESULT_DIR = "test_results"
-TEST_EXPECT_DIR = "test_expects"
+TEST_RESULT_DIR = Path("test_results")
+TEST_EXPECT_DIR = Path("test_expects")
 
-browsers = ["Firefox", "Chrome"]
-sample_files = sorted(glob.glob("samples/**/*.cas", recursive=True))
-test_data = list(itertools.product(browsers, sample_files))
+TEST_RESULT_DIR.mkdir(parents=True, exist_ok=True)
+
+browsers: list[Browser] = ["Firefox", "Chrome"]
+# parametrizeでサンプルファイル名を表示するにはstr型に変換する必要がある
+sample_files: list[str] = sorted(
+    [str(path) for path in Path("samples").glob("**/*.cas")]
+)
+test_data: list[tuple[Browser, str]] = list(itertools.product(browsers, sample_files))
 
 
 @pytest.fixture(scope="module")
@@ -148,22 +153,22 @@ def Chrome() -> Generator[WebDriver, Any, None]:
     driver.quit()
 
 
-@pytest.mark.parametrize(("driver_name,casl2_file"), test_data)
+@pytest.mark.parametrize(("driver_name,casl2_file_path"), test_data)
 def test_casl2comet2_run(
-    driver_name: str, casl2_file: str, request: FixtureRequest
+    driver_name: Browser, casl2_file_path: str, request: FixtureRequest
 ) -> None:
     driver = request.getfixturevalue(driver_name)
-    path_to_html = Path(__file__).parent.parent.joinpath("index.html")
+    path_to_html = Path(__file__).parent.parent / "index.html"
     driver.get("file://" + str(path_to_html))
     driver.set_window_size(1920, 800)
-    if not Path(TEST_RESULT_DIR).exists():
-        os.mkdir(TEST_RESULT_DIR)
-    out_file = Path(TEST_RESULT_DIR).joinpath(Path(casl2_file).name + ".out")
-    if Path(casl2_file).name == "sample16.cas":
+
+    casl2_file = Path(casl2_file_path)
+    out_file = TEST_RESULT_DIR / (casl2_file.name + ".out")
+    if casl2_file.name == "sample16.cas":
         timeout = 90
     else:
         timeout = 10
     common_task(driver, casl2_file, out_file, timeout)
-    expect_file = Path(TEST_EXPECT_DIR).joinpath(Path(casl2_file).name + ".out")
+    expect_file = TEST_EXPECT_DIR / (casl2_file.name + ".out")
     with open(out_file) as ofp, open(expect_file) as efp:
         assert ofp.read() == efp.read()
