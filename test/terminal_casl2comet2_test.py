@@ -4,14 +4,17 @@ import json
 import os
 import re
 from pathlib import Path
+from typing import Any, Generator
 
 import pytest
+from pytest import FixtureRequest
 from selenium import webdriver
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver import ActionChains, ChromeOptions, FirefoxOptions, Keys
 from selenium.webdriver.chrome.service import Service as ChromeService
 from selenium.webdriver.common.by import By
 from selenium.webdriver.firefox.service import Service as FirefoxService
+from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.support.ui import WebDriverWait
 from webdriver_manager.chrome import ChromeDriverManager
@@ -22,7 +25,7 @@ class Casl2AssembleError(Exception):
     pass
 
 
-def init_firefox_driver():
+def init_firefox_driver() -> WebDriver:
     options = FirefoxOptions()
     options.add_argument("-headless")
     options.set_preference("accessibility.typeaheadfind.manual", False)
@@ -33,7 +36,7 @@ def init_firefox_driver():
     return driver
 
 
-def init_chrome_driver():
+def init_chrome_driver() -> WebDriver:
     options = ChromeOptions()
     options.add_argument("--headless")
     options.add_argument("--disable-gpu")
@@ -50,7 +53,9 @@ def init_chrome_driver():
     return driver
 
 
-def common_task(driver, casl2_file, out_file, timeout):
+def common_task(
+    driver: WebDriver, casl2_file: str, out_file: Path, timeout: int
+) -> None:
     driver.refresh()
     with open(casl2_file, encoding="utf-8") as fp:
         buf = fp.read()
@@ -130,21 +135,23 @@ test_data = list(itertools.product(browsers, sample_files))
 
 
 @pytest.fixture(scope="module")
-def Firefox():
+def Firefox() -> Generator[WebDriver, Any, None]:
     driver = init_firefox_driver()
     yield driver
     driver.quit()
 
 
 @pytest.fixture(scope="module")
-def Chrome():
+def Chrome() -> Generator[WebDriver, Any, None]:
     driver = init_chrome_driver()
     yield driver
     driver.quit()
 
 
 @pytest.mark.parametrize(("driver_name,casl2_file"), test_data)
-def test_casl2comet2_run(driver_name, casl2_file, request):
+def test_casl2comet2_run(
+    driver_name: str, casl2_file: str, request: FixtureRequest
+) -> None:
     driver = request.getfixturevalue(driver_name)
     path_to_html = Path(__file__).parent.parent.joinpath("index.html")
     driver.get("file://" + str(path_to_html))

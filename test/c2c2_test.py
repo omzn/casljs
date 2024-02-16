@@ -4,6 +4,7 @@ import os
 import subprocess
 import sys
 from pathlib import Path
+from typing import Any, Generator
 
 import pytest
 
@@ -12,7 +13,7 @@ class Casl2AssembleError(Exception):
     pass
 
 
-def command(cmd):
+def command(cmd) -> Generator[str, Any, None]:
     try:
         result = subprocess.run(
             cmd,
@@ -29,7 +30,7 @@ def command(cmd):
         sys.exit(1)
 
 
-def common_task(casl2_file, out_file):
+def common_task(casl2_file: str, out_file: Path) -> None:
     try:
         c2c2 = Path(__file__).parent.parent.joinpath("c2c2.js")
         assembler_text = command(f"node {c2c2} -n -c -a {casl2_file}")
@@ -69,7 +70,7 @@ test_data = sample_files
 
 @pytest.mark.timeout(20)
 @pytest.mark.parametrize(("casl2_file"), test_data)
-def test_c2c2_run(casl2_file):
+def test_c2c2_run(casl2_file: str) -> None:
     if not Path(TEST_RESULT_DIR).exists():
         os.mkdir(TEST_RESULT_DIR)
     out_file = Path(TEST_RESULT_DIR).joinpath(Path(casl2_file).name + ".out")
