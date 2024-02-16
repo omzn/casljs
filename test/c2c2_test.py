@@ -25,14 +25,14 @@ def command(cmd):
         for line in result.stdout.splitlines():
             yield line
     except subprocess.CalledProcessError:
-        print("外部プログラムの実行に失敗しました [" + cmd + "]", file=sys.stderr)
+        print(f"外部プログラムの実行に失敗しました [{cmd}]", file=sys.stderr)
         sys.exit(1)
 
 
 def common_task(casl2_file, out_file):
     try:
         c2c2 = Path(__file__).parent.parent.joinpath("c2c2.js")
-        assembler_text = command("node {} -n -c -a {}".format(c2c2, casl2_file))
+        assembler_text = command(f"node {c2c2} -n -c -a {casl2_file}")
         if not "DEFINED SYMBOLS" in assembler_text:
             raise Casl2AssembleError
         with open("input.json") as fp:
@@ -40,9 +40,7 @@ def common_task(casl2_file, out_file):
         inputparams = ""
         if Path(casl2_file).name in input.keys():
             inputparams = " ".join([i for i in input[Path(casl2_file).name]])
-        terminal_text = command(
-            "node {} -n -q -r {} {}".format(c2c2, casl2_file, inputparams)
-        )
+        terminal_text = command(f"node {c2c2} -n -q -r {casl2_file} {inputparams}")
         with open(out_file, mode="w") as fp:
             for line in terminal_text:
                 fp.write(line + "\n")

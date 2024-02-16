@@ -59,7 +59,7 @@ def common_task(driver, casl2_file, out_file, timeout):
         e.clear()
         buf_to_js = buf.replace("\\", "\\\\").replace("\n", "\\n").replace('"', '\\"')
         driver.execute_script(
-            f'document.getElementById("casl2src").value="%s"' % buf_to_js
+            f'document.getElementById("casl2src").value="{buf_to_js}"'
         )
         # e.send_keys(buf)
         e = driver.find_element(By.ID, "assemble")
