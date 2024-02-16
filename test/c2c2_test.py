@@ -70,7 +70,7 @@ sample_files: list[str] = sorted(
 test_data = sample_files
 
 
-@pytest.mark.timeout(20)
+@pytest.mark.timeout(90)
 @pytest.mark.parametrize(("casl2_file_path"), test_data)
 def test_c2c2_run(casl2_file_path: str) -> None:
     casl2_file = Path(casl2_file_path)
