@@ -17,6 +17,15 @@ pytestとseleniumで`casl2comet2js.html`のrunコマンドをテストします�
     pip install -r requirements.txt
     ```
 
+## 開発者向け
+
+ソースコードを変更した場合は以下のコマンドでフォーマットを適用してください．
+
+```python
+ruff check
+ruff format
+```
+
 ## テスト入力
 
 CASL2ファイルとして`sample*.cas`を使用します．`samples`フォルダ内に入ってあります．
