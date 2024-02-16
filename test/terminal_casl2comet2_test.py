@@ -17,8 +17,6 @@ from selenium.webdriver.support.ui import WebDriverWait
 from webdriver_manager.chrome import ChromeDriverManager
 from webdriver_manager.firefox import GeckoDriverManager
 
-DRIVER_DESTINATION_PATH = "./drivers"
-
 
 class Casl2AssembleError(Exception):
     pass
@@ -29,9 +27,7 @@ def init_firefox_driver():
     options.add_argument("-headless")
     options.set_preference("accessibility.typeaheadfind.manual", False)
     driver = webdriver.Firefox(
-        service=FirefoxService(
-            GeckoDriverManager(path=DRIVER_DESTINATION_PATH).install()
-        ),
+        service=FirefoxService(GeckoDriverManager().install()),
         options=options,
     )
     return driver
@@ -48,9 +44,7 @@ def init_chrome_driver():
     options.add_argument("--disable-extensions")
     options.add_experimental_option("excludeSwitches", ["enable-logging"])
     driver = webdriver.Chrome(
-        service=ChromeService(
-            ChromeDriverManager(path=DRIVER_DESTINATION_PATH).install()
-        ),
+        service=ChromeService(ChromeDriverManager().install()),
         options=options,
     )
     return driver
