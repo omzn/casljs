@@ -1017,6 +1017,10 @@ function error_comet2(msg) {
   throw (str_red_yellow(msg));
 }
 
+function warn_comet2(msg) {
+  cometprint (str_red_yellow(msg));
+}
+
 function info_comet2(msg) {
   throw (str_white_green(msg));
 }
@@ -1341,7 +1345,7 @@ function step_exec(memoryp, statep) {
       var m = mem_get(memoryp, eadr);
       if (m == 0) {
         fr = FR_OVER | FR_ZERO;
-        error_comet2("Error: Division by zero in DIVA.");
+        warn_comet2("Error: Division by zero in DIVA.");
         pc += 2;
       } else {
         regs[gr] /= m;
@@ -1357,7 +1361,7 @@ function step_exec(memoryp, statep) {
       regs[xr] = signed(regs[xr]);
       if (regs[xr] == 0) {
         fr = FR_OVER | FR_ZERO;
-        error_comet2("Error: Division by zero in DIVA.");
+        warn_comet2("Error: Division by zero in DIVA.");
         pc += 1;
       } else {
         regs[gr] /= regs[xr];
@@ -1374,7 +1378,7 @@ function step_exec(memoryp, statep) {
       var m = mem_get(memoryp, eadr);
       if (m == 0) {
         fr = FR_OVER | FR_ZERO;
-        error_comet2("Error: Division by zero in DIVL.");
+        warn_comet2("Error: Division by zero in DIVL.");
         pc += 2;
       } else {
         regs[gr] /= m;
@@ -1387,7 +1391,7 @@ function step_exec(memoryp, statep) {
     } else {
       if (regs[xr] == 0) {
         fr = FR_OVER | FR_ZERO;
-        error_comet2("Error: Division by zero in DIVL.");
+        warn_comet2("Error: Division by zero in DIVL.");
         pc += 1;
       } else {
         regs[gr] /= regs[xr];
