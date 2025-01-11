@@ -1324,7 +1324,8 @@ function step_exec(memoryp, statep) {
       var m = mem_get(memoryp, eadr);
       if (m == 0) {
         fr = FR_OVER | FR_ZERO;
-       error_comet2("Abort: Division by zero in DIVA.");
+        error_comet2("Error: Division by zero in DIVA.");
+        pc += 2;
       } else {
         regs[gr] /= m;
         var ofr1 = regs[gr] > MAX_SIGNED ? FR_OVER : 0;
@@ -1339,7 +1340,8 @@ function step_exec(memoryp, statep) {
       regs[xr] = signed(regs[xr]);
       if (regs[xr] == 0) {
         fr = FR_OVER | FR_ZERO;
-        error_comet2("Abort: Division by zero in DIVA.");
+        error_comet2("Error: Division by zero in DIVA.");
+        pc += 1;
       } else {
         regs[gr] /= regs[xr];
         var ofr1 = regs[gr] > MAX_SIGNED ? FR_OVER : 0;
@@ -1355,7 +1357,8 @@ function step_exec(memoryp, statep) {
       var m = mem_get(memoryp, eadr);
       if (m == 0) {
         fr = FR_OVER | FR_ZERO;
-        error_comet2("Abort: Division by zero in DIVL.");
+        error_comet2("Error: Division by zero in DIVL.");
+        pc += 2;
       } else {
         regs[gr] /= m;
         var ofr1 = regs[gr] > 0xffff ? FR_OVER : 0;
@@ -1367,7 +1370,8 @@ function step_exec(memoryp, statep) {
     } else {
       if (regs[xr] == 0) {
         fr = FR_OVER | FR_ZERO;
-        error_comet2("Abort: Division by zero in DIVL.");
+        error_comet2("Error: Division by zero in DIVL.");
+        pc += 1;
       } else {
         regs[gr] /= regs[xr];
         var ofr1 = regs[gr] > 0xffff ? FR_OVER : 0;
