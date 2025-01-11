@@ -159,13 +159,17 @@ function assemble() {
     return 1;
   } catch (e) {
     //エラー処理
-    caslprint(e);
+    caslerror(e);
     return 0;
   }
 }
 
 function caslprint(msg) {
   if (!opt_q) console.log(msg);
+}
+
+function caslerror(msg) {
+  console.log(msg);
 }
 
 function error_casl2(msg) {
@@ -1021,6 +1025,10 @@ function cometprint(msg) {
   console.log(msg);
 }
 
+function cometerror(msg) {
+  console.log(msg);
+}
+
 function cometout(msg) {
   process.stdout.write((!opt_Q ? `${str_i_red('OUT')}> ` : "") + msg + (msg.slice(-1) != '\n' ? '\n' : ''));
 }
@@ -1333,7 +1341,8 @@ function step_exec(memoryp, statep) {
       var m = mem_get(memoryp, eadr);
       if (m == 0) {
         fr = FR_OVER | FR_ZERO;
-        error_comet2("Abort: Division by zero in DIVA.");
+        error_comet2("Error: Division by zero in DIVA.");
+        pc += 2;
       } else {
         regs[gr] /= m;
         var ofr1 = regs[gr] > MAX_SIGNED ? FR_OVER : 0;
@@ -1348,7 +1357,8 @@ function step_exec(memoryp, statep) {
       regs[xr] = signed(regs[xr]);
       if (regs[xr] == 0) {
         fr = FR_OVER | FR_ZERO;
-        error_comet2("Abort: Division by zero in DIVA.");
+        error_comet2("Error: Division by zero in DIVA.");
+        pc += 1;
       } else {
         regs[gr] /= regs[xr];
         var ofr1 = regs[gr] > MAX_SIGNED ? FR_OVER : 0;
@@ -1364,7 +1374,8 @@ function step_exec(memoryp, statep) {
       var m = mem_get(memoryp, eadr);
       if (m == 0) {
         fr = FR_OVER | FR_ZERO;
-        error_comet2("Abort: Division by zero in DIVL.");
+        error_comet2("Error: Division by zero in DIVL.");
+        pc += 2;
       } else {
         regs[gr] /= m;
         var ofr1 = regs[gr] > 0xffff ? FR_OVER : 0;
@@ -1376,7 +1387,8 @@ function step_exec(memoryp, statep) {
     } else {
       if (regs[xr] == 0) {
         fr = FR_OVER | FR_ZERO;
-        error_comet2("Abort: Division by zero in DIVL.");
+        error_comet2("Error: Division by zero in DIVL.");
+        pc += 1;
       } else {
         regs[gr] /= regs[xr];
         var ofr1 = regs[gr] > 0xffff ? FR_OVER : 0;
@@ -1942,9 +1954,7 @@ if (options.QuietRun) {
           try {
             CMDTBL[key].subr(comet2mem, state, cmds);
           } catch (e) {
-            if (!opt_q) {
-              cometprint(e);
-            }
+            cometerror(e);
             finish = 1;
             break;
           }
