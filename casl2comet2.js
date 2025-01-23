@@ -7,9 +7,10 @@
     casl2comet2.js                                            
     for use with jQueryTerminal
 */
-var VERSION = '1.0.2 KIT (Jan 31, 2024)';
+var VERSION = '1.0.3 KIT (Jan 23, 2025)';
 var DEBUG = 0;
 var DDEBUG = 0;
+var LDEBUG = 0;
 
 // common functions
 
@@ -119,6 +120,7 @@ var actual_label = '';
 var virtual_label = '';
 var first_start = 1;
 var var_scope = '';
+var literal_counter = 0;
 
 var memory = {};
 var symtbl = {};
@@ -261,8 +263,8 @@ function update_label(hashref, label, val) {
 function add_literal(hashref, literal, val) {
   // check_literal($literal);
   hashref[literal] = { 'val': val, 'file': __file, 'line': __line };
-  if (DEBUG) {
-    console.log(`add_literal(${val})`);
+  if (LDEBUG) {
+    console.log(`add_literal(${val.toString(16)})`);
   }
 }
 
@@ -508,17 +510,19 @@ function pass1(source, symtblp, memoryp, bufp) {
           ss = ss.replace(/\|/g, '\\\|');
 
           var isLiteral = 0;
-          for (var j = 0; j < literal_stack.length; j++) {
-            if (literal_stack[j] == ss) {
-              isLiteral = 1;
-              break;
-            }
-          }
+          //for (var j = 0; j < literal_stack.length; j++) {
+          //  if (literal_stack[j] == ss) {
+           //   isLiteral = 1;
+           //   break;
+           // }
+          //}
           if (!isLiteral) {
+            opr_array[1] = `${opr_array[1]}_${literal_counter}`;
             literal_stack.push(opr_array[1]);
-          }
-          if (DEBUG) {
-            console.log(`Literal:${opr_array[1]}`);
+            if (LDEBUG) {
+              console.log(`op1 Literal: ${opr_array[1]}`);
+            }
+            literal_counter++;
           }
         } else if (
           opr_array[1].match(/^[a-zA-Z\$%_\.][0-9a-zA-Z\$%_\.]*/) &&
@@ -595,18 +599,20 @@ function pass1(source, symtblp, memoryp, bufp) {
           ss = ss.replace(/\|/g, '\\\|');
 
           var isLiteral = 0;
-          for (var j = 0; j < literal_stack.length; j++) {
-            if (literal_stack[j] == ss) {
-              isLiteral = 1;
-              break;
-            }
-          }
+          //for (var j = 0; j < literal_stack.length; j++) {
+          //  if (literal_stack[j] == ss) {
+          //    isLiteral = 1;
+          //    break;
+          //  }
+          //}
           if (!isLiteral) {
+            opr_array[1] = `${opr_array[1]}_${literal_counter}`;
             literal_stack.push(opr_array[1]);
-          }
-          if (DEBUG) {
-            console.log(`Literal:${opr_array[1]}`);
-          }
+            if (LDEBUG) {
+              console.log(`op3 Literal: ${opr_array[1]}`);
+            }
+            literal_counter++;
+          }  
         } else if (
           opr_array[1].match(/^[a-zA-Z\$%_\.][0-9a-zA-Z\$%_\.]*/) &&
           !opr_array[1].match(/^GR[0-7]$/i)) {
@@ -659,7 +665,7 @@ function pass1(source, symtblp, memoryp, bufp) {
           add_literal(symtblp, lit, address);
           lit = lit.replace(/=/, '');
           var result;
-          if (result = lit.match(/^\'(.+)\'$/)) {
+          if (result = lit.match(/^\'(.+)\'/)) {
             var str = result[1];
             str = str.replace(/\'\'/g, '\'');
             var vals = unpack_C(str);
@@ -670,7 +676,7 @@ function pass1(source, symtblp, memoryp, bufp) {
             gen_code1(memoryp, address, 0);
             address++;
           } else if (lit.match(
-            /^[+-]?\d+$|^\#[\da-fA-F]+$/)) {  
+            /^[+-]?\d+|^\#[\da-fA-F]+/)) {  
             // decial or hex
             gen_code1(memoryp, address, lit);
             address++;

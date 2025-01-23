@@ -7,9 +7,10 @@
     c2c2.js                                            
     for use of command line 
 */
-var VERSION = '1.0.2 KIT (Jan 31, 2024)';
+var VERSION = '1.0.3 KIT (Jan 23, 2025)';
 var DEBUG = 0;
 var DDEBUG = 0;
+var LDEBUG = 0;
 
 // common functions
 
@@ -115,6 +116,7 @@ var actual_label = '';
 var virtual_label = '';
 var first_start = 1;
 var var_scope = '';
+var literal_counter = 0;
 
 var memory = {};
 var symtbl = {};
@@ -159,13 +161,17 @@ function assemble() {
     return 1;
   } catch (e) {
     //エラー処理
-    caslprint(e);
+    caslerror(e);
     return 0;
   }
 }
 
 function caslprint(msg) {
   if (!opt_q) console.log(msg);
+}
+
+function caslerror(msg) {
+  console.log(msg);
 }
 
 function error_casl2(msg) {
@@ -204,7 +210,7 @@ function expand_label(hashref, val) {
       } else {
         error_casl2(`Undefined label "${lbl}"`);
       }
-    } else if (!val.match(/^[+-]?\d+$/)) {
+    } else if (!val.match(/^[+-]?\d+/)) { 
       var sym = val;
       if (result = val.match(/([a-zA-Z\$%_\.][0-9a-zA-Z\$%_\.]*):([a-zA-Z\$%_\.][0-9a-zA-Z\$%_\.]*)$/)) {
         if (result[1] == result[2]) {
@@ -260,8 +266,8 @@ function update_label(hashref, label, val) {
 function add_literal(hashref, literal, val) {
   // check_literal($literal);
   hashref[literal] = { 'val': val, 'file': __file, 'line': __line };
-  if (DEBUG) {
-    console.log(`add_literal(${val})`);
+  if (LDEBUG) {
+    console.log(`add_literal(${val.toString(16)})`);
   }
 }
 
@@ -507,17 +513,19 @@ function pass1(source, symtblp, memoryp, bufp) {
           ss = ss.replace(/\|/g, '\\\|');
 
           var isLiteral = 0;
-          for (var j = 0; j < literal_stack.length; j++) {
-            if (literal_stack[j] == ss) {
-              isLiteral = 1;
-              break;
-            }
-          }
+          //for (var j = 0; j < literal_stack.length; j++) {
+           // if (literal_stack[j] == ss) {
+           //   isLiteral = 1;
+           //   break;
+          //  }
+         // }
           if (!isLiteral) {
+            opr_array[1] = `${opr_array[1]}_${literal_counter}`;
             literal_stack.push(opr_array[1]);
-          }
-          if (DEBUG) {
-            console.log(`Literal:${opr_array[1]}`);
+            if (LDEBUG) {
+              console.log(`op1 Literal: ${opr_array[1]}`);
+            }
+            literal_counter++;
           }
         } else if (
           opr_array[1].match(/^[a-zA-Z\$%_\.][0-9a-zA-Z\$%_\.]*/) &&
@@ -594,19 +602,21 @@ function pass1(source, symtblp, memoryp, bufp) {
           ss = ss.replace(/\|/g, '\\\|');
 
           var isLiteral = 0;
-          for (var j = 0; j < literal_stack.length; j++) {
-            if (literal_stack[j] == ss) {
-              isLiteral = 1;
-              break;
-            }
+          //for (var j = 0; j < literal_stack.length; j++) {
+          //  if (literal_stack[j] == ss) {
+          //    isLiteral = 1;
+          //    break;
+          //  }
+         // }
+         if (!isLiteral) {
+          opr_array[1] = `${opr_array[1]}_${literal_counter}`;
+          literal_stack.push(opr_array[1]);
+          if (LDEBUG) {
+            console.log(`op3 Literal: ${opr_array[1]}`);
           }
-          if (!isLiteral) {
-            literal_stack.push(opr_array[1]);
-          }
-          if (DEBUG) {
-            console.log(`Literal:${opr_array[1]}`);
-          }
-        } else if (
+          literal_counter++;
+        }
+      } else if (
           opr_array[1].match(/^[a-zA-Z\$%_\.][0-9a-zA-Z\$%_\.]*/) &&
           !opr_array[1].match(/^GR[0-7]$/i)) {
           opr_array[1] = `${var_scope}:${opr_array[1]}`;
@@ -658,7 +668,7 @@ function pass1(source, symtblp, memoryp, bufp) {
           add_literal(symtblp, lit, address);
           lit = lit.replace(/=/, '');
           var result;
-          if (result = lit.match(/^\'(.+)\'$/)) {
+          if (result = lit.match(/^\'(.+)\'/)) {
             var str = result[1];
             str = str.replace(/\'\'/g, '\'');
             var vals = unpack_C(str);
@@ -668,8 +678,8 @@ function pass1(source, symtblp, memoryp, bufp) {
             }
             gen_code1(memoryp, address, 0);
             address++;
-        } else if (lit.match(
-            /^[+-]?\d+$|^\#[\da-fA-F]+$/)) {  
+          } else if (lit.match(
+            /^[+-]?\d+|^\#[\da-fA-F]+/)) {  
             // decial or hex
             gen_code1(memoryp, address, lit);
             address++;
@@ -1018,6 +1028,10 @@ function info_comet2(msg) {
 }
 
 function cometprint(msg) {
+  console.log(msg);
+}
+
+function cometerror(msg) {
   console.log(msg);
 }
 
@@ -1942,9 +1956,7 @@ if (options.QuietRun) {
           try {
             CMDTBL[key].subr(comet2mem, state, cmds);
           } catch (e) {
-            if (!opt_q) {
-              cometprint(e);
-            }
+            cometerror(e);
             finish = 1;
             break;
           }
