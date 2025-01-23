@@ -7,7 +7,7 @@
     c2c2.js                                            
     for use of command line 
 */
-var VERSION = '1.0.3 KIT (Jan 23, 2025)';
+var VERSION = '1.0.4 KIT (Jan 23, 2025)';
 var DEBUG = 0;
 var DDEBUG = 0;
 var LDEBUG = 0;
@@ -1023,6 +1023,10 @@ function error_comet2(msg) {
   throw (str_red_yellow(msg));
 }
 
+function warn_comet2(msg) {
+  cometprint (str_red_yellow(msg));
+}
+
 function info_comet2(msg) {
   throw (str_white_green(msg));
 }
@@ -1347,7 +1351,8 @@ function step_exec(memoryp, statep) {
       var m = mem_get(memoryp, eadr);
       if (m == 0) {
         fr = FR_OVER | FR_ZERO;
-        error_comet2("Abort: Division by zero in DIVA.");
+        warn_comet2("Error: Division by zero in DIVA.");
+        pc += 2;
       } else {
         regs[gr] /= m;
         var ofr1 = regs[gr] > MAX_SIGNED ? FR_OVER : 0;
@@ -1362,7 +1367,8 @@ function step_exec(memoryp, statep) {
       regs[xr] = signed(regs[xr]);
       if (regs[xr] == 0) {
         fr = FR_OVER | FR_ZERO;
-        error_comet2("Abort: Division by zero in DIVA.");
+        warn_comet2("Error: Division by zero in DIVA.");
+        pc += 1;
       } else {
         regs[gr] /= regs[xr];
         var ofr1 = regs[gr] > MAX_SIGNED ? FR_OVER : 0;
@@ -1378,7 +1384,8 @@ function step_exec(memoryp, statep) {
       var m = mem_get(memoryp, eadr);
       if (m == 0) {
         fr = FR_OVER | FR_ZERO;
-        error_comet2("Abort: Division by zero in DIVL.");
+        warn_comet2("Error: Division by zero in DIVL.");
+        pc += 2;
       } else {
         regs[gr] /= m;
         var ofr1 = regs[gr] > 0xffff ? FR_OVER : 0;
@@ -1390,7 +1397,8 @@ function step_exec(memoryp, statep) {
     } else {
       if (regs[xr] == 0) {
         fr = FR_OVER | FR_ZERO;
-        error_comet2("Abort: Division by zero in DIVL.");
+        warn_comet2("Error: Division by zero in DIVL.");
+        pc += 1;
       } else {
         regs[gr] /= regs[xr];
         var ofr1 = regs[gr] > 0xffff ? FR_OVER : 0;
