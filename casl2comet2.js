@@ -207,7 +207,7 @@ function expand_label(hashref, val) {
       } else {
         error_casl2(`Undefined label "${lbl}"`);
       }
-    } else if (!val.match(/^[+-]?\d+$/)) {
+    } else if (!val.match(/^[+-]?\d+/)) {
       var sym = val;
       if (result = val.match(/([a-zA-Z\$%_\.][0-9a-zA-Z\$%_\.]*):([a-zA-Z\$%_\.][0-9a-zA-Z\$%_\.]*)$/)) {
         if (result[1] == result[2]) {
