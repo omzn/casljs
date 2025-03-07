@@ -9,9 +9,7 @@ on:
       - main
 
 jobs:
-
   test_run:
-
     strategy:
       fail-fast: false
       matrix:
@@ -22,41 +20,41 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       # Python 3.9をインストールする
       - name: Set up Python 3.9
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: 3.9
 
-      # node.js latest をインストールする
+      # node.jsをインストールする(バージョンはlpp_testのものと合わせる)
       - name: Use Node.js latest
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: 'latest'
+          node-version: "20"
       - name: Install dependencies
         run: npm ci
 
       # ubuntu, macosのときはFirefoxの最新版をインストールする
       - name: Set up Firefox on Ubuntu or MacOS
-        uses: browser-actions/setup-firefox@latest
+        uses: browser-actions/setup-firefox@v1
         if: matrix.os != 'windows-latest'
         with:
-          firefox-version: 'latest'
+          firefox-version: "latest"
 
       # windowsのときはFirefoxの84.0をインストールする
       # windowsではfirefox-version: "latest"をサポートしていないことが報告されています
       # https://github.com/browser-actions/setup-firefox/issues/252
       - name: Set up Firefox on Windows
-        uses: browser-actions/setup-firefox@latest
+        uses: browser-actions/setup-firefox@v1
         if: matrix.os == 'windows-latest'
         with:
           firefox-version: "84.0"
 
       # Chromeのstable版をインストールする
       - name: Set up Chrome
-        uses: browser-actions/setup-chrome@latest
+        uses: browser-actions/setup-chrome@v1
         with:
           chrome-version: stable
 
@@ -74,8 +72,8 @@ jobs:
 
       # テスト結果を出力する
       - name: Publish Test Report
-        uses: mikepenz/action-junit-report@v3
+        uses: mikepenz/action-junit-report@v4
         if: always() # always run even if the previous step fails
         with:
           check_name: Result Summary of ${{ matrix.os }}
-          report_paths: 'test/*.xml'
+          report_paths: "test/*.xml"

@@ -1,0 +1,7 @@
+[tool.ruff]
+target-version = "py39"
+fix = true
+
+[tool.ruff.lint]
+select = ["I", "E", "F"]
+ignore = []
